@@ -4,7 +4,7 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "/api/**", "run": { "serviceId": "recoverai-api", "region": "asia-south1" } },
-      { "source": "/healthz", "run": { "serviceId": "recoverai-api", "region": "asia-south1" } },
+      { "source": "/api/health", "run": { "serviceId": "recoverai-api", "region": "asia-south1" } },
       { "source": "**", "destination": "/index.html" }
     ],
     "headers": [

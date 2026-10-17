@@ -62,6 +62,22 @@ PUBSUB_AGENT="service-${PROJECT_NUMBER}@gcp-sa-pubsub.iam.gserviceaccount.com"
 # Deterministic Cloud Run URL: used as the OIDC audience for both push subscriptions (known before the first deploy).
 PUSH_AUDIENCE="https://${SERVICE}-${PROJECT_NUMBER}.${REGION}.run.app"
 ORIGINS="https://${PROJECT_ID}.web.app,https://${PROJECT_ID}.firebaseapp.com"
+# firebase-tools: use `firebase login` if present, else reuse gcloud's ADC (needs a quota project for firebase.googleapis.com).
+firebase_auth() {
+  command -v firebase >/dev/null || return 0
+  if [[ -z "${FIREBASE_TOKEN:-}" && -z "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]] && \
+     ! firebase login:list 2>/dev/null | grep -q "Logged in as"; then
+    local adc="${CLOUDSDK_CONFIG:-$HOME/.config/gcloud}/application_default_credentials.json"
+    if [[ -f "$adc" ]]; then
+      export GOOGLE_APPLICATION_CREDENTIALS="$adc" GOOGLE_CLOUD_QUOTA_PROJECT="$PROJECT_ID"
+      echo "firebase-tools: no 'firebase login'; using gcloud ADC ($adc) with quota project ${PROJECT_ID}"
+    else
+      warn "firebase-tools is not signed in: run 'firebase login' or 'gcloud auth application-default login'"
+    fi
+  fi
+}
+firebase_auth
+
 run_url() { cat "$STATE_DIR/run_url" 2>/dev/null || gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)'; }
 
 setup_platform() {
@@ -107,7 +123,9 @@ setup_platform() {
 
   log "Firebase project, web app and Auth providers"
   need firebase
-  firebase projects:addfirebase "$PROJECT_ID" >/dev/null 2>&1 || true
+  if ! firebase projects:list --json 2>/dev/null | jq -e --arg p "$PROJECT_ID" '.result[]? | select(.projectId == $p)' >/dev/null; then
+    firebase projects:addfirebase "$PROJECT_ID" || warn "projects:addfirebase failed (already a Firebase project?)"
+  fi
   APP_ID="$(firebase apps:list WEB --project "$PROJECT_ID" --json | jq -r '.result[0].appId // empty')"
   if [[ -z "$APP_ID" ]]; then
     firebase apps:create WEB recoverai-web --project "$PROJECT_ID" >/dev/null
@@ -188,7 +206,7 @@ deploy_backend() {
     --set-env-vars "$ENV_VARS"
   RUN_URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
   echo "$RUN_URL" > "$STATE_DIR/run_url"
-  curl -fsS "$RUN_URL/healthz" && echo
+  curl -fsS "$RUN_URL/api/health" && echo
 }
 
 upsert_push_sub() {  # name topic path

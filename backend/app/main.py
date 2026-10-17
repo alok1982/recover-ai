@@ -27,6 +27,23 @@ async def lifespan(_app: FastAPI):
             get_analytics().features("warmup", utcnow())
         except Exception:  # noqa: BLE001 - never block startup on seeding
             log.exception("local analytics warm-up failed")
+    if s.effective_analytics_backend == "bigquery" or s.effective_event_bus == "pubsub":
+        import threading
+
+        def _warm() -> None:  # create clients + auth once, so the first push isn't paying for it
+            try:
+                if s.effective_analytics_backend == "bigquery":
+                    from .analytics.bq import get_analytics
+
+                    get_analytics().features("warmup-no-such-account", utcnow())
+                if s.effective_event_bus == "pubsub":
+                    from .events.pubsub import get_bus
+
+                    get_bus()
+            except Exception:  # noqa: BLE001
+                log.warning("cloud client warm-up failed", exc_info=True)
+
+        threading.Thread(target=_warm, daemon=True).start()
     log.info("startup", extra={"mock": s.mock_mode, "demo": s.demo_mode, "auth": s.effective_auth_mode,
                                "model": s.gemini_model, "runtime": s.copilot_runtime, "bus": s.effective_event_bus,
                                "analytics": s.effective_analytics_backend,
@@ -58,6 +75,7 @@ def create_app() -> FastAPI:
 
     @app.get("/healthz")
     @app.get("/api/healthz")
+    @app.get("/api/health")  # Cloud Run reserves paths ending in "z" (/healthz never reaches the container)
     def healthz() -> dict:
         return {"ok": True, "mock": s.mock_mode, "demo": s.demo_mode, "runtime": s.copilot_runtime}
 
