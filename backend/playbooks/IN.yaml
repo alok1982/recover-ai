@@ -1,0 +1,71 @@
+country: IN
+name: India
+version: 2026-10-17
+last_verified: 2026-10-17
+currency: INR
+timezone: Asia/Kolkata
+tz_label: IST
+languages: [en, hi]
+hotline: "1930"
+steps:
+  - id: call_1930
+    title: Call the National Cyber Crime Helpline 1930 now
+    title_local:
+      hi: राष्ट्रीय साइबर क्राइम हेल्पलाइन 1930 पर अभी कॉल करें
+    channel: call
+    contact: "1930"
+    urgency: now
+    why: Fast reporting lets banks place a lien on the scammer's account through CFCFRMS before money is moved again.
+    required_fields: [reference_id, amount, occurred_at, beneficiary.account_or_vpa]
+    template_id: hotline_script
+  - id: file_ncrp
+    title: File a complaint on the National Cyber Crime Reporting Portal
+    title_local:
+      hi: राष्ट्रीय साइबर क्राइम रिपोर्टिंग पोर्टल पर शिकायत दर्ज करें
+    channel: portal
+    contact: "https://cybercrime.gov.in"
+    urgency: today
+    why: The NCRP complaint is the official record police and banks use to trace and freeze the money.
+    required_fields: [reference_id, amount, occurred_at, beneficiary.account_or_vpa, payer_bank, scammer_contacts]
+    template_id: ncrp_complaint
+  - id: report_bank
+    title: Report the fraud to your bank in writing
+    title_local:
+      hi: अपने बैंक को लिखित में धोखाधड़ी की जानकारी दें
+    channel: bank
+    urgency: today
+    why: A written report to your bank starts its dispute process and the 30-day resolution period.
+    required_fields: [reference_id, amount, occurred_at, beneficiary.account_or_vpa, payer_bank]
+    template_id: bank_dispute_letter
+clocks:
+  - id: dual_report_5d
+    label: Report to BOTH your bank and 1930/NCRP within 5 calendar days (needed for RBI compensation)
+    label_local:
+      hi: RBI मुआवज़े के लिए 5 कैलेंडर दिनों के भीतर बैंक और 1930/NCRP दोनों को रिपोर्ट करें
+    from: incident_at
+    days: 5
+    effective_from: 2027-01-01
+    not_in_force_note: Recommended — the RBI rule applies to frauds from 1 Jan 2027
+    not_in_force_note_local:
+      hi: अनुशंसित — RBI नियम 1 जनवरी 2027 से होने वाली धोखाधड़ी पर लागू होता है
+    applies_to_steps: [call_1930, file_ncrp, report_bank]
+  - id: ombudsman_30d
+    label: If the bank has not resolved your complaint in 30 days, you can complain to the RBI Integrated Ombudsman
+    label_local:
+      hi: अगर बैंक 30 दिनों में आपकी शिकायत हल नहीं करता, तो आप RBI एकीकृत लोकपाल से शिकायत कर सकते हैं
+    from: step_done:report_bank
+    days: 30
+    escalation_template: rbi_ombudsman_complaint
+    escalation_title: Escalate to RBI Integrated Ombudsman
+    escalation_title_local:
+      hi: RBI एकीकृत लोकपाल से शिकायत करें
+    contact: "https://cms.rbi.org.in"
+rules_text:
+  compensation: "From 1 Jan 2027, eligible victims of small digital frauds can receive 85% of the loss up to ₹25,000 if they report to the bank and 1930/NCRP within 5 calendar days."
+  ombudsman: "If your bank does not resolve your complaint within 30 days, you can complain to the RBI Integrated Ombudsman at https://cms.rbi.org.in."
+  freeze: "Reporting on 1930 quickly lets banks place a lien on the receiving account through CFCFRMS before the money moves again."
+notes: {}
+sources:
+  - https://moneylife.in/article/rbi-notifies-digital-fraud-compensation-rules-gives-banks-more-time-delays-rollout/80882.html
+  - https://www.finowings.com/trending/rbi-fraud-refund-rule-25000-compensation
+  - https://www.mha.gov.in/MHA1/Par2017/pdfs/par2026-pdfs/LS21072026/251.pdf

@@ -1,0 +1,54 @@
+country: MY
+name: Malaysia
+version: 2026-10-17
+last_verified: 2026-10-17
+currency: MYR
+timezone: Asia/Kuala_Lumpur
+tz_label: MYT
+languages: [en, ms]
+hotline: "997"
+steps:
+  - id: call_997
+    title: Call the National Scam Response Centre (NSRC) on 997 immediately
+    title_local:
+      ms: Hubungi Pusat Respons Scam Kebangsaan (NSRC) di talian 997 dengan segera
+    channel: call
+    contact: "997"
+    urgency: now
+    why: NSRC works with banks to freeze the receiving account. Since September 2025 the 997 call is treated as your police report. Every hour matters.
+    required_fields: [reference_id, amount, occurred_at, beneficiary.account_or_vpa]
+    template_id: hotline_script
+  - id: call_bank
+    title: Call your bank's fraud hotline and ask for a hold or recall
+    title_local:
+      ms: Hubungi talian penipuan bank anda dan minta sekatan atau panggil balik dana
+    channel: bank
+    urgency: now
+    why: Your bank can try to recall the transfer and flag the receiving account.
+    required_fields: [reference_id, amount, occurred_at, beneficiary.account_or_vpa, payer_bank]
+    template_id: bank_dispute_letter
+  - id: keep_reference
+    title: Keep your NSRC / police report reference number
+    title_local:
+      ms: Simpan nombor rujukan NSRC / laporan polis anda
+    channel: note
+    urgency: today
+    why: You will need the reference number for your bank and any follow-up.
+    template_id: none
+clocks:
+  - id: report_hours
+    label: Report within hours — delays sharply reduce what can be frozen
+    label_local:
+      ms: Lapor dalam beberapa jam — kelewatan mengurangkan jumlah yang boleh dibekukan
+    from: incident_at
+    hours: 2
+    urgency_only: true
+    applies_to_steps: [call_997, call_bank]
+rules_text:
+  freeze: "NSRC (997) works with banks to freeze the receiving account. Since September 2025 the 997 call is treated as your police report."
+  compensation: "There is no automatic compensation rule in this playbook. Fast reporting to 997 and your bank gives the best chance of freezing the money."
+notes:
+  police_statement: "Police statement not needed: since September 2025 your 997 call to NSRC is treated as your police report. Keep the reference number."
+sources:
+  - https://www.misslobang.my/article/scammed-malaysia-997-nsrc-what-to-do-2026
+  - https://www.freemalaysiatoday.com/category/nation/2026/06/24/sharp-rise-in-losses-from-online-scams
