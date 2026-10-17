@@ -33,3 +33,7 @@ firebase.generated.json
 frontend/tsconfig.tsbuildinfo
 frontend/tsconfig.*.tsbuildinfo
 .localdata/
+
+# Built by deploy.sh (copy of knowledge/ text for the image)
+backend/knowledge_bundle/*
+!backend/knowledge_bundle/.gitkeep

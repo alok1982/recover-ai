@@ -21,15 +21,12 @@ service cloud.firestore {
       allow read: if isBank();
       allow write: if false;
     }
-    match /bank_accounts/{id} {
-      allow read: if isBank();
-      allow write: if false;
-    }
     match /audit_log/{id} {
       allow read: if isBank();
       allow write: if false;
     }
 
+    // processed_events (Pub/Sub dedupe) and anything else: server only.
     match /{document=**} {
       allow read, write: if false;
     }

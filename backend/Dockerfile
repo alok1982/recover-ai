@@ -19,6 +19,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY app ./app
 COPY playbooks ./playbooks
+COPY sql ./sql
+COPY knowledge_bundle ./knowledge
 
 ENV PORT=8080
 EXPOSE 8080
