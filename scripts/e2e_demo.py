@@ -6,6 +6,8 @@ Deployed stack:     API_BASE=$(cat deploy/.state/run_url) python scripts/e2e_dem
   (anonymous victim sign-in + analyst password sign-in via the Firebase Auth REST API, using
    deploy/.state/sdkconfig.json and deploy/.state/bank_password written by deploy/deploy.sh)
 Exits non-zero on the first failed check. DEMO_MODE must be on for the time-travel step.
+Checks the v2.2 backbone too: bank case created via the fraud-case-submitted Pub/Sub push with BigQuery features,
+the bank decision reaching the victim via bank-decision (timed against the 3 s target), and a cited source (F16).
 """
 from __future__ import annotations
 
@@ -45,6 +47,10 @@ class Api:
         r.raise_for_status()
         return r.json()
 
+    def get_or_none(self, p):
+        r = self.c.get(self.url(p))
+        return r.json() if r.status_code == 200 else None
+
     def post(self, p, body=None):
         r = self.c.post(self.url(p), json=body or {})
         if r.status_code >= 400:
@@ -75,6 +81,16 @@ class Api:
 
     def paste(self, cid, fname):
         return self.post(f"/api/cases/{cid}/evidence", {"type": "text", "textContent": (FIX / fname).read_text()})
+
+
+def poll(fn, timeout: float, every: float = 0.5):
+    end = time.time() + timeout
+    while time.time() < end:
+        r = fn()
+        if r:
+            return r
+        time.sleep(every)
+    return None
 
 
 def kinds(evs):
@@ -122,15 +138,30 @@ def india(v: Api, bank: Api) -> None:
     check(all("612345678901" in d["en"] and "612345678901" in d["local"] for d in card(evs, "drafts")["drafts"]), "drafts carry UTR")
     pack = v.post(f"/api/cases/{cid}/evidence-pack")
     check(httpx.get(v.url(pack["url"]), timeout=60).content[:4] == b"%PDF", "evidence pack PDF downloads")
+    t_send = time.time()
     case = v.post(f"/api/cases/{cid}/send-to-bank", {"consent": True})["case"]
-    check(case["bankStatus"] == "SENT", "case sent to bank via A2A")
+    check(case["bankStatus"] == "SENT" and case.get("bankCaseId"), "consent → published to fraud-case-submitted")
     print(f"  (victim flow {time.time() - t0:.1f}s)")
-    bc = next(b for b in bank.get("/api/bank/cases")["cases"] if b["caseId"] == cid)
-    d = bank.get(f"/api/bank/cases/{bc['id']}")["case"]
+    d = poll(lambda: bank.get_or_none(f"/api/bank/cases/{case['bankCaseId']}"), 15)
+    check(d is not None, f"bank case created by Pub/Sub push ({time.time() - t_send:.1f}s after consent)")
+    d = d["case"]
     check(d["riskLevel"] == "HIGH" and d["recommendedAction"] == "TEMPORARY_HOLD", "bank: HIGH risk, temporary hold recommended")
-    bank.post(f"/api/bank/cases/{bc['id']}/decision", {"decision": "APPROVE_HOLD"})
-    check(v.get(f"/api/cases/{cid}")["case"]["bankStatus"] == "HOLD_APPROVED", "victim sees hold approved")
+    f = d.get("txnFeatures") or {}
+    check(d.get("txnStatus") == "ok" and f.get("credits_24h") == 9 and f.get("account_age_days") == 21,
+          f"signals from transaction data ({d.get('txnSource')}, {d.get('txnQueryMs')} ms)")
+    if d.get("mlRiskScore") is not None:
+        print(f"  (ML mule-risk {d['mlRiskScore']} — advisory)")
+    t_dec = time.time()
+    bank.post(f"/api/bank/cases/{d['id']}/decision", {"decision": "APPROVE_HOLD"})
+    ok = poll(lambda: v.get(f"/api/cases/{cid}")["case"]["bankStatus"] == "HOLD_APPROVED" or None, 10, 0.25)
+    took = time.time() - t_dec
+    check(bool(ok), f"victim sees hold approved via bank-decision event ({took:.1f}s{' — over the 3 s target!' if took > 3 else ''})")
     check(kinds(v.chat(cid, {"text": "Pay ₹5,000 fee and we recover your money"}))[:1] == ["warning"], "recovery-scam warning first")
+    done = next(e for e in v.chat(cid, {"text": "Will I definitely get my money back?"}) if e.get("type") == "done")
+    srcs = (done.get("message") or {}).get("sources") or []
+    check(bool(srcs), f"honest answer cites an official source: {srcs[0]['title'][:60] if srcs else '-'}")
+    intel = bank.get("/api/bank/analytics")
+    check(bool(intel.get("repeat_beneficiaries")), f"scam intelligence panels ({intel.get('source')})")
     r = v.post(f"/api/cases/{cid}/clock", {"jumpToDay": 31})
     check([m["card"]["kind"] for m in r["messages"] if m.get("card")] == ["escalation"], "day-31 ombudsman escalation")
     check(v.post(f"/api/cases/{cid}/clock", {"addDays": 1})["messages"] == [], "escalation fires exactly once")

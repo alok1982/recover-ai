@@ -64,6 +64,10 @@ def main() -> None:
         bank.screenshot(path=str(SHOTS / "04-bank-case-detail.png"), full_page=True)
         bank.get_by_role("button", name="Approve temporary hold").click()
         bank.wait_for_selector(".pill.bstat-HOLD_APPROVED")
+        bank.get_by_role("link", name="Scam intelligence").click()
+        bank.wait_for_selector(".intel table tbody tr")
+        bank.wait_for_timeout(500)
+        bank.screenshot(path=str(SHOTS / "09-bank-scam-intelligence.png"), full_page=True)
 
         pg.goto(case_url)
         pg.wait_for_selector("text=अस्थायी रोक", timeout=10000)
