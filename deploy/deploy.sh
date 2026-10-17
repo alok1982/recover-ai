@@ -53,6 +53,8 @@ setup_platform() {
   fi
   sed "s/PROJECT_ID/${PROJECT_ID}/g" "$ROOT/cors.json" > "$STATE_DIR/cors.json"
   gcloud storage buckets update "gs://${BUCKET}" --cors-file="$STATE_DIR/cors.json"
+  echo '{"rule":[{"action":{"type":"Delete"},"condition":{"age":90}}]}' > "$STATE_DIR/lifecycle.json"
+  gcloud storage buckets update "gs://${BUCKET}" --lifecycle-file="$STATE_DIR/lifecycle.json"
 
   log "Service account ${SA} and least-privilege IAM"
   if ! gcloud iam service-accounts describe "$SA" >/dev/null 2>&1; then
