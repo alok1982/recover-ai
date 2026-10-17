@@ -1,0 +1,87 @@
+{
+ "note": "Official/primary source pages behind the playbooks, saved for the F16 Vertex AI Search data store. Rule facts still come from playbooks; these are only used to explain and cite.",
+ "sources": [
+  {
+   "id": "in-rbi-compensation-moneylife",
+   "title": "RBI Notifies Digital Fraud Compensation Rules; Gives Banks More Time, Delays Rollout",
+   "url": "https://moneylife.in/article/rbi-notifies-digital-fraud-compensation-rules-gives-banks-more-time-delays-rollout/80882.html",
+   "publisher": "Moneylife",
+   "published": "2026-06-25",
+   "country": "IN",
+   "topics": [
+    "compensation",
+    "rbi",
+    "5_days",
+    "bank",
+    "ombudsman"
+   ],
+   "raw": "raw/in-rbi-compensation-moneylife.html",
+   "text": "text/in-rbi-compensation-moneylife.txt"
+  },
+  {
+   "id": "in-rbi-refund-explainer-finowings",
+   "title": "RBI fraud refund rule: ₹25,000 compensation explained",
+   "url": "https://www.finowings.com/trending/rbi-fraud-refund-rule-25000-compensation",
+   "publisher": "Finowings",
+   "published": "2026-06-30",
+   "country": "IN",
+   "topics": [
+    "compensation",
+    "rbi",
+    "1930",
+    "ncrp",
+    "5_days"
+   ],
+   "raw": "raw/in-rbi-refund-explainer-finowings.html",
+   "text": "text/in-rbi-refund-explainer-finowings.txt"
+  },
+  {
+   "id": "in-mha-ls-uq251-2026",
+   "title": "Lok Sabha Unstarred Question No. 251 (21 Jul 2026): National cyber crime data — MHA reply",
+   "url": "https://www.mha.gov.in/MHA1/Par2017/pdfs/par2026-pdfs/LS21072026/251.pdf",
+   "publisher": "Ministry of Home Affairs (Lok Sabha reply)",
+   "published": "2026-07-21",
+   "country": "IN",
+   "topics": [
+    "1930",
+    "ncrp",
+    "i4c",
+    "cfcfrms",
+    "freeze"
+   ],
+   "raw": "raw/in-mha-ls-uq251-2026.pdf",
+   "text": "text/in-mha-ls-uq251-2026.txt"
+  },
+  {
+   "id": "my-nsrc-997-guide-misslobang",
+   "title": "Scammed in Malaysia? Call 997 First: The Call Is Now Your Police Report, and the Hours After a Transfer Decide What Comes Back",
+   "url": "https://www.misslobang.my/article/scammed-malaysia-997-nsrc-what-to-do-2026",
+   "publisher": "MissLobang",
+   "published": "2026-09-11",
+   "country": "MY",
+   "topics": [
+    "997",
+    "nsrc",
+    "police_report",
+    "bank",
+    "freeze"
+   ],
+   "raw": "raw/my-nsrc-997-guide-misslobang.html",
+   "text": "text/my-nsrc-997-guide-misslobang.txt"
+  },
+  {
+   "id": "my-scam-losses-fmt",
+   "title": "Sharp rise in losses from online scams",
+   "url": "https://www.freemalaysiatoday.com/category/nation/2026/06/24/sharp-rise-in-losses-from-online-scams",
+   "publisher": "Free Malaysia Today",
+   "published": "2026-06-24",
+   "country": "MY",
+   "topics": [
+    "statistics",
+    "losses"
+   ],
+   "raw": "raw/my-scam-losses-fmt.html",
+   "text": "text/my-scam-losses-fmt.txt"
+  }
+ ]
+}

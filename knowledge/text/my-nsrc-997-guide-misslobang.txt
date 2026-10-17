@@ -1,0 +1,48 @@
+Scammed in Malaysia? Call 997 First: The Call Is Now Your Police Report, and the Hours After a Transfer Decide What Comes Back
+Source: https://www.misslobang.my/article/scammed-malaysia-997-nsrc-what-to-do-2026
+Publisher: MissLobang
+
+If you have just realised that money has left your account to a scammer, stop reading after this sentence and call 997. Everything below can wait an hour. The money usually cannot.
+This guide covers what the 997 call now does, what to do in the same hour, the fake "NSRC officer" call that has become a scam of its own, and how to check an account before you ever transfer to it. It draws on statements by the Home Ministry, the Communications Ministry and the Government Spokesperson as carried by BERNAMA and The Star, the banks' associations (ABM and AIBIM), and PDRM's own Semak Mule portal, all read on 11 September 2026.
+What the 997 call now does
+The National Scam Response Centre (NSRC) was set up in October 2022 as a joint effort of the National Financial Crime Centre, PDRM, Bank Negara Malaysia, the Malaysian Communications and Multimedia Commission and the banks and telcos. For its first years it had no single lead agency.
+That changed in three steps:
+- 16 July 2025: Home Minister Datuk Seri Saifuddin Nasution Ismail announced that PDRM would lead the NSRC, with the Commercial Crime Investigation Department (CCID) running it day to day and 139 new posts created. The hotline was taking about 500 calls a day.
+- 26 July 2025: Deputy Communications Minister Teo Nie Ching said 997 would operate 24 hours under PDRM from September 2025, and that a call to 997 would be treated as a police report, so victims would no longer have to lodge a separate one at a station.
+- 4 March 2026: Government Spokesperson Datuk Fahmi Fadzil repeated it after Cabinet: "We no longer need to make a separate police report; 997 is enough."
+Some how-to pages still print an old 8am to 8pm window for 997. That is out of date. The line is 24 hours.
+Why the first hours decide everything
+Fahmi's two examples are the clearest explanation of how NSRC works. In one case the scam happened at 2pm and was reported to NSRC at 10pm. Of more than RM800,000 lost, RM170,000 was recovered. In the other, the victim called immediately and nearly 100 per cent came back.
+The reason is mechanical. NSRC's job is to get the receiving banks to freeze the money before it is split and moved on. Every hour gives the scammer more transfers to make.
+The national numbers show how rarely that race is won. On 27 January 2026 the Home Minister told the Dewan Rakyat that RM542 million was reported lost to scams in 2025. RM34 million was recovered or intercepted, RM17.5 million was frozen for investigation, and RM6.7 million had actually been returned to victims. That is roughly RM1 back for every RM81 lost. He also said about half of the roughly 500 daily calls to 997 were genuine scam complaints.
+The 2026 numbers so far
+Two newer sets of figures, both official, show the same pattern.
+- First quarter of 2026 (PDRM, reported by The Star on 7 May 2026): NSRC received 55,619 calls and 11,486 reports in January to March, seized RM4.2 million and returned RM1.9 million to victims. Over the same three months, online scams overall cost Malaysians RM555.78 million across 16,680 cases, led by investment scams (RM246.7 million) and telecommunication scams such as fake officer calls (RM173 million).
+- Since NSRC began (12 October 2022 to 31 March 2026): 77,771 reports, RM1.05 billion in losses, RM29.12 million seized and RM9.2 million returned.
+- January to July 2026 (Home Minister, 2 September 2026): of RM7.94 million seized through NSRC, RM5.16 million, or 65 per cent, had been returned to victims.
+Read those together and the lesson is unchanged. Money that NSRC manages to freeze mostly does come back. The problem is how little gets frozen at all: RM4.2 million seized in a quarter when more than RM550 million was lost. PDRM's Commercial Crime Investigation Department director, Comm Datuk Rusdi Mohd Isa, gave the reason in May: quick reporting is what lets the police stop transactions and freeze accounts.
+What to do in the same hour
+- Call 997. Have your own account number, the date, time and amount of each transfer, the receiving account number and bank, and the scammer's phone number or links ready if you can. Ask for the reference of your report.
+- Call your bank's 24-hour line and freeze your own access if your login may be compromised. Since 2023, Malaysian banks have been bound by five industry measures announced by ABM and AIBIM: SMS one-time passwords replaced by app-based approval, tighter fraud detection, a cooling-off period on first-time registration of online banking or a new device, one authorised device per account holder, and a 24/7 scam hotline with a way for customers to suspend their own account quickly. That last one is usually called the kill switch.
+- Keep everything. Do not delete the chat, the call log or the fake website. Screenshots help the investigation.
+- Do not talk to anyone who then calls you offering to help. See below.
+The call that pretends to be NSRC
+ABM and AIBIM warned on 14 May 2024 about a scam that uses NSRC's own name. A caller claims to be an NSRC officer, says your IC or phone number is linked to money laundering or a mule account, keeps you on long "interrogation" calls over days, and finally asks you to leave your ATM card somewhere for "verification". The banks' instruction is simple: hang up, because NSRC only receives calls from the public and makes no outbound calls. Banks will also never ask for your card number, CVV, online banking password or one-time code.
+Before you transfer: Semak Mule
+PDRM's CCID runs Semak Mule at semakmule.rmp.gov.my. You choose a category (bank account number, phone number or company name), type it in and press SEMAK. If the number has been named in police reports, it will show.
+Read the result the right way round. A hit is a strong reason not to pay. No hit does not clear anyone: new mule accounts have no reports yet, and the portal carries a disclaimer that the government and PDRM accept no liability for how its information is used.
+One practical note, now updated: the portal's old security certificate expired on 10 September 2026 and browsers showed a certificate warning for about a day. It has since been renewed. Checked again on 12 September 2026, semakmule.rmp.gov.my loads normally on a GlobalSign certificate issued to Polis Diraja Malaysia on 9 September 2026 and valid to 27 March 2027. If you ever do meet a certificate warning on a government site, type the address in yourself and come back later rather than clicking through, and never use a "Semak Mule" link that someone sends you.
+Lending your account is now a crime in itself
+The Penal Code (Amendment) Act 2024, approved by Parliament in July 2024, added offences aimed at mule accounts. According to a summary by the law firm Low & Partners:
+- Section 424A, possessing or controlling someone else's account without lawful authority: a fine of RM5,000 to RM50,000, jail of six months to five years, or both.
+- Section 424B, handing control of your own account to someone else: RM10,000 to RM100,000, one to seven years, or both.
+- Section 424C, unlawful transactions through your own or someone else's account: RM10,000 to RM150,000, three to ten years, or both.
+The Home Minister's January figures show the new sections being used: 51 cases under 424A in 2025, 20 of them charged, one under 424B and ten under 424C. Selling or "renting" your account for a few hundred ringgit is not a loophole.
+One mismatch worth knowing
+The government's own MyGovernment page on the NSRC hotline, last updated 31 July 2026, still lists "file a police report locally" as a separate step alongside calling within 24 hours of discovering the scam. The ministers say the 997 call is the report. The practical answer: call 997 first, because that is what freezes money, and keep the report reference. If your bank or insurer later wants a written report, ask them what they need before you queue at a station.
+Related reads
+- Consumer Claims Tribunal in Malaysia 2026: the cheaper route when a seller took your money but is not a scammer.
+- Buy Now Pay Later in Malaysia 2026: what BNPL really costs, and the new rules behind it.
+- New MyKad Rules and Fees 2026: if a scam started with a lost or stolen IC.
+*Image: PDRM Commercial Crime Investigation Department, Semak Mule portal (screenshot, 11 September 2026)*
+*Sources: BERNAMA (16 and 26 July 2025, 4 March 2026), The Star (4 March 2026), Home Minister's reply to the Dewan Rakyat as reported on 27 January 2026, The Star (7 May 2026, PDRM NSRC figures), Media Selangor (Home Minister, 2 September 2026), ABM and AIBIM press releases (27 September 2022 and 14 May 2024), MyGovernment NSRC page, semakmule.rmp.gov.my. Penalty ranges as summarised by Low & Partners. This is a factual guide, not legal advice.*

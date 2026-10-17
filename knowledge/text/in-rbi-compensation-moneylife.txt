@@ -1,0 +1,29 @@
+RBI Notifies Digital Fraud Compensation Rules; Gives Banks More Time, Delays Rollout
+Source: https://moneylife.in/article/rbi-notifies-digital-fraud-compensation-rules-gives-banks-more-time-delays-rollout/80882.html
+Publisher: Moneylife
+
+The Reserve Bank of India (RBI) has notified its framework for protecting customers against fraudulent electronic banking transactions, but the final directions differ in several important respects from the draft released for public consultation in March. While the framework retains the proposed compensation mechanism for certain small-value digital frauds, RBI has deferred its implementation by six months, given banks more time to resolve complaints and modified some of the consumer protection measures proposed in the draft.
+ 
+The Reserve Bank of India (Commercial Banks – Responsible Business Conduct) Third Amendment Directions, 2026, issued on 24 June 2026, will now come into effect from 1 January 2027, instead of 1 July 2026, as proposed in the draft directions released in March.
+ 
+Among the most significant changes is the extension of the timeline available to banks for examining complaints, determining liability and responding to customers. While the draft directions required banks to complete the process within 30 calendar days, the final framework allows up to 45 calendar days for domestic fraudulent electronic banking transactions and 60 calendar days for cross-border cases.
+ 
+The directions retain the proposed compensation mechanism for victims of small-value digital frauds. Individual customers, including sole proprietors, who suffer losses of up to ₹50,000 due to fraudulent electronic banking transactions arising from customer negligence may receive compensation of 85% of the net loss, subject to a maximum of ₹25,000, once during their lifetime. To qualify, customers must report the fraud both to their bank and through the national cybercrime reporting portal (NCRP) or the national cybercrime helpline (1930) within five calendar days of the transaction. 
+ 
+The compensation, however, remains limited in scope. It applies only to losses of up to ₹50,000, but is capped at ₹25,000 and can be claimed only once during a customer's lifetime. RBI will bear the largest share of the compensation, while the customer's bank and the beneficiary bank will contribute the balance.
+ 
+A comparison of the final directions with the March draft shows that RBI has modified several key provisions, relaxing some requirements proposed in the consultation paper while introducing a few additional safeguards.
+ 
+One notable change relates to third-party breach cases. Under the draft directions, customers who reported such fraud after five calendar days could still receive compensation under RBI's compensation mechanism, provided they met the eligibility conditions. The final directions no longer provide for such compensation. Instead, where third-party breach cases are reported after five days, customer liability will be determined according to the concerned bank’s policy. 
+ 
+The notified directions, however, retain the proposed protection for customers in cases of bank negligence and in cases of timely reporting. Customers will continue to enjoy zero liability for fraudulent transactions resulting from the bank's negligence or deficiency, regardless of when it is reported. Likewise, customers reporting third-party breach cases within five calendar days will be entitled to zero liability and reversal of the transaction.
+ 
+The final directions also introduce certain safeguards that were not part of the draft. Banks will now be required to provide a shadow reversal within five calendar days of receiving notification from the customer for fraudulent credit card transactions. This provisional credit will ensure that customers do not suffer additional interest or charges while the bank investigates the complaint.
+ 
+The final directions also extend the compensation framework to sole proprietors, require banks to periodically verify customers' registered mobile numbers and email addresses, include more detailed information in transaction alerts, expand fraud reporting channels to include mobile applications, dedicated email addresses and instant messaging, and provide acknowledgements through the same channel used for reporting complaints.
+ 
+At the same time, some disclosure requirements have been relaxed. The draft directions required banks to reject a complaint and provide supporting evidence, such as OTP logs, SMS logs, and transaction logs. The final directions require banks to disclose the reasons for rejection along with supporting details, if any.
+ 
+The compensation mechanism will be available for fraudulent electronic banking transactions occurring for one year from the date the directions come into force. 
+ 
+You may also want to read…

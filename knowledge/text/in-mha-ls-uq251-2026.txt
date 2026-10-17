@@ -1,0 +1,387 @@
+Lok Sabha Unstarred Question No. 251 (21 Jul 2026): National cyber crime data — MHA reply
+Source: https://www.mha.gov.in/MHA1/Par2017/pdfs/par2026-pdfs/LS21072026/251.pdf
+Publisher: Ministry of Home Affairs (Lok Sabha reply)
+
+GOVERNMENT OF INDIA
+                          MINISTRY OF HOME AFFAIRS
+
+                             LOK SABHA
+                      UNSTARRED QUESTION NO. 251
+
+TO BE ANSWERED ON THE 21ST JULY, 2026/ ASHADHA 30, 1948 (SAKA)
+
+NATIONAL CYBER CRIME DATA
+
+251.    SHRI ANURAG SHARMA:
+        SHRI ESWARASAMY K:
+
+Will the Minister of HOME AFFAIRS be pleased to state:
+
+(a) the number of cyber-crime cases registered during the last five years,
+State-wise and year-wise along with the online scams and cyber exploitation
+during the said period;
+
+(b) the estimated financial losses suffered by citizens due to cyber fraud, the
+amount recovered or frozen, and the number of complaints resolved during
+the said period, State-wise and year-wise;
+
+(c) the measures taken by the Government to strengthen cyber-crime
+investigation through capacity building, specialised cyber police stations,
+forensic laboratories, training of investigating agencies and coordination
+among Central and State Governments;
+
+(d) whether the Government has reviewed the timeliness and availability of
+national cyber-crime data for effective policymaking and law enforcement;
+and
+
+(e) if so, the details thereof, including the steps taken to improve real-time
+reporting and monitoring?
+
+                                  ANSWER
+
+MINISTER OF STATE IN THE MINISTRY OF HOME AFFAIRS
+(SHRI BANDI SANJAY KUMAR)
+                                      -2-
+                                               L.S.US.Q.NO. 251 FOR 21.07.2026
+
+(a) to (e) : The National Crime Records Bureau (NCRB) compiles and
+
+publishes the statistical data on crimes in its publication “Crime in India”.
+
+The latest published report is for the year 2024. As per the data published
+
+by the NCRB, State/UT wise & Crime Head-wise cases registered under cyber
+
+crimes (involving communication devices as medium/target) during the
+
+period from 2020 to 2024 is at Annexure-I & Annexure-II.
+
+     The Ministry of Home Affairs has set up the ‘Indian Cyber Crime
+
+Coordination Centre’ (I4C) as an attached office to deal with all types of
+
+cyber crimes in the country, in a coordinated and comprehensive manner.
+
+     The     ‘National     Cyber     Crime     Reporting     Portal’    (NCRP)
+
+(https://cybercrime.gov.in) has been launched, as a part of the I4C, to enable
+
+public to report incidents pertaining to all types of cyber crimes, with special
+
+focus on cyber crimes against women and children.
+
+     The ‘Citizen Financial Cyber Fraud Reporting and Management System’
+
+(CFCFRMS), under I4C, has been launched in year 2021 for immediate
+
+reporting of financial frauds and to stop siphoning off funds by the fraudsters.
+
+As per CFCFRMS operated by I4C, till 30.06.2026, financial amount of more
+
+than Rs. 11,158 Crore has been saved in more than 32.80 lakh complaints. A
+
+toll-free Helpline number ‘1930’ has been operationalized to get assistance
+
+in lodging online cyber complaints. As per NCRP & CFCFRMS operated by I4C,
+
+from the year 2021 to 2025, the total number of financial frauds complaints
+                                        -3-
+                                                L.S.US.Q.NO. 251 FOR 21.07.2026
+
+on NCRP are more than 6589201, the total amount reported is more than ₹
+
+55050 Crores, the total amount marked as Lien is more than ₹ 8189 Crores
+
+and the number of FIRs registered is more than 195760.
+
+     Cyber crime incidents reported on National Cyber Crime Reporting
+
+Portal, their conversion into FIRs and subsequent action i.e. filing of
+
+chargesheets, arrest and resolution of complaints, thereon are handled by
+
+the State/UT Law Enforcement Agencies concerned as per the provisions of
+
+the law.
+
+     ‘Police’ and ‘Public Order’ are State subjects under the Seventh
+
+Schedule to the Constitution of India. Accordingly, the States and Union
+
+Territories (UTs) are primarily responsible for the prevention, detection,
+
+investigation, and prosecution of cybercrime. The Central Government,
+
+through the Ministry of Home Affairs (MHA), supplements the efforts of
+
+States and UTs by providing policy guidance, technological support,
+
+capacity-building   assistance,   and     financial   resources   to   strengthen
+
+cybercrime management and enforcement capabilities.
+
+   The Central Government has taken the following steps to strengthen the
+
+cyber crime investigation and coordination among Central and State
+
+Governments :
+                                         -4-
+                                                 L.S.US.Q.NO. 251 FOR 21.07.2026
+
+  i.   Samanvaya Platform has been made operational to serve as an
+
+       Management Information System (MIS) platform, data repository and a
+
+       coordination platform for LEAs for cybercrime data sharing and analytics.
+
+       It provides analytics based interstate linkages of crimes and criminals,
+
+       involved in cybercrime complaints in various States/UTs. The module
+
+       ‘Pratibimb’ maps locations of criminals and crime infrastructure on a map
+
+       to give visibility to jurisdictional officers. The module also facilitates
+
+       seeking and receiving of techno-legal assistance by Law Enforcement
+
+       Agencies from I4C and other SMEs. It has lead to arrest of more than
+
+       29,837 accused and more than 2,33,593 Cyber Investigation assistance
+
+       request.
+
+ii.    ‘Sahyog’ Portal has been launched to expedite the process of sending
+
+       notices to IT intermediaries by the Appropriate Government or its agency
+
+       under clause (b) of sub-section (3) of section 79 of the IT Act, 2000 to
+
+       facilitate the removal or disabling of access to any information, data or
+
+       communication link being used to commit an unlawful act.
+
+iii.   Seven Joint Cyber Coordination Teams (JCCTs) have been constituted for
+
+       Mewat, Jamtara, Ahmedabad, Hyderabad, Chandigarh, Vishakhapatnam,
+
+       and Guwahati under I4C covering the whole country based upon cyber
+
+       crime hotspots/ areas having multi jurisdictional issues by onboarding
+
+       States/UTs to enhance the coordination framework among the Law
+
+       Enforcement Agencies of the States/UTs.
+                                          -5-
+                                                   L.S.US.Q.NO. 251 FOR 21.07.2026
+
+iv.    The Massive Open Online Courses (MOOC) platform, namely ‘CyTrain’
+
+       portal has been developed under I4C, for capacity building of police
+
+       officers/judicial officers through online course on critical aspects of cyber
+
+       crime investigation, forensics, prosecution etc. Till 30.06.2026, more than
+
+       1,63,344 police officers/judicial officers from States/UTs are registered
+
+       and more than 1,61,957 Certificates issued through the portal.
+
+ v.    Cyber Commando programme was launched by the Hon'ble Home Minister
+
+       on 10.09.2024 to establish a Special Wing of Cyber Commandos equipped
+
+       with specialized training to counter cybersecurity threats in the country.
+
+       The programme envisions the creation of a dedicated, skilled workforce
+
+       capable of securing critical information infrastructure and supporting
+
+       national cybersecurity efforts. So far, 281 cyber commandos successfully
+
+       completed their training at premier institutions including IITs, IIITs,
+
+       Rashtriya   Raksha    University   (RRU),   National   Forensic    Sciences
+
+       University (NFSU) Gandhinagar & New Delhi, etc.
+
+vi.    I4C, MHA is regularly organising ‘State Connect’, ‘Thana Connect’ and
+
+       Peer learning session to share best practices, enhance capacity building,
+
+       etc.
+
+vii.   The state of the art National-Digital Investigation Support Centre
+
+       (previously known as National Cyber Forensic Laboratory (Investigation)
+
+       {NCFL(I)}) has been established, as a part of the I4C, at New Delhi (on
+
+       18.02.2019) and at Assam (on 29.08.2025) to provide early stage cyber
+                                           -6-
+                                                   L.S.US.Q.NO. 251 FOR 21.07.2026
+
+        forensic assistance to Investigating Officers (IOs) of State/UT Police. Till
+
+        30.06.2026, National-Digital Investigation Support Centre, New Delhi has
+
+        provided its services to State/UT LEAs in more than 14,064 cases
+
+        pertaining to cyber crimes.
+
+viii.   The Ministry of Home Affairs has released financial assistance to the
+
+        tune of Rs. 132.93 crores under the ‘Cyber Crime Prevention against
+
+        Women and Children (CCPWC)’ Scheme, to the States/UTs for their
+
+        capacity building such as setting up of cyber forensic-cum-training
+
+        laboratories, hiring of junior cyber consultants and training of LEAs’
+
+        personnel, public prosecutors and judicial officers. Cyber forensic-cum-
+
+        training laboratories have been commissioned in 33 States/UTs and more
+
+        than 24,600 LEA personnel, judicial officers and prosecutors have been
+
+        provided training on cyber crime awareness, investigation, forensics etc.
+
+ ix.    At present, 07 Central Forensic Science Laboratories and 28 State
+
+        Forensic Science Laboratories are operational across the country' to
+
+        assist in investigation of cybercrime cases. Assistance has been provided
+
+        to 20 States / UTs for Strengthening of Cyber Forensic Capacities in State
+
+        FSLs under the Nirbhaya funded scheme for Strengthening of DNA
+
+        Analysis and Cyber Forensic Capacities in State FSLs.
+
+  x.    To further strengthen operational efficiency and ensure uniformity in
+
+        handling   cybercrime     complaints,    the   Ministry   has    issued   a
+
+        comprehensive Standard Operating Procedure (SOP) for NCRP-CFCFRMS.
+                                 -7-
+                                         L.S.US.Q.NO. 251 FOR 21.07.2026
+
+The SOP lays down a standardized framework for complaint processing,
+
+bank coordination, grievance redressal, removal of lien markings, and
+
+restoration of defrauded funds to rightful claimants based on complaints
+
+received through the NCRP. Money Restoration Module for expeditious
+
+restoration of defrauded money to the victims and Grievance Redressal
+
+Module for timely attending to the grievances relating to freezing of the
+
+bank accounts and lien marking of the amount, have been made
+
+functional from April, 2026.
+
+                                *****
+                                            -8-
+                                                           L.S.US.Q.NO. 251 FOR 21.07.2026
+                                                                               ANNEXURE-I
+State/UT-wise Cases Registered under Cyber Crimes during 2020-2024
+
+  SL   State/UT                      2020          2021    2022        2023        2024
+   1   Andhra Pradesh                1899          1875    2341        2341        2528
+   2   Arunachal Pradesh               30            47      14          24          78
+   3   Assam                         3530          4846    1733         909         408
+   4   Bihar                         1512          1413    1621        4450        6380
+   5   Chhattisgarh                   297           352     439         473         660
+   6   Goa                             40            36      90          86          77
+   7   Gujarat                       1283          1536    1417        1995        1592
+   8   Haryana                        656           622     681         751        1815
+   9   Himachal Pradesh                98            70      77         127         148
+  10   Jharkhand                     1204           953     967        1079        1423
+  11   Karnataka                    10741          8136   12556       21889       21993
+  12   Kerala                         426           626     773        3295        2962
+  13   Madhya Pradesh                 699           589     826         685        1081
+  14   Maharashtra                   5496          5562    8249        8103        9922
+  15   Manipur                         79            67      18           3           5
+  16   Meghalaya                      142           107      75          64          97
+  17   Mizoram                         13            30       1          31          50
+  18   Nagaland                         8             8       4           2          14
+  19   Odisha                        1931          2037    1983        2348        2501
+  20   Punjab                         378           551     697         511         888
+  21   Rajasthan                     1354          1504    1833        2435        1527
+  22   Sikkim                           0             0      26          12          15
+  23   Tamil Nadu                     782          1076    2082        4121        5793
+  24   Telangana                     5024         10303   15297       18236       27230
+  25   Tripura                         34            24      30          36          33
+  26   Uttar Pradesh                11097          8829   10117       10794       11073
+  27   Uttarakhand                    243           718     559         494         543
+  28   West Bengal                    712           513     401         309         282
+       TOTAL STATE(S)               49708         52430   64907       85603      101118
+  29   A&N Islands                      5             8      28          47          28
+  30   Chandigarh                      17            15      27          23         116
+       D&N Haveli and Daman &
+  31                                                                                  5
+       Diu                              3             5       5           6
+  32   Delhi                          168           356     685         407         404
+  33   Jammu & Kashmir                120           154     173         185         114
+  34   Ladakh                           1             5       3           1           1
+  35   Lakshadweep                      3             1       1           1           0
+  36   Puducherry                      10             0      64         147         142
+       TOTAL UT(S)                    327           544     986         817         810
+       TOTAL (ALL INDIA)            50035         52974   65893       86420      101928
+                                                            -9-
+                                                                             L.S.US.Q.NO. 251 FOR 21.07.2026
+                                                                                                      ANNEXURE-II
+
+Crime Heads-wise Cases Registered) under Cyber Crimes during 2020-2024
+
+    SL                      Crime Head                        2020             2021        2022       2023        2024
+1        Tampering computer source documents                         338              55      65             71     162
+2        Computer Related Offences                                21926         19915      23894       35329      36920
+3        Cyber Terrorism                                              26              15      12             11       18
+         Publication/transmission of obscene /
+4                                                                  6308          6598       6896        7893       6990
+         sexually explicit act in electronic form
+         Interception or Monitoring or decryption of
+5                                                                        7             2          1          1           4
+         Information
+         Un-authorized access/attempt to access to
+6                                                                        2             3          1          1           2
+         protected computer system
+7        Breach of Confidentiality & Privacy                             -             -          -           -       37
+         Publication of Electronic Signatures for
+8                                                                        -             -          -           -          5
+         fraudulent purposes
+9        Abetment to Commit Offences                                     1             7          4          0           2
+10       Attempt to Commit Offences                                   18               5      18             11       14
+11       Other Sections of IT Act                                  1017           827       1017         920        718
+A        Total Offences under I.T. Act                            29643         27427      31908       44237      44872
+12       Abetment of Suicide (Online)                                 10              10      24             30       12
+13       Cyber Stalking/Bullying of Women/Children                   872         1176       1471        1305       1240
+14       Sexual Intercourse by Deceitful Means                           -             -          -           -       99
+15       Organized Cyber Crimes                                          -             -          -           -       60
+         Publishing false or misleading information
+16       jeopardizing the Sovereignty Unity and                          -             -          -           -          2
+         integrity or security of India
+17       Data theft                                                   98          170         97         113          88
+18       Fraud                                                    10395         14007      17470       19466      29758
+19       Cheating                                                  4480          6343      10509       16943      19296
+20       Forgery                                                     582          198        224         444        702
+21       Defamation/Morphing                                          51              31      61             36       28
+22       Fake Profile                                                149          123        157         225        266
+23       Counterfeiting                                                  9             2          2          0           3
+24       Cyber Blackmailing/Threatening                              303          689        696         689        601
+25       Fake News on Social Media                                   578          179        230         209        483
+26       Other Offences                                            2674          2456       2857        2389       4109
+B        Total Offences under IPC/BNS                             20201         25384      33798       41849      56747
+27       Gambling Act (Online Gambling)                               63              27      37             87       37
+28       Lotteries Act (Online Lotteries)                             26               4          6          0           0
+29       Copy Right Act                                               49              32      27             23       30
+30       Trade Marks Act                                                 5             1      14             1           6
+31       Other SLL Crimes                                             48              99     103         223        236
+C        Total Offences under SLL                                    191          163        187         334        309
+         Total Cyber Crimes (A+B+C)                               50035         52974      65893       86420      101928
+         Source: ‘Crime in India’ published by NCRB.
+
+                                                          *****

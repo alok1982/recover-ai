@@ -16,6 +16,7 @@ from typing import Any, AsyncIterator
 from .. import actions
 from ..config import get_settings
 from ..i18n import LANG_NAMES, t
+from ..knowledge.search import search_sources
 from ..llm import INJECTION_GUARD, get_llm
 from ..rules.formatting import format_amount
 from ..services import card as make_card
@@ -94,7 +95,8 @@ class Toolbox:
         self.case_id = case_id
         self.events: list[dict] = []
         self.calls: list[dict] = []
-        self.results: list[Any] = []
+        self.results: list[Any] = []  # verified values for the post-check (never search snippets)
+        self.sources: list[dict] = []  # F16 citations shown under the reply
 
     def _case(self) -> dict:
         return actions.load(self.case_id)
@@ -156,7 +158,8 @@ class Toolbox:
             if not case.get("extraction"):
                 return {"error": "no facts yet; call extract_facts first"}
             if case.get("status") == "extracted":
-                actions.update_case(self.case_id, {"status": "confirmed"})
+                actions.update_case(self.case_id, {"status": "confirmed", "confirmedAt": actions.utcnow()})
+                await asyncio.to_thread(actions.record_confirmed_event, self._case())
             case = actions.recompute_plan(self.case_id)
             self._add_card("plan", actions.plan_card_data(case))
             r = jsonable({"steps": case_summary(case, 1)["steps"], "clocks": case_summary(case, 1)["clocks"]})
@@ -199,9 +202,16 @@ class Toolbox:
 
     async def explain_rule(self, topic: str) -> dict:
         async def run():
-            r = actions.explain(self._case(), topic)
-            self.results.append(r)
-            return r
+            case = self._case()
+            r = actions.explain(case, topic)
+            self.results.append(r)  # playbook text is the only source of rule facts
+            hits = await asyncio.to_thread(search_sources, f"{topic} {r.get('text') or ''}", case["country"])
+            for h in hits:
+                if all(h["url"] != x["url"] for x in self.sources):
+                    self.sources.append({"title": h["title"], "url": h["url"], "publisher": h.get("publisher")})
+            return {**r, "sources": [{"title": h["title"], "url": h["url"], "snippet": h["snippet"]} for h in hits],
+                    "usage": ("Rule facts (amounts, days, dates) come only from 'text'. Use 'sources' to explain in plain words; "
+                              "a source link is shown under your reply automatically.")}
         return await self._timed("explain_rule", run())
 
     async def show_countries(self) -> dict:
@@ -246,7 +256,8 @@ class Toolbox:
             return await tb.check_recovery_scam(text)
 
         async def explain_rule(topic: str) -> dict:
-            """Return the playbook's exact text for a topic such as 'compensation', 'ombudsman', 'freeze' or a step id."""
+            """Explain a rule for a topic such as 'compensation', 'ombudsman', 'freeze' or a step id: the playbook's exact text
+            plus official-source snippets (Vertex AI Search) with titles and URLs for citation."""
             return await tb.explain_rule(topic)
 
         async def show_countries() -> dict:
@@ -446,8 +457,10 @@ async def run_turn(case_id: str, text: str | None, flagged: bool) -> AsyncIterat
             yield tb.events.pop(0)
     msg = None
     if final_text:
-        msg = store.add_message(case_id, {"role": "assistant", "text": final_text, "card": None, "audioPath": None,
-                                          "lang": lang, "toolCalls": tb.calls})
+        rec = {"role": "assistant", "text": final_text, "card": None, "audioPath": None, "lang": lang, "toolCalls": tb.calls}
+        if tb.sources:
+            rec["sources"] = tb.sources
+        msg = store.add_message(case_id, rec)
     log.info("copilot_turn", extra={"caseId": case_id, "step": "chat", "firstTokenMs": first_token_ms,
                                     "totalMs": int((time.perf_counter() - t0) * 1000), "tools": [c["name"] for c in tb.calls],
                                     "runtime": "adk" if use_adk else "stage"})
