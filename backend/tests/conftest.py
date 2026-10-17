@@ -10,6 +10,8 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app import storage, store  # noqa: E402
+from app.analytics import bq  # noqa: E402
+from app.events import pubsub  # noqa: E402
 from app.llm import set_llm  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
@@ -21,9 +23,27 @@ def fresh_state(tmp_path):
     store.set_store(store.MemoryStore())
     storage.set_blobs(storage.LocalBlobStore(str(tmp_path / "blobs")))
     set_llm(None)
+    bq.set_analytics(_shared_analytics())
+    pubsub.set_bus(pubsub.LocalBus())
     yield
     store.set_store(None)
     storage.set_blobs(None)
+    bq.set_analytics(None)
+    pubsub.set_bus(None)
+
+
+_ANALYTICS = None
+
+
+def _shared_analytics():
+    """One synthetic dataset per test session (seeding trains the S2 model); case_events reset per test."""
+    global _ANALYTICS
+    if _ANALYTICS is None:
+        _ANALYTICS = bq.LocalAnalytics(None)
+        _ANALYTICS.seed()
+        _ANALYTICS._seed_events = list(_ANALYTICS.data["case_events"])
+    _ANALYTICS.data["case_events"] = list(_ANALYTICS._seed_events)
+    return _ANALYTICS
 
 
 @pytest.fixture
@@ -39,3 +59,4 @@ def H(uid="victim1"):
 
 
 BANK = {"Authorization": "Bearer mock:bank:Rahul"}
+PUSH = {"Authorization": "Bearer mock-push"}

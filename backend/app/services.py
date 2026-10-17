@@ -40,19 +40,21 @@ def update_case(case_id: str, patch: dict, store: Store | None = None) -> None:
 
 def append_message(case_id: str, *, role: str, text: str | None = None, card: dict | None = None,
                    lang: str = "en", audio_path: str | None = None, tool_calls: list | None = None,
-                   meta: dict | None = None, store: Store | None = None) -> dict:
+                   meta: dict | None = None, store: Store | None = None, msg_id: str | None = None) -> dict:
     msg = {
         "role": role, "text": text, "card": card, "audioPath": audio_path, "lang": lang,
         "toolCalls": tool_calls or [],
     }
     if meta:
         msg["meta"] = meta
+    if msg_id:
+        msg["id"] = msg_id
     return (store or get_store()).add_message(case_id, msg)
 
 
-def system_event(case_id: str, text: str, lang: str = "en", store: Store | None = None) -> dict:
+def system_event(case_id: str, text: str, lang: str = "en", store: Store | None = None, msg_id: str | None = None) -> dict:
     log.info("system_event", extra={"caseId": case_id, "step": "system_event", "event": text})
-    return append_message(case_id, role="system_event", text=text, lang=lang, store=store)
+    return append_message(case_id, role="system_event", text=text, lang=lang, store=store, msg_id=msg_id)
 
 
 def card(kind: str, data: dict) -> dict:

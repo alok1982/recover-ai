@@ -5,6 +5,7 @@ conversation. Streaming actions are async generators of SSE event dicts.
 """
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import time
@@ -15,15 +16,18 @@ from fastapi import HTTPException
 
 from .agents import bank_receiver, filing, guard, intake, playbook
 from .agents import post_check
+from .analytics import bq
+from .analytics.synthetic import beneficiary_hash
 from .bank.rules import HOLD_NOTE
 from .config import get_settings
+from .events import pubsub
 from .i18n import t
 from .rules.engine import compute_plan, evaluate_clocks, explain_rule, get_playbook, mark_step
 from .rules.formatting import format_amount, format_dt, parse_local_datetime
 from .services import append_message, card, jsonable, system_event, update_case
 from .storage import get_blobs
 from .store import get_store
-from .timeutil import effective_now, ensure_utc, utcnow
+from .timeutil import effective_now, ensure_utc, parse_iso, to_iso, utcnow
 
 log = logging.getLogger("recoverai.actions")
 
@@ -117,8 +121,8 @@ def upload_card_data(lang: str, prompt: str | None = None) -> dict:
             "limits": {"images": 5, "imageMB": 10, "audioMinutes": 2}}
 
 
-def add_card(case_id: str, kind: str, data: dict, lang: str, text: str | None = None) -> dict:
-    return append_message(case_id, role="assistant", text=text, card=card(kind, data), lang=lang)
+def add_card(case_id: str, kind: str, data: dict, lang: str, text: str | None = None, msg_id: str | None = None) -> dict:
+    return append_message(case_id, role="assistant", text=text, card=card(kind, data), lang=lang, msg_id=msg_id)
 
 
 # ------------------------------------------------------------------ deadlines (lazy evaluation)
@@ -224,7 +228,19 @@ def patch_extraction(case_id: str, fields: dict, confirm: bool) -> dict:
         system_event(case_id, f"User edited fields: {', '.join(sorted(fields))}", case.get("language", "en"))
     if confirm:
         system_event(case_id, "User confirmed facts", case.get("language", "en"))
+        if patch.get("status") == "confirmed":
+            record_confirmed_event(load(case_id))
     return load(case_id)
+
+
+def record_confirmed_event(case: dict) -> None:
+    """F14: anonymised row in BigQuery case_events (no names/phones; beneficiary only as SHA-256)."""
+    ex = case.get("extraction") or {}
+    bq.record_case_event({
+        "event_id": f"{case['id']}-confirmed", "case_id": case["id"], "event_type": "case_confirmed", "country": case["country"],
+        "scam_type": ex.get("scam_type"), "amount": ex.get("amount"), "currency": ex.get("currency"),
+        "beneficiary_hash": beneficiary_hash((ex.get("beneficiary") or {}).get("account_or_vpa")),
+        "risk_level": None, "decision": None, "event_time": case.get("confirmedAt") or utcnow()})
 
 
 # ------------------------------------------------------------------ plan
@@ -385,6 +401,11 @@ async def guard_text(case_id: str, text: str, lang: str) -> list[dict]:
 
 # ------------------------------------------------------------------ bank handoff
 async def send_to_bank(case_id: str, consent: bool, version: str) -> tuple[dict, list[dict]]:
+    """Consent → publish the A2A envelope to Pub/Sub `fraud-case-submitted` (F8/F15).
+
+    The bank case id is derived from caseId + sent_at, so the victim side knows it before the push subscription
+    delivers the envelope to the Bank Case Receiver, and redelivery cannot create a second bank case.
+    """
     case = load(case_id)
     lang = case.get("language", "en")
     if not consent:
@@ -400,53 +421,83 @@ async def send_to_bank(case_id: str, consent: bool, version: str) -> tuple[dict,
     update_case(case_id, {"consentGivenAt": now, "consentVersion": version or CONSENT_VERSION})
     case = load(case_id)
     envelope = bank_receiver.build_envelope(case, get_store().list_evidence(case_id), effective_now(case))
+    bank_case_id = bank_receiver.bank_case_id_for(envelope)
     settings = get_settings()
-    if settings.bank_a2a_url:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=20) as client:
-            r = await client.post(settings.bank_a2a_url, json=envelope, headers={"X-A2A-Token": settings.a2a_token})
-            r.raise_for_status()
-            bank_case = r.json()
-    else:
-        bank_case = await bank_receiver.receive(envelope)
-    patch = {"bankCaseId": bank_case["id"], "bankStatus": "SENT", "status": "sent_to_bank"}
-    update_case(case_id, patch)
+    try:
+        message_id = await pubsub.publish(settings.topic_case_submitted, envelope,
+                                          {"topic": settings.topic_case_submitted, "caseId": case_id})
+    except Exception as e:  # noqa: BLE001
+        log.exception("publish fraud-case-submitted failed", extra={"caseId": case_id})
+        raise HTTPException(503, "could not send to the bank right now; please try again") from e
+    update_case(case_id, {"bankCaseId": bank_case_id, "bankStatus": "SENT", "status": "sent_to_bank",
+                          "bankHandoff": {"topic": settings.topic_case_submitted, "messageId": message_id, "sentAt": envelope["sent_at"]}})
     case = load(case_id)
     steps = {s["id"]: s for s in (case.get("plan") or {}).get("steps", [])}
     bank_step = "report_bank" if "report_bank" in steps else ("call_bank" if "call_bank" in steps else None)
     if bank_step and steps[bank_step].get("status") != "done":
-        set_step(case_id, bank_step, "done", bank_case["id"])
-    system_event(case_id, f"Case sent to bank (bank case {bank_case['id']})", lang)
+        set_step(case_id, bank_step, "done", bank_case_id)
+    system_event(case_id, f"Case sent to bank (bank case {bank_case_id})", lang)
     case = load(case_id)
     msgs = [add_card(case_id, "timeline", timeline_card_data(case), lang, text=t("sent_to_bank", lang))]
     return case, msgs
 
 
+DECISION_STATUS = {"APPROVE_HOLD": "HOLD_APPROVED", "REQUEST_INFO": "INFO_REQUESTED", "REJECT": "REJECTED"}
+
+
 async def bank_decision(bank_case_id: str, decision: str, note: str | None, analyst: str) -> dict:
+    """Bank side: record the decision + audit, publish `bank-decision` (F9/F15), log an anonymised case_event (F14)."""
     store = get_store()
     bc = store.get_bank_case(bank_case_id)
     if not bc:
         raise HTTPException(404, "bank case not found")
-    status = {"APPROVE_HOLD": "HOLD_APPROVED", "REQUEST_INFO": "INFO_REQUESTED", "REJECT": "REJECTED"}[decision]
-    store.update_bank_case(bank_case_id, {"status": status, "decidedAt": utcnow(), "decidedBy": analyst, "decisionNote": note})
+    status = DECISION_STATUS[decision]
+    decided_at = utcnow()
+    store.update_bank_case(bank_case_id, {"status": status, "decidedAt": decided_at, "decidedBy": analyst, "decisionNote": note})
     store.add_audit({"actor": analyst, "action": decision, "bankCaseId": bank_case_id, "caseId": bc["caseId"],
                      "details": {"note": note, "holdLimitAmount": bc.get("holdLimitAmount") if decision == "APPROVE_HOLD" else None}})
-    case = store.get_case(bc["caseId"])
-    if case:
-        lang = case.get("language", "en")
-        update_case(case["id"], {"bankStatus": status})
-        system_event(case["id"], f"Bank decision: {decision}" + (f" — {note}" if note else ""), lang)
-        case = load(case["id"])
-        if decision == "APPROVE_HOLD":
-            add_card(case["id"], "timeline", timeline_card_data(case), lang, text=t("bank_hold", lang))
-        elif decision == "REQUEST_INFO":
-            q = note or "Please share any other screenshot or message about this payment."
-            add_card(case["id"], "upload", upload_card_data(lang, q), lang, text=t("bank_info", lang, question=q))
-        else:
-            add_card(case["id"], "timeline", timeline_card_data(case), lang, text=t("bank_reject", lang))
+    event_id = pubsub.stable_key("bank-decision", bank_case_id, decision, to_iso(decided_at))
+    event = {"eventId": event_id, "bankCaseId": bank_case_id, "caseId": bc["caseId"], "decision": decision, "status": status,
+             "note": note, "decidedAt": to_iso(decided_at), "from_agent": f"bank.fraud_case_receiver.{bc['country'].lower()}",
+             "to_agent": "recoverai.victim_copilot", "intent": "fraud_case.decision"}
+    await asyncio.to_thread(bq.record_case_event, {
+        "event_id": f"{bc['caseId']}-decision-{event_id[:8]}", "case_id": bc["caseId"], "event_type": "bank_decision",
+        "country": bc.get("country"), "scam_type": bc.get("scam_type"), "amount": bc.get("amount"), "currency": bc.get("currency"),
+        "beneficiary_hash": bc.get("beneficiaryHash"), "risk_level": bc.get("riskLevel"), "decision": decision,
+        "event_time": decided_at})
+    settings = get_settings()
+    try:
+        mid = await pubsub.publish(settings.topic_bank_decision, event, {"topic": settings.topic_bank_decision, "caseId": bc["caseId"]})
+        store.update_bank_case(bank_case_id, {"decisionEvent": {"eventId": event_id, "messageId": mid}})
+    except Exception as e:  # noqa: BLE001
+        log.exception("publish bank-decision failed", extra={"bankCaseId": bank_case_id})
+        raise HTTPException(503, "decision saved but could not notify the victim; retry") from e
     log.info("bank_decision", extra={"bankCaseId": bank_case_id, "caseId": bc["caseId"], "step": "decision", "decision": decision})
     return store.get_bank_case(bank_case_id)
+
+
+async def apply_bank_decision(event: dict) -> dict:
+    """Victim side (push from `bank-decision`): update the case and post the co-pilot message, idempotently."""
+    store = get_store()
+    case = store.get_case(event["caseId"])
+    if not case:
+        log.warning("bank decision for unknown case", extra={"caseId": event["caseId"]})
+        return {"applied": False, "reason": "case not found"}
+    decision, note = event["decision"], event.get("note")
+    status = DECISION_STATUS[decision]
+    lang = case.get("language", "en")
+    mid = f"m_dec_{event['eventId'][:20]}"
+    update_case(case["id"], {"bankStatus": status, "bankDecisionAt": parse_iso(event.get("decidedAt")) or utcnow()})
+    system_event(case["id"], f"Bank decision: {decision}" + (f" — {note}" if note else ""), lang, msg_id=mid + "_sys")
+    case = load(case["id"])
+    if decision == "APPROVE_HOLD":
+        m = add_card(case["id"], "timeline", timeline_card_data(case), lang, text=t("bank_hold", lang), msg_id=mid)
+    elif decision == "REQUEST_INFO":
+        q = note or "Please share any other screenshot or message about this payment."
+        m = add_card(case["id"], "upload", upload_card_data(lang, q), lang, text=t("bank_info", lang, question=q), msg_id=mid)
+    else:
+        m = add_card(case["id"], "timeline", timeline_card_data(case), lang, text=t("bank_reject", lang), msg_id=mid)
+    return {"applied": True, "messageId": m["id"], "status": status}
 
 
 # ------------------------------------------------------------------ evidence

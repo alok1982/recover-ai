@@ -1,14 +1,19 @@
-"""BankCaseReceiverAgent — A2A inbox: deterministic rules (bank/rules.py) + Gemini-written reason (PRD §9.3)."""
+"""BankCaseReceiverAgent — Pub/Sub-pushed A2A inbox (F8/F15): BigQuery transaction features (F14) →
+deterministic rules (bank/rules.py, §10) → Gemini-written reason (§9.3) → bank_case in Firestore."""
 from __future__ import annotations
 
 import json
 import logging
 
+import asyncio
+
+from ..analytics import bq
+from ..analytics.synthetic import beneficiary_hash
 from ..bank.rules import normalize_account_key, recommend
 from ..llm import LLMError, get_llm
 from ..rules.engine import get_playbook
 from ..rules.formatting import format_amount, format_dt
-from ..store import get_store, new_id
+from ..store import get_store
 from ..timeutil import parse_iso, to_iso, utcnow
 
 log = logging.getLogger("recoverai.bank")
@@ -64,6 +69,11 @@ def template_reason(payload: dict, rec: dict) -> str:
             f"The evidence supports {ACTION_LABEL[rec['recommendedAction']].lower()} rather than an immediate hold.")
 
 
+REASON_TIMEOUT_S = 15  # keep the push handler well inside the subscription's 30 s ack deadline
+TXN_UNAVAILABLE = "Transaction data unavailable — signals computed from the case only."
+TXN_NOT_FOUND = "Beneficiary account not found in transaction data — signals computed from the case only."
+
+
 async def write_reason(payload: dict, rec: dict, account: dict | None) -> str:
     llm = get_llm()
     if llm.is_mock:
@@ -71,43 +81,79 @@ async def write_reason(payload: dict, rec: dict, account: dict | None) -> str:
     facts = {k: payload.get(k) for k in ("country", "amount", "currency", "reference_id", "occurred_at_utc", "scam_type",
                                          "payment_method", "beneficiary", "evidence_count")}
     facts["amount_display"] = format_amount(payload.get("amount"), payload.get("currency"))
-    body = {"facts": facts, "beneficiary_account": account, "signals": rec["signals"], "riskScore": rec["riskScore"],
+    body = {"facts": facts, "beneficiary_transaction_features": account, "signals": rec["signals"], "riskScore": rec["riskScore"],
             "recommendedAction": ACTION_LABEL[rec["recommendedAction"]],
             "holdLimit": format_amount(rec["holdLimitAmount"], payload.get("currency"))}
     try:
-        return await llm.generate_text(system=SYSTEM, parts=[json.dumps(body, ensure_ascii=False, default=str)],
-                                       temperature=0.2, step="bank_reason", case_id=payload.get("caseId"))
-    except LLMError:
+        return await asyncio.wait_for(
+            llm.generate_text(system=SYSTEM, parts=[json.dumps(body, ensure_ascii=False, default=str)],
+                              temperature=0.2, step="bank_reason", case_id=payload.get("caseId")),
+            timeout=REASON_TIMEOUT_S)
+    except (LLMError, asyncio.TimeoutError):
         return template_reason(payload, rec)
 
 
-async def receive(envelope: dict) -> dict:
+def bank_case_id_for(envelope: dict) -> str:
+    from ..events.handlers import bank_case_key
+
+    return "b_" + bank_case_key(envelope)
+
+
+async def receive(envelope: dict, meta: dict | None = None) -> dict:
+    """Create the bank case for an envelope. Idempotent: the id is derived from caseId + sent_at."""
     if envelope.get("intent") != "fraud_case.submit":
         raise ValueError("unsupported intent")
     store = get_store()
+    bank_case_id = bank_case_id_for(envelope)
+    existing = store.get_bank_case(bank_case_id)
+    if existing:
+        return existing
     p = envelope["payload"]
     key = normalize_account_key((p.get("beneficiary") or {}).get("account_or_vpa"))
-    account = store.get_bank_account(key) if key else None
     now = parse_iso(p.get("effective_now")) or utcnow()
-    rec = recommend(p, account, now)
-    reason = await write_reason(p, rec, account)
-    bank_case_id = new_id("b_")
+    fx = await asyncio.to_thread(bq.beneficiary_features, key, now)
+    features = fx["features"]
+    rec = recommend(p, features, now)
+    ml = await asyncio.to_thread(bq.safe_ml_score, features)
+    reason = await write_reason(p, rec, features)
+    txn_note = {"unavailable": TXN_UNAVAILABLE, "not_found": TXN_NOT_FOUND}.get(fx["status"])
     doc = {
         "caseId": p["caseId"], "country": p["country"], "receivedAt": utcnow(), "amount": p.get("amount"),
         "currency": p.get("currency"), "amountDisplay": format_amount(p.get("amount"), p.get("currency")),
         "reference_id": p.get("reference_id"), "occurredAt": parse_iso(p.get("occurred_at_utc")),
         "occurredAtDisplay": _occurred_display(p),
         "payment_method": p.get("payment_method"), "payer_bank": p.get("payer_bank"),
-        "beneficiary": p.get("beneficiary"), "beneficiaryKey": key, "accountFound": account is not None,
+        "beneficiary": p.get("beneficiary"), "beneficiaryKey": key, "beneficiaryHash": beneficiary_hash(key),
+        "accountFound": features is not None,
+        "txnFeatures": _txn_features(features), "txnStatus": fx["status"], "txnNote": txn_note,
+        "txnSource": fx["source"], "txnQueryMs": fx["queryMs"], "featureTime": now,
+        "mlRiskScore": ml,
         "scam_type": p.get("scam_type"), "scammer_contacts": p.get("scammer_contacts"), "narrative_en": p.get("narrative_en"),
         "evidence": p.get("evidence"), "signals": rec["signals"], "riskScore": rec["riskScore"], "riskLevel": rec["riskLevel"],
         "recommendedAction": rec["recommendedAction"], "recommendedActionLabel": ACTION_LABEL[rec["recommendedAction"]],
         "holdLimitAmount": rec["holdLimitAmount"],
         "holdLimitDisplay": format_amount(rec["holdLimitAmount"], p.get("currency")) if rec["holdLimitAmount"] else None,
-        "holdNote": rec["note"], "reason_en": reason, "status": "NEW", "envelope": {k: v for k, v in envelope.items() if k != "payload"},
+        "holdNote": rec["note"], "reason_en": reason, "status": "NEW",
+        "envelope": {k: v for k, v in envelope.items() if k != "payload"},
+        "delivery": {"messageId": (meta or {}).get("messageId"), "subscription": (meta or {}).get("subscription")},
     }
-    store.put_bank_case(bank_case_id, doc)
+    if not store.create_bank_case_if_absent(bank_case_id, doc):  # lost a race with a concurrent redelivery
+        return store.get_bank_case(bank_case_id)
     store.add_audit({"actor": envelope.get("from_agent"), "action": "CASE_RECEIVED", "bankCaseId": bank_case_id,
-                     "caseId": p["caseId"], "details": {"riskScore": rec["riskScore"], "recommendedAction": rec["recommendedAction"]}})
-    log.info("bank_case_received", extra={"caseId": p["caseId"], "bankCaseId": bank_case_id, "step": "a2a", "riskScore": rec["riskScore"]})
+                     "caseId": p["caseId"], "details": {"riskScore": rec["riskScore"], "recommendedAction": rec["recommendedAction"],
+                                                        "txnStatus": fx["status"], "messageId": (meta or {}).get("messageId")}})
+    log.info("bank_case_received", extra={"caseId": p["caseId"], "bankCaseId": bank_case_id, "step": "a2a",
+                                          "riskScore": rec["riskScore"], "txnStatus": fx["status"], "bqMs": fx["queryMs"]})
     return {**doc, "id": bank_case_id}
+
+
+def _txn_features(f: dict | None) -> dict | None:
+    if not f:
+        return None
+    out = {k: f.get(k) for k in ("account_age_days", "credits_24h", "distinct_senders_24h", "outflow_60m_pct", "credit_ratio_vs_avg",
+                                 "credit_amount_24h", "declared_profile", "current_balance", "monthly_avg_credit", "bank",
+                                 "holder_name", "account_type", "currency")}
+    for k in ("outflow_60m_pct", "credit_ratio_vs_avg"):
+        if out.get(k) is not None:
+            out[k] = round(float(out[k]), 1)
+    return out

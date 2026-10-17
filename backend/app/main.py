@@ -10,7 +10,8 @@ from fastapi.responses import JSONResponse
 
 from .config import get_settings
 from .logging_setup import setup_logging
-from .routers import bank, cases, local_blob
+from .routers import bank, cases, events, local_blob
+from .timeutil import utcnow
 
 setup_logging()
 log = logging.getLogger("recoverai")
@@ -19,15 +20,17 @@ log = logging.getLogger("recoverai")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     s = get_settings()
-    if s.seed_on_startup:
-        try:
-            from .seed import seed_bank_accounts
+    if s.seed_on_startup and s.effective_analytics_backend == "local":
+        try:  # offline: build the synthetic transaction data once (BigQuery is seeded by scripts/seed_bigquery.py)
+            from .analytics.bq import get_analytics
 
-            seed_bank_accounts()
+            get_analytics().features("warmup", utcnow())
         except Exception:  # noqa: BLE001 - never block startup on seeding
-            log.exception("seeding failed")
+            log.exception("local analytics warm-up failed")
     log.info("startup", extra={"mock": s.mock_mode, "demo": s.demo_mode, "auth": s.effective_auth_mode,
-                               "model": s.gemini_model, "runtime": s.copilot_runtime})
+                               "model": s.gemini_model, "runtime": s.copilot_runtime, "bus": s.effective_event_bus,
+                               "analytics": s.effective_analytics_backend,
+                               "search": "vertex" if s.vertex_search_serving_config else "local/playbook"})
     yield
 
 
@@ -39,11 +42,12 @@ def create_app() -> FastAPI:
         allow_origins=list(s.allowed_origins),
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-A2A-Token"],
+        allow_headers=["Authorization", "Content-Type"],
     )
     app.include_router(cases.router)
     app.include_router(bank.router)
     app.include_router(bank.api_router)
+    app.include_router(events.router)
     if s.mock_mode:
         app.include_router(local_blob.router)
 

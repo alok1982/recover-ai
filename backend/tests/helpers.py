@@ -36,3 +36,17 @@ def paste(client, case_id, fname, uid="victim1"):
     r = client.post(f"/api/cases/{case_id}/evidence", json={"type": "text", "textContent": (FIX / fname).read_text()}, headers=H(uid))
     assert r.status_code == 200, r.text
     return r.json()
+
+
+def ready_india_case(client, uid="victim1"):
+    """IN case with evidence, confirmed facts, plan and drafts — ready for the consent step."""
+    from conftest import H
+
+    cid = client.post("/api/cases", json={"country": "IN", "language": "hi"}, headers=H(uid)).json()["caseId"]
+    upload(client, cid, "in_upi_success.png", "image/png", uid=uid)
+    paste(client, cid, "in_whatsapp_scam.txt", uid=uid)
+    sse(client, cid, {"trigger": "evidence_added"}, uid=uid)
+    client.patch(f"/api/cases/{cid}/extraction", json={"confirm": True}, headers=H(uid))
+    sse(client, cid, {"trigger": "facts_confirmed"}, uid=uid)
+    sse(client, cid, {"trigger": "generate_all"}, uid=uid)
+    return cid

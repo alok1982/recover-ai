@@ -1,15 +1,17 @@
-"""Bank side: A2A inbox (BankCaseReceiverAgent) + analyst dashboard API. Mounted at /bank and /api/bank."""
+"""Bank side: Pub/Sub push inbox (BankCaseReceiverAgent, F8/F15) + analyst dashboard API (F9) + Scam intelligence (F14).
+
+Mounted at /bank and /api/bank. The push subscription targets the Cloud Run URL directly (/bank/a2a/inbox)."""
 from __future__ import annotations
 
-import hmac
 import logging
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 
 from .. import actions
-from ..agents import bank_receiver
+from ..analytics import bq
 from ..auth import User, bank_user
-from ..config import get_settings
+from ..events import handlers
+from ..events.pubsub import decode_push, verify_push_auth
 from ..models import DecisionReq
 from ..services import jsonable
 from ..storage import get_blobs
@@ -23,15 +25,15 @@ def make_router(prefix: str) -> APIRouter:
     r = APIRouter(prefix=prefix, tags=["bank"])
 
     @r.post("/a2a/inbox")
-    async def inbox(envelope: dict, x_a2a_token: str | None = Header(default=None)) -> dict:
-        token = get_settings().a2a_token
-        if not token or not x_a2a_token or not hmac.compare_digest(token, x_a2a_token):
-            raise HTTPException(401, "invalid A2A token")
+    async def inbox(body: dict, authorization: str | None = Header(default=None)) -> dict:
+        """Pub/Sub push from `fraud-case-submitted` (OIDC-verified). 2xx = ack; anything else is retried, then DLQ."""
+        verify_push_auth(authorization)
+        envelope, meta = decode_push(body)
         try:
-            bc = await bank_receiver.receive(envelope)
+            result = await handlers.on_fraud_case_submitted(envelope, meta)
         except (KeyError, ValueError) as e:
             raise HTTPException(400, f"bad envelope: {e}") from e
-        return jsonable(bc)
+        return jsonable(result)
 
     @r.get("/cases")
     def list_cases(user: User = Depends(bank_user)) -> dict:
@@ -63,8 +65,7 @@ def make_router(prefix: str) -> APIRouter:
                     item["previewUrl"] = None
             item.pop("gcsPath", None)
             ev.append(item)
-        account = store.get_bank_account(b.get("beneficiaryKey") or "") if b.get("beneficiaryKey") else None
-        return {"case": jsonable({**b, "evidence": ev}), "account": jsonable(account),
+        return {"case": jsonable({**b, "evidence": ev}), "account": jsonable(b.get("txnFeatures")),
                 "audit": jsonable(store.list_audit(bank_case_id=bank_case_id))}
 
     @r.post("/cases/{bank_case_id}/decision")
@@ -75,11 +76,13 @@ def make_router(prefix: str) -> APIRouter:
 
     @r.get("/analytics")
     def analytics(user: User = Depends(bank_user)) -> dict:
-        if not get_settings().bigquery_enabled:
-            raise HTTPException(501, "Scam intelligence (BigQuery, stretch S2) is not enabled in this deployment")
-        from ..analytics import bq
-
-        return bq.run_queries()
+        """F14 [SHOULD] Scam intelligence: three BigQuery queries over anonymised case_events."""
+        try:
+            data = bq.run_queries(utcnow())
+        except Exception as e:  # noqa: BLE001
+            log.warning("scam intelligence query failed", extra={"err": str(e)[:300]})
+            raise HTTPException(503, "Scam intelligence is temporarily unavailable") from e
+        return {"source": bq.get_analytics().name, **jsonable(data)}
 
     return r
 

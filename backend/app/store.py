@@ -48,9 +48,11 @@ class Store(Protocol):
     def update_bank_case(self, bank_case_id: str, patch: dict) -> None: ...
     def list_bank_cases(self, limit: int = 100) -> list[dict]: ...
     def delete_bank_case(self, bank_case_id: str) -> None: ...
-    def get_bank_account(self, key: str) -> dict | None: ...
-    def put_bank_account(self, key: str, data: dict) -> None: ...
-    def count_bank_accounts(self) -> int: ...
+    def create_bank_case_if_absent(self, bank_case_id: str, data: dict) -> bool: ...
+    # Pub/Sub dedupe (F15)
+    def get_processed_event(self, event_key: str) -> dict | None: ...
+    def put_processed_event(self, event_key: str, data: dict) -> None: ...
+    def delete_processed_events(self) -> int: ...
     def add_audit(self, entry: dict) -> dict: ...
     def list_audit(self, bank_case_id: str | None = None, case_id: str | None = None) -> list[dict]: ...
     def delete_audit(self, audit_id: str) -> None: ...
@@ -86,11 +88,13 @@ class MemoryStore:
         self._lock = threading.RLock()
         self._path = Path(persist_path) if persist_path else None
         self.db: dict[str, dict[str, dict]] = {
-            "cases": {}, "messages": {}, "evidence": {}, "bank_cases": {}, "bank_accounts": {}, "audit_log": {},
+            "cases": {}, "messages": {}, "evidence": {}, "bank_cases": {}, "audit_log": {}, "processed_events": {},
         }
         if self._path and self._path.exists():
             try:
-                self.db.update(_dec(json.loads(self._path.read_text())))
+                loaded = _dec(json.loads(self._path.read_text()))
+                loaded.pop("bank_accounts", None)  # moved to BigQuery (F14)
+                self.db.update(loaded)
             except Exception:  # corrupted local file: start fresh
                 log.warning("could not load local store; starting empty")
 
@@ -138,6 +142,8 @@ class MemoryStore:
     def add_message(self, case_id: str, msg: dict) -> dict:
         with self._lock:
             mid = msg.get("id") or new_id("m_")
+            if mid in self.db["messages"]:  # idempotent write with a caller-supplied id
+                return {k: v for k, v in copy.deepcopy(self.db["messages"][mid]).items() if k != "_caseId"}
             rec = {**msg, "id": mid, "seq": msg.get("seq") or _seq(), "createdAt": msg.get("createdAt") or utcnow()}
             self.db["messages"][mid] = copy.deepcopy({**rec, "_caseId": case_id})
             self._save()
@@ -203,18 +209,30 @@ class MemoryStore:
             self.db["bank_cases"].pop(bank_case_id, None)
             self._save()
 
-    def get_bank_account(self, key: str) -> dict | None:
+    def create_bank_case_if_absent(self, bank_case_id: str, data: dict) -> bool:
         with self._lock:
-            a = self.db["bank_accounts"].get(key)
-            return copy.deepcopy(a) if a else None
+            if bank_case_id in self.db["bank_cases"]:
+                return False
+            self.db["bank_cases"][bank_case_id] = copy.deepcopy({**data, "id": bank_case_id})
+            self._save()
+            return True
 
-    def put_bank_account(self, key: str, data: dict) -> None:
+    def get_processed_event(self, event_key: str) -> dict | None:
         with self._lock:
-            self.db["bank_accounts"][key] = copy.deepcopy({**data, "id": key})
+            e = self.db["processed_events"].get(event_key)
+            return copy.deepcopy(e) if e else None
+
+    def put_processed_event(self, event_key: str, data: dict) -> None:
+        with self._lock:
+            self.db["processed_events"][event_key] = copy.deepcopy({**data, "id": event_key})
             self._save()
 
-    def count_bank_accounts(self) -> int:
-        return len(self.db["bank_accounts"])
+    def delete_processed_events(self) -> int:
+        with self._lock:
+            n = len(self.db["processed_events"])
+            self.db["processed_events"].clear()
+            self._save()
+            return n
 
     def add_audit(self, entry: dict) -> dict:
         with self._lock:
@@ -282,9 +300,16 @@ class FirestoreStore:
         return sorted(out, key=lambda c: c.get("createdAt") or utcnow(), reverse=True)
 
     def add_message(self, case_id: str, msg: dict) -> dict:
+        """A caller-supplied id makes the write idempotent (Pub/Sub redelivery): an existing message is returned as is."""
+        from google.api_core.exceptions import AlreadyExists
+
         ref = self._cases().document(case_id).collection("messages").document(msg.get("id") or new_id("m_"))
         rec = {**msg, "id": ref.id, "seq": msg.get("seq") or _seq(), "createdAt": msg.get("createdAt") or utcnow()}
-        ref.set(rec)
+        try:
+            ref.create(rec)
+        except AlreadyExists:
+            snap = ref.get()
+            return {**snap.to_dict(), "id": snap.id}
         return rec
 
     def list_messages(self, case_id: str, limit: int | None = None) -> list[dict]:
@@ -325,15 +350,28 @@ class FirestoreStore:
     def delete_bank_case(self, bank_case_id: str) -> None:
         self.client.collection("bank_cases").document(bank_case_id).delete()
 
-    def get_bank_account(self, key: str) -> dict | None:
-        snap = self.client.collection("bank_accounts").document(key).get()
+    def create_bank_case_if_absent(self, bank_case_id: str, data: dict) -> bool:
+        from google.api_core.exceptions import AlreadyExists
+
+        try:
+            self.client.collection("bank_cases").document(bank_case_id).create({**data, "id": bank_case_id})
+            return True
+        except AlreadyExists:
+            return False
+
+    def get_processed_event(self, event_key: str) -> dict | None:
+        snap = self.client.collection("processed_events").document(event_key).get()
         return {**snap.to_dict(), "id": snap.id} if snap.exists else None
 
-    def put_bank_account(self, key: str, data: dict) -> None:
-        self.client.collection("bank_accounts").document(key).set({**data, "id": key})
+    def put_processed_event(self, event_key: str, data: dict) -> None:
+        self.client.collection("processed_events").document(event_key).set({**data, "id": event_key})
 
-    def count_bank_accounts(self) -> int:
-        return sum(1 for _ in self.client.collection("bank_accounts").limit(50).stream())
+    def delete_processed_events(self) -> int:
+        n = 0
+        for d in self.client.collection("processed_events").stream():
+            d.reference.delete()
+            n += 1
+        return n
 
     def add_audit(self, entry: dict) -> dict:
         ref = self.client.collection("audit_log").document(new_id("a_"))
