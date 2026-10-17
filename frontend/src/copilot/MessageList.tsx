@@ -21,6 +21,16 @@ export function MessageList({ messages, streaming, status }: { messages: Message
                 {m.text}
               </div>
             )}
+            {m.sources && m.sources.length > 0 && (
+              <div className="sources">
+                {t("source")}:{" "}
+                {m.sources.map((s, i) => (
+                  <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
+                    {i > 0 ? " · " : ""}↗ {s.title}
+                  </a>
+                ))}
+              </div>
+            )}
             {m.card && <CardView card={m.card} messageId={m.id} />}
           </div>
         ))}

@@ -89,5 +89,6 @@
  "status.closed": "बंद",
  "escalateRow": "समाधान नहीं → आगे शिकायत करें",
  "bankRef": "बैंक संदर्भ",
- "bankComplaint": "बैंक शिकायत"
+ "bankComplaint": "बैंक शिकायत",
+ "source": "स्रोत"
 }

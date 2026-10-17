@@ -4,6 +4,13 @@ import { api } from "../lib/api";
 import { resolveUrl } from "../lib/config";
 import { riskBadge } from "./Inbox";
 
+export function fmtMoney(v: number | null | undefined, currency?: string | null): string {
+  if (v == null) return "—";
+  return currency === "MYR"
+    ? `RM ${Number(v).toLocaleString("en-MY", { maximumFractionDigits: 2 })}`
+    : `₹${Number(v).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
 export function CaseDetail({ analyst }: { analyst: string }) {
   const { id } = useParams();
   const [d, setD] = useState<any>(null);
@@ -55,17 +62,30 @@ export function CaseDetail({ analyst }: { analyst: string }) {
             <dt>Scammer contacts</dt><dd>{(c.scammer_contacts || []).join(", ")}</dd>
           </dl>
           <p>{c.narrative_en}</p>
-          <h3>Beneficiary account (synthetic bank data)</h3>
+          <h3>Beneficiary account <span className="chip src-chip">from transaction data</span></h3>
           {a ? (
-            <dl className="kv">
-              <dt>Holder</dt><dd>{a.holderName}</dd>
-              <dt>Account age</dt><dd>{a.accountAgeDays} days</dd>
-              <dt>Profile</dt><dd>{a.profile}</dd>
-              <dt>Credits 24 h</dt><dd>{a.credits24hCount} from {a.distinctSenders24h} senders</dd>
-              <dt>Outflow</dt><dd>{a.outflowPct}%{a.outflowWithinMinutes ? ` within ${a.outflowWithinMinutes} min` : ""}</dd>
-              <dt>Balance</dt><dd>{a.currentBalance} {a.currency}</dd>
-            </dl>
-          ) : <p className="muted">Beneficiary not found in bank records — case signals only.</p>}
+            <>
+              <dl className="kv">
+                <dt>Holder</dt><dd>{a.holder_name} · {a.account_type} · {a.bank}</dd>
+                <dt>Declared profile</dt><dd>{a.declared_profile}</dd>
+                <dt>Account age</dt><dd>{a.account_age_days} days</dd>
+                <dt>Credits in last 24 h</dt><dd>{a.credits_24h} from {a.distinct_senders_24h} distinct senders</dd>
+                <dt>Moved out within 60 min</dt><dd>{a.outflow_60m_pct ?? "—"}% of credited amount</dd>
+                <dt>24 h credits vs monthly avg</dt><dd>{a.credit_ratio_vs_avg != null ? `${a.credit_ratio_vs_avg}×` : "—"}</dd>
+                <dt>Current balance</dt><dd>{fmtMoney(a.current_balance, a.currency)}</dd>
+              </dl>
+              <p className="muted small">
+                Computed by one parameterised {c.txnSource === "bigquery" ? "BigQuery" : "offline (mock)"} query over synthetic
+                bank_txn{c.txnQueryMs != null ? ` in ${c.txnQueryMs} ms` : ""}; feature time {c.featureTime ? new Date(c.featureTime).toLocaleString() : "—"}.
+              </p>
+            </>
+          ) : <p className="warn-note">{c.txnNote || "Beneficiary not found in transaction data — case signals only."}</p>}
+          {c.mlRiskScore != null && (
+            <p className="ml-score">
+              ML mule-risk: <b>{c.mlRiskScore.toFixed(2)}</b>{" "}
+              <span className="muted small">(BigQuery ML model on synthetic data — advisory only; the rules decide the action)</span>
+            </p>
+          )}
           <h3>Evidence</h3>
           <ul className="evidence-list">
             {c.evidence.map((e: any) => (
@@ -78,7 +98,10 @@ export function CaseDetail({ analyst }: { analyst: string }) {
           </ul>
           <h3>Audit trail</h3>
           <ul className="audit">{d.audit.map((x: any) => <li key={x.id}>{new Date(x.at).toLocaleString()} — <b>{x.action}</b> by {x.actor}{x.details?.note ? ` (${x.details.note})` : ""}</li>)}</ul>
-          <p className="muted small">A2A envelope: {c.envelope?.intent} from {c.envelope?.from_agent} to {c.envelope?.to_agent}</p>
+          <p className="muted small">
+            A2A envelope: {c.envelope?.intent} from {c.envelope?.from_agent} to {c.envelope?.to_agent}
+            {c.delivery?.messageId ? ` · delivered by Pub/Sub push (message ${c.delivery.messageId})` : ""}
+          </p>
         </section>
       </div>
     </main>

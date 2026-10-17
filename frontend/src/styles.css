@@ -122,3 +122,26 @@ tr.lvl-red td { background: var(--red-bg); } tr.lvl-amber td { background: #fffa
   .inbox { font-size: .85rem; } .inbox th:nth-child(5), .inbox td:nth-child(5) { display: none; }
 }
 @media (max-width: 400px) { :root { font-size: 16px; } .send { padding: 8px 10px; } }
+
+/* F16 citations under co-pilot replies */
+.sources { font-size: 0.85rem; color: var(--muted, #555); margin: 4px 0 0 6px; max-width: 85%; }
+.sources a { color: inherit; text-decoration: underline; }
+
+/* F14 bank detail + Scam intelligence */
+.src-chip { font-size: 0.7rem; vertical-align: middle; background: #e8f0fe; color: #1a4fb4; }
+.warn-note { background: #fff4e5; border-left: 3px solid #e8a33d; padding: 6px 10px; border-radius: 4px; }
+.ml-score { background: #f3f6fb; padding: 6px 10px; border-radius: 6px; }
+.intel .card.wide { grid-column: 1 / -1; }
+.bars { list-style: none; padding: 0; margin: 0; }
+.bars li { display: grid; grid-template-columns: 150px 1fr 32px; align-items: center; gap: 8px; margin: 6px 0; }
+.bar { display: block; height: 14px; border-radius: 3px; background: #0b6e8a; min-width: 4px; }
+.bar-label { text-transform: capitalize; font-size: 0.9rem; }
+.bar-val { text-align: right; font-weight: 600; }
+.daygrid { display: flex; align-items: flex-end; gap: 4px; height: 120px; overflow-x: auto; padding-bottom: 18px; position: relative; }
+.daycol { display: flex; align-items: flex-end; gap: 1px; position: relative; min-width: 22px; height: 100%; }
+.daybar { width: 9px; border-radius: 2px 2px 0 0; display: block; }
+.daylabel { position: absolute; bottom: -16px; left: 0; font-size: 0.6rem; color: #777; white-space: nowrap; }
+.c-IN { background: #e07a2f; }
+.c-MY { background: #2f7de0; }
+.legend { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 10px; vertical-align: middle; }
+table.compact td, table.compact th { padding: 4px 8px; }

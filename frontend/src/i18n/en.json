@@ -89,5 +89,6 @@
  "status.closed": "Closed",
  "escalateRow": "No resolution → escalate",
  "bankRef": "Bank ref",
- "bankComplaint": "Bank complaint"
+ "bankComplaint": "Bank complaint",
+ "source": "Source"
 }

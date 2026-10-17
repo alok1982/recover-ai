@@ -89,5 +89,6 @@
  "status.closed": "Ditutup",
  "escalateRow": "Tiada penyelesaian → tingkatkan aduan",
  "bankRef": "Rujukan bank",
- "bankComplaint": "Aduan bank"
+ "bankComplaint": "Aduan bank",
+ "source": "Sumber"
 }

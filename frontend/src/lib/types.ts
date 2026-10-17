@@ -17,6 +17,7 @@ export interface Message {
   seq?: number;
   toolCalls?: { name: string; ok: boolean; latencyMs: number }[];
   pending?: boolean;
+  sources?: { title: string; url: string; publisher?: string | null }[];
 }
 
 export interface Step {
