@@ -1,0 +1,9 @@
+rules_version = '2';
+// The evidence bucket is private. Browsers only use short-lived V4 signed URLs minted by the backend.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

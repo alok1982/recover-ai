@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+backend/.localdata/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/.env.production
+
+# Secrets / env
+.env
+*.env
+!.env.example
+service-account*.json
+*-key.json
+.firebase/
+firebase-debug.log
+firestore-debug.log
+deploy/.state
+
+# OS
+.DS_Store

@@ -1,0 +1,9 @@
+{
+  "name": "RecoverAI",
+  "short_name": "RecoverAI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0B6E8A",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

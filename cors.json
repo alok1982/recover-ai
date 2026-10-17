@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://PROJECT_ID.web.app", "https://PROJECT_ID.firebaseapp.com", "http://localhost:5173"],
+    "method": ["PUT", "GET"],
+    "responseHeader": ["Content-Type", "x-goog-content-length-range"],
+    "maxAgeSeconds": 3600
+  }
+]
