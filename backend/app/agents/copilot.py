@@ -271,6 +271,8 @@ class Toolbox:
 # ------------------------------------------------------------------ deterministic co-pilot (offline / fallback)
 _Q_GUARANTEE = re.compile(r"(definitely|guarantee|surely|will i get|get (?:my )?money back|पक्का|ज़रूर|जरूर|वापस मिलेगा|"
                           r"वापस मिल|pasti|dapat balik|wang .*kembali)", re.I)
+_Q_RULES = re.compile(r"(compensat|refund|liabilit|my rights|\brule|\blaw\b|regulat|RBI|ombudsman|मुआवज|नियम|अधिकार|"
+                      r"pampasan|hak saya|undang)", re.I)
 _Q_COUNTRIES = re.compile(r"(other countr|singapore|indonesia|philippines|australia|japan|korea|देश|negara lain)", re.I)
 _Q_STATUS = re.compile(r"(status|deadline|timeline|clock|kab tak|समय|स्थिति|tarikh akhir|status kes)", re.I)
 _Q_DANGER = re.compile(r"(threaten|kill|come to my house|धमकी|मार देंगे|ugut|bunuh)", re.I)
@@ -363,6 +365,13 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
         + f"\nCurrent stage hint: {STAGE_HINT[summary['stage']]}"
         + "\nCurrent case state (JSON, authoritative): " + json.dumps(jsonable(summary), ensure_ascii=False)
     )
+    if _Q_GUARANTEE.search(text or "") or _Q_RULES.search(text or ""):
+        # F16: questions about outcomes/rights are always grounded — fetch the playbook rule + official sources up
+        # front instead of hoping the model calls explain_rule (it sometimes answers from memory).
+        grounded = await tb.explain_rule("compensation")
+        instruction += ("\nGrounding for this question (from explain_rule; rule facts only from 'text', never promise "
+                        "recovery; the cited sources are shown to the user under your reply): "
+                        + json.dumps(jsonable(grounded), ensure_ascii=False))
     agent = LlmAgent(
         name="RecoverAICopilot", model=ADK_MODEL_OVERRIDE or settings.gemini_model,
         instruction=lambda _ctx: instruction,  # provider: bypasses {state} templating of braces in JSON

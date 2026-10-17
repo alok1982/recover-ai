@@ -142,15 +142,19 @@ def india(v: Api, bank: Api) -> None:
     case = v.post(f"/api/cases/{cid}/send-to-bank", {"consent": True})["case"]
     check(case["bankStatus"] == "SENT" and case.get("bankCaseId"), "consent → published to fraud-case-submitted")
     print(f"  (victim flow {time.time() - t0:.1f}s)")
-    d = poll(lambda: bank.get_or_none(f"/api/bank/cases/{case['bankCaseId']}"), 15)
+    d = poll(lambda: bank.get_or_none(f"/api/bank/cases/{case['bankCaseId']}"), 30)
     check(d is not None, f"bank case created by Pub/Sub push ({time.time() - t_send:.1f}s after consent)")
     d = d["case"]
     check(d["riskLevel"] == "HIGH" and d["recommendedAction"] == "TEMPORARY_HOLD", "bank: HIGH risk, temporary hold recommended")
     f = d.get("txnFeatures") or {}
     check(d.get("txnStatus") == "ok" and f.get("credits_24h") == 9 and f.get("account_age_days") == 21,
           f"signals from transaction data ({d.get('txnSource')}, {d.get('txnQueryMs')} ms)")
-    if d.get("mlRiskScore") is not None:
-        print(f"  (ML mule-risk {d['mlRiskScore']} — advisory)")
+    full = poll(lambda: (lambda x: x if x and not x["case"].get("reasonPending") else None)(
+        bank.get_or_none(f"/api/bank/cases/{d['id']}")), 30)
+    if full:
+        d = full["case"]
+        print(f"  (reason: {d.get('reasonSource')}, {time.time() - t_send:.1f}s after consent; "
+              f"ML mule-risk {d.get('mlRiskScore')} — advisory)")
     t_dec = time.time()
     bank.post(f"/api/bank/cases/{d['id']}/decision", {"decision": "APPROVE_HOLD"})
     ok = poll(lambda: v.get(f"/api/cases/{cid}")["case"]["bankStatus"] == "HOLD_APPROVED" or None, 10, 0.25)
@@ -188,7 +192,7 @@ def main() -> None:
     a = ap.parse_args()
     vt, bt = tokens(a.mock)
     v, bank = Api(a.api, vt), Api(a.api, bt)
-    check(httpx.get(v.url("/healthz"), timeout=30).json().get("ok") is True, f"healthz {a.api}")
+    check(httpx.get(v.url("/api/health"), timeout=30).json().get("ok") is True, f"healthz {a.api}")
     india(v, bank)
     malaysia(v)
     print("E2E OK")

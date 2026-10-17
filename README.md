@@ -83,7 +83,7 @@ flowchart LR
 
 ```text
 backend/            FastAPI service (Cloud Run)
-  app/main.py         app factory, routers, /healthz
+  app/main.py         app factory, routers, /api/health (+ /healthz locally; Cloud Run reserves paths ending in z)
   app/routers/        cases.py (victim API + SSE chat), bank.py (Pub/Sub push inbox + dashboard API),
                       events.py (bank-decision push), local_blob.py (mock only)
   app/events/         pubsub.py (PubSubBus / in-process LocalBus, OIDC push auth, dedupe), handlers.py
@@ -97,7 +97,7 @@ backend/            FastAPI service (Cloud Run)
   sql/                create_tables.sql, features.sql, scam_intel.sql, account_features.sql, ml_model.sql, ml_predict.sql
   agent_engine/       S1 stub (not built)
   playbooks/          IN.yaml, MY.yaml
-  tests/              pytest suite (86 tests)
+  tests/              pytest suite (88 tests)
   Dockerfile, requirements.txt
 frontend/           React 19 + Vite 7 + TS (Firebase Hosting)
   src/copilot/        Chat, MessageList, InputBar (text / mic / attach)
@@ -137,7 +137,7 @@ To run local mode against **real** Gemini, set `MOCK_MODE=false` and `AUTH_MODE=
 ## Tests
 
 ```bash
-cd backend && pytest                              # 85 passed, 1 skipped (live-Gemini test skipped offline)
+cd backend && pytest                              # 87 passed, 1 skipped (live-Gemini test skipped offline)
 python ../scripts/e2e_demo.py --mock              # both storylines over HTTP against the local backend
 python ../scripts/ui_smoke.py                     # headless-browser run of the India + bank story; writes docs/screenshots/
 cd ../frontend && npm run build
@@ -147,6 +147,8 @@ The suite covers the playbook engine, deadlines (`effective_from` against the in
 
 ## Deploy to Google Cloud
 
+**Live (deployed 18 Oct 2026):** victim app https://recoverai-511917.web.app · bank desk https://recoverai-511917.web.app/bank · API https://recoverai-api-77639740514.asia-south1.run.app. Models: `gemini-3.8-flash` and `gemini-3.5-flash-lite` on Vertex AI (`GEMINI_LOCATION=global`; 3.8 Flash is not served in asia-south1).
+
 Defaults: project **`recoverai-511917`**, account **`alokkumar.iiitm@gmail.com`**, region `asia-south1` (set in `deploy/deploy.sh`, `.firebaserc` and `.env.example`; override with `PROJECT_ID=`, `GCLOUD_ACCOUNT=`, `REGION=`). The project needs **billing enabled**, and the account needs Owner (or Editor + Firebase Admin + Service Usage Admin). Tools: `gcloud` (with `bq`), `firebase-tools`, Node 20+, Python 3.12+, `jq`, `openssl`, `curl`. On the build box they live in `/home/box/tools`.
 
 ```bash
@@ -154,7 +156,7 @@ export PATH=/home/box/tools/google-cloud-sdk/bin:/home/box/tools/npm-global/bin:
 gcloud auth login alokkumar.iiitm@gmail.com          # add --no-launch-browser on a headless machine
 gcloud config set project recoverai-511917
 gcloud auth application-default login                # used by the seed / make_bank_user scripts
-firebase login                                       # --no-localhost on a headless machine
+firebase login                                       # optional: without it deploy.sh reuses the gcloud ADC (quota project set)
 
 ./deploy/deploy.sh            # = all
 ```

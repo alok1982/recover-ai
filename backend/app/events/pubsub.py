@@ -42,6 +42,10 @@ class EventBus(Protocol):
     async def publish(self, topic: str, data: dict, attributes: dict[str, str] | None = None) -> str: ...
 
 
+# Message attribute naming the logical topic. Not "topic": PublisherClient.publish(topic, data, **attrs) would clash.
+ATTR_TOPIC = "eventTopic"
+
+
 class PubSubBus:
     def __init__(self, project: str):
         from google.cloud import pubsub_v1
@@ -52,9 +56,11 @@ class PubSubBus:
     async def publish(self, topic: str, data: dict, attributes: dict[str, str] | None = None) -> str:
         path = self.client.topic_path(self.project, topic)
         body = json.dumps(data, ensure_ascii=False, default=str).encode()
+        attrs = {str(k): str(v) for k, v in (attributes or {}).items()}
+        attrs.setdefault(ATTR_TOPIC, topic)
 
         def _pub() -> str:
-            return self.client.publish(path, body, **(attributes or {})).result(timeout=30)
+            return self.client.publish(path, body, **attrs).result(timeout=30)
 
         mid = await asyncio.to_thread(_pub)
         log.info("published", extra={"step": "pubsub_publish", "topic": topic, "messageId": mid})
@@ -93,7 +99,7 @@ def push_body(topic: str, data: dict, message_id: str, attributes: dict[str, str
     return {
         "message": {
             "data": base64.b64encode(json.dumps(data, ensure_ascii=False, default=str).encode()).decode(),
-            "messageId": message_id, "publishTime": to_iso(utcnow()), "attributes": {"topic": topic, **(attributes or {})},
+            "messageId": message_id, "publishTime": to_iso(utcnow()), "attributes": {ATTR_TOPIC: topic, **(attributes or {})},
         },
         "subscription": f"projects/local/subscriptions/{topic}-push",
     }
@@ -106,7 +112,7 @@ def decode_push(body: dict) -> tuple[dict, dict]:
     except (KeyError, TypeError, ValueError) as e:
         raise HTTPException(400, f"malformed Pub/Sub push body: {e}") from e
     attrs = msg.get("attributes") or {}
-    return data, {"messageId": msg.get("messageId") or msg.get("message_id"), "topic": attrs.get("topic"),
+    return data, {"messageId": msg.get("messageId") or msg.get("message_id"), "topic": attrs.get(ATTR_TOPIC) or attrs.get("topic"),
                   "attributes": attrs, "subscription": body.get("subscription"),
                   "deliveryAttempt": body.get("deliveryAttempt")}
 

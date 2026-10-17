@@ -22,9 +22,10 @@ SELECT
   CAST(FLOOR(TIMESTAMP_DIFF(@now, a.opened_at, SECOND) / 86400) AS INT64) AS account_age_days,
   COALESCE(cs.credits_24h, 0) AS credits_24h,
   COALESCE(cs.distinct_senders_24h, 0) AS distinct_senders_24h,
-  COALESCE(CASE WHEN SAFE_DIVIDE(ds.out_amount, cs.credit_amount) * 100 > 100 THEN 100
-                ELSE SAFE_DIVIDE(ds.out_amount, cs.credit_amount) * 100 END, 0) AS outflow_60m_pct,
-  COALESCE(SAFE_DIVIDE(cs.credit_amount, a.monthly_avg_credit), 0) AS credit_ratio_vs_avg,
+  -- FLOAT64 (amounts are NUMERIC): ML.PREDICT will not coerce FLOAT64 query parameters to a NUMERIC training column.
+  CAST(COALESCE(CASE WHEN SAFE_DIVIDE(ds.out_amount, cs.credit_amount) * 100 > 100 THEN 100
+                ELSE SAFE_DIVIDE(ds.out_amount, cs.credit_amount) * 100 END, 0) AS FLOAT64) AS outflow_60m_pct,
+  CAST(COALESCE(SAFE_DIVIDE(cs.credit_amount, a.monthly_avg_credit), 0) AS FLOAT64) AS credit_ratio_vs_avg,
   a.is_mule
 FROM `recoverai_analytics.bank_accounts` a
 LEFT JOIN cs USING (account_key)

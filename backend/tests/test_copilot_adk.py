@@ -48,3 +48,27 @@ def test_adk_runner_tools_streaming_and_post_check(client, monkeypatch):
     # stateless: the next turn rebuilds the session from Firestore history
     ev2 = sse(client, cid, {"text": "ok"})
     assert ev2[-1]["type"] == "done"
+
+
+class PlainAnswerLlm(BaseLlm):
+    """Answers straight away without calling any tool (what real Gemini sometimes does)."""
+
+    model: str = "plain"
+
+    async def generate_content_async(self, llm_request, stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
+        SEEN.append(str(llm_request.config.system_instruction))
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+            text="Nobody can promise that. Recovery depends on how fast the bank acts.")]), partial=False)
+
+
+def test_outcome_question_is_grounded_even_without_tool_call(client, monkeypatch):
+    """F16: 'will I get my money back' always carries the playbook rule + cited official sources."""
+    monkeypatch.setattr(copilot, "ADK_MODEL_OVERRIDE", PlainAnswerLlm())
+    SEEN.clear()
+    cid = client.post("/api/cases", json={"country": "IN", "language": "en"}, headers=H()).json()["caseId"]
+    ev = sse(client, cid, {"text": "Will I definitely get my money back?"})
+    done = ev[-1]
+    assert done["type"] == "done"
+    assert done["message"]["sources"], "honest answer must cite at least one official source"
+    assert any(c["name"] == "explain_rule" for c in done["message"]["toolCalls"])
+    assert "Grounding for this question" in SEEN[0]

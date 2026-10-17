@@ -21,7 +21,7 @@ def test_consent_publishes_to_fraud_case_topic_and_push_creates_bank_case(client
     case = _send(client, cid)
     bus = pubsub.get_bus()
     body = bus.delivered[-1]
-    assert body["message"]["attributes"]["topic"] == "fraud-case-submitted"
+    assert body["message"]["attributes"]["eventTopic"] == "fraud-case-submitted"
     data, meta = pubsub.decode_push(body)
     assert data["intent"] == "fraud_case.submit" and data["payload"]["caseId"] == cid and meta["messageId"]
     bc = client.get(f"/api/bank/cases/{case['bankCaseId']}", headers=BANK).json()["case"]
@@ -53,7 +53,7 @@ def test_bank_decision_event_round_trip_is_idempotent(client):
     client.post(f"/api/bank/cases/{case['bankCaseId']}/decision", json={"decision": "APPROVE_HOLD"}, headers=BANK)
     bus = pubsub.get_bus()
     body = bus.delivered[-1]
-    assert body["message"]["attributes"]["topic"] == "bank-decision"
+    assert body["message"]["attributes"]["eventTopic"] == "bank-decision"
     for _ in range(2):  # redelivered twice
         r = client.post("/api/events/bank-decision", json=body, headers=PUSH)
         assert r.status_code == 200
@@ -168,3 +168,32 @@ def test_ml_score_is_advisory_and_flagged(client, monkeypatch):
         assert bc["mlRiskScore"] > 0.8 and bc["recommendedAction"] == "TEMPORARY_HOLD"
     finally:
         reset_settings_cache()
+
+
+def test_pubsub_bus_attributes_do_not_clash_with_client_signature():
+    """Regression: PublisherClient.publish(topic, data, ordering_key="", retry=..., timeout=..., **attrs)."""
+    import asyncio
+
+    from app.events.pubsub import PubSubBus
+
+    class Fut:
+        def result(self, timeout=None):
+            return "mid-1"
+
+    class FakeClient:
+        def __init__(self):
+            self.calls = []
+
+        def topic_path(self, project, topic):
+            return f"projects/{project}/topics/{topic}"
+
+        def publish(self, topic, data, ordering_key="", retry=None, timeout=None, **attrs):
+            assert all(isinstance(v, str) for v in attrs.values())
+            self.calls.append((topic, attrs))
+            return Fut()
+
+    bus = PubSubBus.__new__(PubSubBus)
+    bus.project, bus.client = "p", FakeClient()
+    mid = asyncio.run(bus.publish("fraud-case-submitted", {"a": 1}, {"eventTopic": "fraud-case-submitted", "caseId": "c1"}))
+    assert mid == "mid-1"
+    assert bus.client.calls == [("projects/p/topics/fraud-case-submitted", {"eventTopic": "fraud-case-submitted", "caseId": "c1"})]

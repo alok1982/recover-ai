@@ -425,7 +425,7 @@ async def send_to_bank(case_id: str, consent: bool, version: str) -> tuple[dict,
     settings = get_settings()
     try:
         message_id = await pubsub.publish(settings.topic_case_submitted, envelope,
-                                          {"topic": settings.topic_case_submitted, "caseId": case_id})
+                                          {"eventTopic": settings.topic_case_submitted, "caseId": case_id})
     except Exception as e:  # noqa: BLE001
         log.exception("publish fraud-case-submitted failed", extra={"caseId": case_id})
         raise HTTPException(503, "could not send to the bank right now; please try again") from e
@@ -460,19 +460,20 @@ async def bank_decision(bank_case_id: str, decision: str, note: str | None, anal
     event = {"eventId": event_id, "bankCaseId": bank_case_id, "caseId": bc["caseId"], "decision": decision, "status": status,
              "note": note, "decidedAt": to_iso(decided_at), "from_agent": f"bank.fraud_case_receiver.{bc['country'].lower()}",
              "to_agent": "recoverai.victim_copilot", "intent": "fraud_case.decision"}
-    await asyncio.to_thread(bq.record_case_event, {
-        "event_id": f"{bc['caseId']}-decision-{event_id[:8]}", "case_id": bc["caseId"], "event_type": "bank_decision",
-        "country": bc.get("country"), "scam_type": bc.get("scam_type"), "amount": bc.get("amount"), "currency": bc.get("currency"),
-        "beneficiary_hash": bc.get("beneficiaryHash"), "risk_level": bc.get("riskLevel"), "decision": decision,
-        "event_time": decided_at})
     settings = get_settings()
     try:
-        mid = await pubsub.publish(settings.topic_bank_decision, event, {"topic": settings.topic_bank_decision, "caseId": bc["caseId"]})
+        mid = await pubsub.publish(settings.topic_bank_decision, event, {"eventTopic": settings.topic_bank_decision, "caseId": bc["caseId"]})
         store.update_bank_case(bank_case_id, {"decisionEvent": {"eventId": event_id, "messageId": mid}})
     except Exception as e:  # noqa: BLE001
         log.exception("publish bank-decision failed", extra={"bankCaseId": bank_case_id})
         raise HTTPException(503, "decision saved but could not notify the victim; retry") from e
     log.info("bank_decision", extra={"bankCaseId": bank_case_id, "caseId": bc["caseId"], "step": "decision", "decision": decision})
+    # F14 analytics row after the publish, so BigQuery never sits on the decision → victim path.
+    await asyncio.to_thread(bq.record_case_event, {
+        "event_id": f"{bc['caseId']}-decision-{event_id[:8]}", "case_id": bc["caseId"], "event_type": "bank_decision",
+        "country": bc.get("country"), "scam_type": bc.get("scam_type"), "amount": bc.get("amount"), "currency": bc.get("currency"),
+        "beneficiary_hash": bc.get("beneficiaryHash"), "risk_level": bc.get("riskLevel"), "decision": decision,
+        "event_time": decided_at})
     return store.get_bank_case(bank_case_id)
 
 

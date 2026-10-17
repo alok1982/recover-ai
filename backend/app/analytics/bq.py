@@ -259,6 +259,10 @@ def _decode(o: Any) -> Any:
 
 
 # ------------------------------------------------------------------ BigQuery backend
+CASE_EVENT_COLUMNS = ("event_id", "case_id", "event_type", "country", "scam_type", "amount", "currency", "beneficiary_hash",
+                      "risk_level", "decision", "event_time")
+
+
 class BigQueryAnalytics:
     name = "bigquery"
 
@@ -291,9 +295,36 @@ class BigQueryAnalytics:
 
     def insert_case_event(self, event: dict) -> None:
         row = {k: (to_iso(v) if isinstance(v, datetime) else v) for k, v in event.items()}
-        errors = self.client.insert_rows_json(self._table("case_events"), [row], row_ids=[event["event_id"]])
+        try:
+            errors = self.client.insert_rows_json(self._table("case_events"), [row], row_ids=[event["event_id"]])
+        except Exception as e:  # noqa: BLE001
+            # Streaming inserts are refused for a few minutes after the table was truncated (reset/seed):
+            # fall back to an idempotent DML insert.
+            log.info("streaming insert refused, using DML", extra={"step": "bq_insert", "err": str(e)[:200]})
+            self._insert_dml(row)
+            return
         if errors:
             raise AnalyticsError(f"case_events insert failed: {errors}")
+
+    def _insert_dml(self, row: dict) -> None:
+        P = self.bq.ScalarQueryParameter
+        cols = [c for c in row if c in CASE_EVENT_COLUMNS]
+        params, exprs = [], []
+        for c in cols:
+            v = row[c]
+            if c == "amount":
+                params.append(P(c, "STRING", None if v is None else str(v)))
+                exprs.append("CAST(@amount AS NUMERIC)")
+            elif c == "event_time":
+                params.append(P(c, "TIMESTAMP", parse_iso(v) if isinstance(v, str) else v))
+                exprs.append("@event_time")
+            else:
+                params.append(P(c, "STRING", None if v is None else str(v)))
+                exprs.append("@" + c)
+        sql = (f"INSERT INTO `{self.dataset}.case_events` ({', '.join(cols)}) "
+               f"SELECT {', '.join(exprs)} FROM (SELECT 1) "
+               f"WHERE NOT EXISTS (SELECT 1 FROM `{self.dataset}.case_events` WHERE event_id = @event_id)")
+        self._query(sql, params)
 
     def scam_intelligence(self, now: datetime) -> dict:
         P = self.bq.ScalarQueryParameter

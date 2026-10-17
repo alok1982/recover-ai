@@ -93,6 +93,13 @@ class LocalSearch:
         return out
 
 
+def _clean_snippet(text: str) -> str:
+    """Vertex snippets are HTML (<b> highlights, &nbsp;, &#39;): plain text with collapsed whitespace."""
+    import html
+
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", text or "")).replace("\xa0", " ")).strip()
+
+
 class VertexSearch:
     name = "vertex"
 
@@ -121,7 +128,7 @@ class VertexSearch:
             if not url or url in seen:
                 continue
             seen.add(url)
-            snip = " ".join(re.sub(r"<[^>]+>", "", s.get("snippet", "")) for s in dd.get("snippets") or [])
+            snip = " ".join(_clean_snippet(s.get("snippet", "")) for s in dd.get("snippets") or [])
             out.append({"title": sd.get("title") or dd.get("title") or url, "url": url, "publisher": sd.get("publisher"),
                         "snippet": snip.strip()[:400]})
             if len(out) >= k:

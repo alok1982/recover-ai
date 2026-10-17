@@ -114,8 +114,10 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
     fx = await asyncio.to_thread(bq.beneficiary_features, key, now)
     features = fx["features"]
     rec = recommend(p, features, now)
-    ml = await asyncio.to_thread(bq.safe_ml_score, features)
-    reason = await write_reason(p, rec, features)
+    # The case appears on the desk as soon as the rules have run (template reason); the Gemini reason and the advisory
+    # ML score are filled in a moment later, still inside the push request (Firestore listeners update the dashboard).
+    reason = template_reason(p, rec)
+    ml = None
     txn_note = {"unavailable": TXN_UNAVAILABLE, "not_found": TXN_NOT_FOUND}.get(fx["status"])
     doc = {
         "caseId": p["caseId"], "country": p["country"], "receivedAt": utcnow(), "amount": p.get("amount"),
@@ -133,7 +135,7 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
         "recommendedAction": rec["recommendedAction"], "recommendedActionLabel": ACTION_LABEL[rec["recommendedAction"]],
         "holdLimitAmount": rec["holdLimitAmount"],
         "holdLimitDisplay": format_amount(rec["holdLimitAmount"], p.get("currency")) if rec["holdLimitAmount"] else None,
-        "holdNote": rec["note"], "reason_en": reason, "status": "NEW",
+        "holdNote": rec["note"], "reason_en": reason, "reasonSource": "template", "reasonPending": True, "status": "NEW",
         "envelope": {k: v for k, v in envelope.items() if k != "payload"},
         "delivery": {"messageId": (meta or {}).get("messageId"), "subscription": (meta or {}).get("subscription")},
     }
@@ -144,7 +146,12 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
                                                         "txnStatus": fx["status"], "messageId": (meta or {}).get("messageId")}})
     log.info("bank_case_received", extra={"caseId": p["caseId"], "bankCaseId": bank_case_id, "step": "a2a",
                                           "riskScore": rec["riskScore"], "txnStatus": fx["status"], "bqMs": fx["queryMs"]})
-    return {**doc, "id": bank_case_id}
+    ml, gem = await asyncio.gather(asyncio.to_thread(bq.safe_ml_score, features), write_reason(p, rec, features))
+    upd = {"mlRiskScore": ml, "reasonPending": False}
+    if gem and gem != reason:
+        upd.update({"reason_en": gem, "reasonSource": "gemini"})
+    store.update_bank_case(bank_case_id, upd)
+    return {**doc, **upd, "id": bank_case_id}
 
 
 def _txn_features(f: dict | None) -> dict | None:

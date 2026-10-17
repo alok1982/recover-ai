@@ -38,7 +38,7 @@ export function CaseDetail({ analyst }: { analyst: string }) {
           <h3>Recommendation</h3>
           <p className="rec"><b>{c.recommendedActionLabel}</b>{c.holdLimitDisplay && <> — limited to <b>{c.holdLimitDisplay}</b></>}</p>
           <p className="muted small">{c.holdNote}</p>
-          <h4>Reason (Gemini)</h4>
+          <h4>{c.reasonSource === "template" ? (c.reasonPending ? "Reason (rules summary · Gemini reason loading…)" : "Reason (rules summary)") : "Reason (Gemini)"}</h4>
           <p>{c.reason_en}</p>
           <h4>Signals that fired</h4>
           <ul className="signals">{c.signals.map((s: any) => <li key={s.code}><code>{s.code}</code> {s.label} <span className="chip">+{s.weight}</span></li>)}</ul>
