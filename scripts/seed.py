@@ -1,21 +1,8 @@
 #!/usr/bin/env python3
-"""Seed the synthetic bank accounts (PRD §12.3) into Firestore (or the local store when MOCK_MODE=true).
-
-  GOOGLE_CLOUD_PROJECT=<id> MOCK_MODE=false python scripts/seed.py [--force]
-Uses Application Default Credentials (gcloud auth application-default login).
-"""
-import argparse
-
-import _path  # noqa: F401
-from app.seed import seed_bank_accounts
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--force", action="store_true", help="overwrite even if accounts already exist")
-    n = seed_bank_accounts(force=ap.parse_args().force)
-    print(f"seeded {n} bank accounts" if n else "bank accounts already seeded (use --force to overwrite)")
-
+"""Seed all demo data. Firestore needs no seed data (cases are created by the app); the synthetic bank data lives in
+BigQuery (F14), so this is the same as scripts/seed_bigquery.py. Kept for the PRD's script list and old docs."""
+import runpy
+from pathlib import Path
 
 if __name__ == "__main__":
-    main()
+    runpy.run_path(str(Path(__file__).with_name("seed_bigquery.py")), run_name="__main__")

@@ -1,21 +1,15 @@
-"""Seed synthetic bank accounts (PRD §12.3) into the active store."""
+"""Seed the synthetic bank data (PRD §12.3) into the active analytics backend (BigQuery, or local in mock mode)."""
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
-from .bank.rules import normalize_account_key, synthetic_accounts
-from .store import Store, get_store
+from .analytics.bq import get_analytics
 
 log = logging.getLogger("recoverai.seed")
 
 
-def seed_bank_accounts(store: Store | None = None, force: bool = False) -> int:
-    store = store or get_store()
-    if not force and store.count_bank_accounts() >= len(synthetic_accounts()):
-        return 0
-    n = 0
-    for a in synthetic_accounts():
-        store.put_bank_account(normalize_account_key(a["id"]), dict(a))
-        n += 1
-    log.info("seeded bank accounts", extra={"count": n, "step": "seed"})
-    return n
+def seed_bank_data(seed_time: datetime | None = None, with_ml: bool = True) -> dict:
+    stats = get_analytics().seed(seed_time, with_ml=with_ml)
+    log.info("seeded bank data", extra={"step": "seed", **stats})
+    return stats

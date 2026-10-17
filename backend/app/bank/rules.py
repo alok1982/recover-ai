@@ -1,4 +1,10 @@
-"""Deterministic bank recommendation rules (PRD §10). The model never decides the action or the amount."""
+"""Deterministic bank recommendation rules (PRD §10). The model never decides the action or the amount.
+
+Inputs: the A2A case payload + the beneficiary's transaction features from the BigQuery feature query (F14,
+backend/sql/features.sql). Feature dict keys: account_age_days, credits_24h, distinct_senders_24h,
+outflow_60m_pct, credit_ratio_vs_avg, declared_profile, current_balance. ``None`` = account not found or
+transaction data unavailable: only the case signals (VICTIM_REPORT, RECENT_TXN, FLAGGED_NUMBER) can fire.
+"""
 from __future__ import annotations
 
 import json
@@ -16,7 +22,7 @@ SIGNALS = {
     "RECENT_TXN": ("Transaction less than 24 h ago", 15),
     "NEW_ACCOUNT": ("Beneficiary account younger than 90 days", 15),
     "FAN_IN": ("≥ 5 credits from distinct senders in last 24 h", 20),
-    "RAPID_OUTFLOW": ("≥ 70% of credits moved out within 60 min", 20),
+    "RAPID_OUTFLOW": ("≥ 70% of credited amount moved out within 60 min", 20),
     "FLAGGED_NUMBER": ("Scammer number on high-risk list", 10),
     "PROFILE_MISMATCH": ("Student/homemaker profile with 24 h credits > 10× monthly average", 10),
 }
@@ -39,11 +45,6 @@ def high_risk_numbers() -> frozenset[str]:
     return frozenset(normalize_phone(n) for n in data["numbers"])
 
 
-@lru_cache
-def synthetic_accounts() -> tuple[dict, ...]:
-    return tuple(json.loads((DATA_DIR / "bank_accounts.json").read_text(encoding="utf-8")))
-
-
 def _phone_match(contact: str, risky: frozenset[str]) -> bool:
     d = normalize_phone(contact)
     if not d:
@@ -51,7 +52,7 @@ def _phone_match(contact: str, risky: frozenset[str]) -> bool:
     return any(d == r or (len(d) >= 9 and (r.endswith(d) or d.endswith(r[-10:]))) for r in risky)
 
 
-def compute_signals(payload: dict, account: dict | None, now: datetime,
+def compute_signals(payload: dict, features: dict | None, now: datetime,
                     risky_numbers: frozenset[str] | None = None) -> list[dict]:
     risky = risky_numbers if risky_numbers is not None else high_risk_numbers()
     fired: list[str] = []
@@ -60,16 +61,15 @@ def compute_signals(payload: dict, account: dict | None, now: datetime,
     occurred = parse_iso(payload.get("occurred_at_utc"))
     if occurred and timedelta(0) <= ensure_utc(now) - occurred < timedelta(hours=24):
         fired.append("RECENT_TXN")
-    if account:
-        if (account.get("accountAgeDays") or 10**6) < 90:
+    if features:
+        age = features.get("account_age_days")
+        if age is not None and age < 90:
             fired.append("NEW_ACCOUNT")
-        if (account.get("distinctSenders24h") or 0) >= 5:
+        if (features.get("distinct_senders_24h") or 0) >= 5:
             fired.append("FAN_IN")
-        within = account.get("outflowWithinMinutes")
-        if (account.get("outflowPct") or 0) >= 70 and within is not None and within <= 60:
+        if (features.get("outflow_60m_pct") or 0) >= 70:
             fired.append("RAPID_OUTFLOW")
-        if (account.get("profile") in ("student", "homemaker")
-                and (account.get("credits24hAmount") or 0) > 10 * (account.get("monthlyAvgCredits") or 0)):
+        if features.get("declared_profile") in ("student", "homemaker") and (features.get("credit_ratio_vs_avg") or 0) > 10:
             fired.append("PROFILE_MISMATCH")
     if any(_phone_match(c, risky) for c in payload.get("scammer_contacts") or []):
         fired.append("FLAGGED_NUMBER")
@@ -85,16 +85,16 @@ def risk_level(score: int) -> str:
     return "LOW"
 
 
-def recommend(payload: dict, account: dict | None, now: datetime,
+def recommend(payload: dict, features: dict | None, now: datetime,
               risky_numbers: frozenset[str] | None = None) -> dict:
-    signals = compute_signals(payload, account, now, risky_numbers)
+    signals = compute_signals(payload, features, now, risky_numbers)
     score = min(100, sum(s["weight"] for s in signals))
     level = risk_level(score)
     action = {"HIGH": "TEMPORARY_HOLD", "MEDIUM": "ESCALATE_ANALYST", "LOW": "MONITOR"}[level]
     amount = float(payload.get("amount") or 0)
     hold = 0.0
     if action == "TEMPORARY_HOLD":
-        balance = account.get("currentBalance") if account else None
+        balance = features.get("current_balance") if features else None
         hold = min(amount, float(balance)) if balance is not None else amount
     return {"signals": signals, "riskScore": score, "riskLevel": level, "recommendedAction": action,
             "holdLimitAmount": hold, "note": HOLD_NOTE}

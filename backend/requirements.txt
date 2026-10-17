@@ -6,6 +6,8 @@ google-genai==1.75.0
 google-adk==1.14.1
 google-cloud-firestore==2.34.1
 google-cloud-storage==2.19.0
+google-cloud-bigquery==3.46.2
+google-cloud-pubsub==2.43.0
 firebase-admin==6.9.0
 weasyprint==70.0
 httpx==0.28.1
