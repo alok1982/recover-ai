@@ -27,3 +27,9 @@ deploy/.state
 
 # OS
 .DS_Store
+
+# Generated
+firebase.generated.json
+frontend/tsconfig.tsbuildinfo
+frontend/tsconfig.*.tsbuildinfo
+.localdata/
