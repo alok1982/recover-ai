@@ -1,0 +1,19 @@
+{
+  "images": {
+    "1461c7daba43b65fb8d56dea66b3f14604bb267aaca8a495518ac9e86f93027c": {
+      "file": "in_upi_success.png",
+      "case": "in_case"
+    },
+    "7d2c14b37620a10800fc423d1105e8e7f8e180926b782ca057a01ceed180c857": {
+      "file": "my_bank_transfer.png",
+      "case": "my_case"
+    }
+  },
+  "audio": {
+    "579dbacb6633f1339e60317758a94df0e14076031f92645b1a79ed54642cec02": {
+      "file": "in_voice_note.mp3",
+      "case": "in_case",
+      "transcript_file": "in_voice_note.txt"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "country": "MY",
+  "language": "ms",
+  "extraction": {
+    "reference_id": "DN202610170042",
+    "amount": 4800,
+    "currency": "MYR",
+    "occurred_at": "2026-10-17T10:15:00+08:00",
+    "payment_method": "DuitNow",
+    "payer_bank": "Bank Demo Malaysia",
+    "beneficiary": {
+      "name": "PUSAT KASTAM PARCEL",
+      "account_or_vpa": "5140 1234 5678",
+      "bank": "Bank Contoh Berhad",
+      "ifsc_or_code": null
+    },
+    "scammer_contacts": ["+60 11-0000 4321"],
+    "urls": ["http://kastam-parcel.example/bayar"],
+    "scam_type": "fake_courier_customs",
+    "narrative_en": "On 17 Oct 2026 the victim received an SMS claiming a parcel was held by customs and paid a fake customs duty by DuitNow to account 5140 1234 5678 (PUSAT KASTAM PARCEL).",
+    "narrative_local": "Pada 17 Okt 2026 mangsa menerima SMS kononnya bungkusan ditahan kastam dan membayar duti kastam palsu melalui DuitNow ke akaun 5140 1234 5678 (PUSAT KASTAM PARCEL).",
+    "confidence": {
+      "reference_id": 0.95, "amount": 0.98, "currency": 0.99, "occurred_at": 0.9, "payment_method": 0.96,
+      "payer_bank": 0.88, "beneficiary.name": 0.9, "beneficiary.account_or_vpa": 0.95,
+      "beneficiary.bank": 0.8, "scammer_contacts": 0.9, "urls": 0.9, "scam_type": 0.93
+    },
+    "missing_fields": ["beneficiary.ifsc_or_code"]
+  },
+  "key_fields": ["reference_id", "amount", "currency", "payment_method", "beneficiary.account_or_vpa", "scam_type"]
+}

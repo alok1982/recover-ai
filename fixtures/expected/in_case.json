@@ -1,0 +1,30 @@
+{
+  "country": "IN",
+  "language": "hi",
+  "extraction": {
+    "reference_id": "612345678901",
+    "amount": 195000,
+    "currency": "INR",
+    "occurred_at": "2026-10-17T14:02:00+05:30",
+    "payment_method": "UPI",
+    "payer_bank": "Bank of Demo",
+    "beneficiary": {
+      "name": "CBI Verification Desk",
+      "account_or_vpa": "cbi.verify.desk@okdemo",
+      "bank": "Sample Co-operative Bank",
+      "ifsc_or_code": null
+    },
+    "scammer_contacts": ["+91 90000 12345"],
+    "urls": [],
+    "scam_type": "digital_arrest",
+    "narrative_en": "On 17 Oct 2026 a caller posing as a CBI officer told the victim she was under 'digital arrest' in a money-laundering case and pressured her to send money to a 'verification account'. She paid by UPI to cbi.verify.desk@okdemo.",
+    "narrative_local": "17 अक्टूबर 2026 को CBI अधिकारी बनकर एक व्यक्ति ने पीड़िता से कहा कि वह मनी लॉन्ड्रिंग केस में 'डिजिटल अरेस्ट' में हैं, और उन पर 'सत्यापन खाते' में पैसा भेजने का दबाव डाला। उन्होंने UPI से cbi.verify.desk@okdemo को भुगतान किया।",
+    "confidence": {
+      "reference_id": 0.97, "amount": 0.98, "currency": 0.99, "occurred_at": 0.93, "payment_method": 0.95,
+      "payer_bank": 0.9, "beneficiary.name": 0.86, "beneficiary.account_or_vpa": 0.96,
+      "beneficiary.bank": 0.62, "scammer_contacts": 0.92, "scam_type": 0.94
+    },
+    "missing_fields": ["beneficiary.ifsc_or_code", "urls"]
+  },
+  "key_fields": ["reference_id", "amount", "currency", "payment_method", "beneficiary.account_or_vpa", "scam_type"]
+}
