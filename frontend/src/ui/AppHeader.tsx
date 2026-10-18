@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useVictim, victimSignOut } from "../lib/auth";
 import type { Lang } from "../lib/types";
 import { LANG_LABEL, useT } from "../i18n";
-import { useHealth } from "../lib/health";
+import { useDemo } from "../lib/health";
 import { Logo } from "./Logo";
 
 /** Shared header for the victim pages: brand, EN/HI/MS switch, account menu (My cases · Profile · Log out). */
@@ -50,6 +50,5 @@ export function AppHeader({ lang, setLang, children }: { lang?: Lang; setLang?: 
 
 export function DemoRibbon() {
   const t = useT();
-  const h = useHealth();
-  return h?.demo ? <div className="demo-ribbon" data-testid="demo-ribbon">{t("demoRibbon")}</div> : null;
+  return useDemo() ? <div className="demo-ribbon" data-testid="demo-ribbon">{t("demoRibbon")}</div> : null;
 }

@@ -2,14 +2,13 @@ import { useState } from "react";
 import { Route, Routes, Link } from "react-router-dom";
 import { bankLogin, bankLogout, currentBankUser, type BankUser } from "../lib/auth";
 import { MOCK } from "../lib/config";
-import { useHealth } from "../lib/health";
+import { useDemo } from "../lib/health";
 import { DEMO_BANK_NAME } from "../lib/demobank";
 import { DemoRibbon } from "../ui/AppHeader";
 
 /** DEMO_MODE: the desk belongs to the fictional demo bank, never a real bank. */
 export function useDeskName(): string {
-  const h = useHealth();
-  return h?.demo ? `${DEMO_BANK_NAME} · Fraud desk` : "Bank fraud desk";
+  return useDemo() ? `${DEMO_BANK_NAME} · Fraud desk` : "Bank fraud desk";
 }
 import { Inbox } from "./Inbox";
 import { CaseDetail } from "./CaseDetail";

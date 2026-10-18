@@ -89,11 +89,12 @@ def main() -> int:
             pg.fill(f + "input[name=password]", pw)
             pg.fill(f + "input[name=password2]", pw)
             pg.fill(f + "input[name=fullName]", "Neha Sharma")
+            pg.wait_for_selector("[data-testid=demo-bank-note]", timeout=15000)
             opts = pg.eval_on_selector_all(f + "select[name=bankName] option", "els => els.map(e => [e.value, e.disabled])")
             ok("demo: staff signup offers only the demo bank (Other disabled)",
                [o for o in opts if o[0] and not o[1]] == [["RecoverAI Demo Bank (fictional)", False]], str(opts))
             pg.select_option(f + "select[name=bankName]", "RecoverAI Demo Bank (fictional)")
-            pg.fill(f + "input[name=employeeId]", "KMB-77310")
+            pg.fill(f + "input[name=employeeId]", "DEMO-77310")
             pg.fill(f + "input[name=designation]", "Fraud investigation officer")
             pg.fill(f + "textarea[name=note]", "UI check account — deleted after the test")
             pg.check(f + "input[name=ack]")
@@ -118,6 +119,7 @@ def main() -> int:
             ag.wait_for_url(lambda u: "/admin/login" in u and "next=" in u, timeout=30000)
             ok("signed-out /admin → /admin/login?next=/admin", "next=/admin" in ag.url or "next=%2Fadmin" in ag.url, ag.url)
             ag.wait_for_selector("[data-testid=admin-login]")
+            ag.wait_for_selector("[data-testid=demo-ribbon]", timeout=15000)
             ok("admin login page: 'RecoverAI Admin', email + password only, demo banner",
                "RecoverAI Admin" in ag.inner_text("h1") and ag.locator("[data-testid=admin-login] input").count() == 2
                and ag.locator("[data-testid=demo-ribbon]").count() == 1)
@@ -137,7 +139,8 @@ def main() -> int:
             uid = httpx.get(api + "/api/me", headers={"Authorization": "Bearer " + app_token()}, timeout=30).json()["uid"]
             ag.wait_for_selector(f"[data-testid='req-{uid}']", timeout=30000)
             q = ag.inner_text("[data-testid=admin-console]")
-            ok("admin console lists the new and the seeded pending applicant", email in q and SEEDED_APPLICANT in q)
+            ok("admin console lists the new pending applicant", email in q)
+            print("INFO seeded applicant in the pending queue:", SEEDED_APPLICANT in q, "(an admin may have decided it already)")
             ag.screenshot(path=str(shots / "04-admin-console.png"), full_page=True)
             ag.click(f"[data-testid='req-{uid}'] [data-testid=approve]")
             ag.wait_for_selector("[data-testid=admin-flash]")
@@ -198,6 +201,9 @@ def main() -> int:
             an.wait_for_selector("text=Inbox")
             ok("existing analyst: single login → bank desk", True)
             an.wait_for_selector("[data-testid=desk-title]")
+            an.wait_for_function("() => /Sandbox \\(([1-9][0-9]*)\\)/.test(document.body.innerText)", timeout=30000)
+            an.click(".sandbox-tab")
+            an.wait_for_timeout(800)
             an.screenshot(path=str(shots / "08-bank-desk-header.png"))
             an.click(".sandbox-tab")
             try:

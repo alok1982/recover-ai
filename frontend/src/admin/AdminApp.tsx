@@ -1,7 +1,7 @@
 /** CR-04: admin console (/admin). Needs the `role: admin` custom claim (checked by the server on every call). */
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useHealth } from "../lib/health";
+import { useDemo } from "../lib/health";
 import { DEMO_BANK_ID } from "../lib/demobank";
 import { DemoRibbon } from "../ui/AppHeader";
 import { AuthError } from "../lib/auth";
@@ -108,7 +108,7 @@ export function AdminLogin() {
 
 export function AdminApp() {
   const nav = useNavigate();
-  const health = useHealth();
+  const demo = useDemo();
   const [me, setMe] = useState<StaffMe | null>(null);
   const [denied, setDenied] = useState(false);
   const [tab, setTab] = useState<RequestStatus>("PENDING");
@@ -167,7 +167,7 @@ export function AdminApp() {
         {rows.length === 0 ? <p className="muted">No {tab.toLowerCase()} requests.</p> : (
           <table className="table admin-table">
             <thead><tr><th>Applicant</th><th>Bank</th><th>Employee ID / designation</th><th>Note</th><th>Dates</th><th>Action</th></tr></thead>
-            <tbody>{rows.map((r) => <Row key={r.uid + r.status} r={r} demo={!!health?.demo} onDone={(m) => { setFlash(m); refresh(); }} />)}</tbody>
+            <tbody>{rows.map((r) => <Row key={r.uid + r.status} r={r} demo={demo} onDone={(m) => { setFlash(m); refresh(); }} />)}</tbody>
           </table>
         )}
         <h3>Audit log</h3>

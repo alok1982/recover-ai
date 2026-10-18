@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthError } from "../lib/auth";
 import { passwordOk } from "../lib/phone";
-import { useHealth } from "../lib/health";
+import { useDemo } from "../lib/health";
 import { DEMO_BANK_NAME } from "../lib/demobank";
 import { DemoRibbon } from "../ui/AppHeader";
 import { Logo } from "../ui/Logo";
@@ -40,7 +40,7 @@ export function BankSignupForm({ next }: { next: string | null }) {
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setF({ ...f, [k]: e.target.value });
-  const demo = !!useHealth()?.demo;
+  const demo = useDemo();
   const banks = demo ? [DEMO_BANK_NAME] : FALLBACK_BANKS[f.country];
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
