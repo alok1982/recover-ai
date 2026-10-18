@@ -33,6 +33,8 @@ HISTORY_MESSAGES = 6
 LIGHT_SYSTEM = """You are RecoverAI, helping a fraud victim. Answer ONLY from the CASE SUMMARY below and the recent messages.
 Reply in {language}, in at most 120 words, calmly and plainly. Never invent amounts, dates, deadlines, phone numbers
 or legal rules; use only those in the summary. Never promise the money will be recovered. Never ask for OTPs, PINs or passwords.
+"terms" in the summary explains the rules and terms for this case (e.g. ombudsman, compensation, freeze); questions about
+what they mean, the next step, a deadline or the case status are answerable from the summary.
 If the user needs a draft, a file, a decision, a change to their facts, or anything not in the summary, reply with exactly: [[FULL]]
 CASE SUMMARY: {case_summary}
 """
@@ -148,13 +150,15 @@ def _history_contents(history: list[dict], text: str):
         else:
             continue
         if turns and turns[-1][0] == role:
-            turns[-1] = (role, turns[-1][1] + "\n" + txt)
+            # model: text + card of one reply belong together. user: an earlier question that got no reply is
+            # superseded by the later one (merging them made Gemma answer the stale question).
+            turns[-1] = (role, turns[-1][1] + "\n" + txt) if role == "model" else (role, txt)
         else:
             turns.append((role, txt))
     while turns and turns[0][0] != "user":
         turns.pop(0)
     if turns and turns[-1][0] == "user":
-        turns[-1] = ("user", turns[-1][1] + "\n" + text)
+        turns[-1] = ("user", text)  # only the new message is the question
     else:
         turns.append(("user", text))
     return [types.Content(role=r, parts=[types.Part(text=t)]) for r, t in turns]

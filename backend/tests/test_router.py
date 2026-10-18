@@ -176,3 +176,11 @@ def test_bank_reason_budget_stays_inside_ack_deadline():
     assert bank_receiver.enrich_budget(0.5) == 25
     assert bank_receiver.enrich_budget(3.0) == pytest.approx(23.0)  # 30 s ack − 4 s margin − 3 s already spent
     assert bank_receiver.enrich_budget(40) == 1.0
+
+
+def test_history_drops_an_unanswered_earlier_question():
+    hist = [{"role": "user", "text": "अब मुझे क्या करना है?"}, {"role": "assistant", "text": "1930 पर कॉल करें"},
+            {"role": "user", "text": "Ombudsman क्या है?"}]  # got no reply
+    c = router._history_contents(hist, "<user_message>मेरी डेडलाइन कब है?</user_message>")
+    assert [x.role for x in c] == ["user", "model", "user"]
+    assert c[-1].parts[0].text == "<user_message>मेरी डेडलाइन कब है?</user_message>"
