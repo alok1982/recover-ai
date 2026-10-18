@@ -9,6 +9,9 @@
 
 ## Verdict: **NO-GO as it stands → GO once BUG-01 and BUG-03 are fixed** (both are small)
 
+> **Update 18 Oct 2026, 18:00 IST:** BUG-01, BUG-02, BUG-03, BUG-04, BUG-05, BUG-07 (partial) and BUG-08 are fixed, plus BUG-09 (nosniff),
+> and the fixes are deployed as `recoverai-api-00017-qfh`. **New verdict: GO.** See [Re-test after fixes](#re-test-after-fixes) at the end.
+
 | Gate | Rule | Result |
 |---|---|---|
 | Security | F5, I6, the probe's P0 checks and A4 all pass | ✅ F5 20/20, I6 clean, all probe P0 checks pass (IDOR, rules, roles, sandbox lock, health), A4 ✅. ⚠️ P1 **BUG-03** (Hosting caches API 404s) is a correctness / DoS risk, not a data leak |
@@ -333,3 +336,61 @@ B1 (meter shows a percent only), E4 (evidence count + SHA-256 instead of thumbna
 ## Test-tooling change
 `backend/evals/common.py`: the eval harness now uses a profiled in-memory store, so mock eval users have a complete profile and are not stopped by the
 CR-03 profile gate (412). Only eval tooling changed; production code is untouched.
+
+## Re-test after fixes
+
+- **When:** 18 Oct 2026, 17:00–18:00 IST · **Code:** `main` @ `cd888f2` (the fixes) plus the re-test tooling and doc commit
+- **Deployed:** `./deploy/deploy.sh backend` + `frontend` (I checked first that no other deploy was running) → Cloud Run **`recoverai-api-00017-qfh`**, 100 % traffic.
+  `/api/health`: `allowLiveSubmission:false`, `sandboxDefault:true`; `CHAT_LIGHT_MODEL` unset (all turns on gemini-3.5-flash-lite)
+- **Scope:** only the bugs listed below. No other feature was changed. The other P2s (BUG-06, BUG-10, BUG-11, CSP) were not touched.
+
+### Per bug
+
+| Bug | ID | Status | Root cause | Fix | Re-test evidence (live 00017 unless noted) |
+|---|---|---|---|---|---|
+| BUG-01 | D5 (P0) | ✅ fixed | Two causes. (1) The QA script read `bankComplaintDate` from the top level of the card, but the field is under `card.data`, so the earlier "null" was partly a false failure. (2) The real gap: when the user had their own bank reference, the RecoverAI `RAI-…` ref was not on the card or in the draft. Also, the draft's bank reference fell back to the internal `bankCaseId`. | `filing.bank_complaint_at()`: the report_bank done time, else the bank-share time. `escalation_refs()` provides the complaint date, the bank ref (the user's ref, else the RAI ref, never the internal id) and the RAI ref. The card (`bankComplaintDate`, `bankReference`, `publicRef`) and both Ombudsman templates (en/hi) cite all three. `missing_values` blocks a Gemini draft that drops any of them. | `deadline_checks.py` 5/5. Day 31: card `bankComplaintDate=18 Oct 2026, 17:39 IST`, `publicRef=RAI-IN-20261018-1150`. The draft cites the date, the RAI ref and the user's bank ref. Refreshing does not duplicate it. +5 days: `dual_report_5d="recommended"` |
+| BUG-03 | I8 (P1) | ✅ fixed | No Cache-Control on API responses, so the Hosting CDN cached the 404 for 600 s | A pure-ASGI `NoStoreMiddleware` sets `cache-control: private, no-store` on every API response, error responses included. `firebase.json` adds a `/api/**` header rule too. | Probe I8 4/4: 403, 404, 401 and 200, each requested twice through Hosting, all show `private, no-store`, no max-age, and `x-cache: MISS` |
+| BUG-02 | E8 / E13 (P1) | ✅ fixed | Confirm checked the status and then published, which is not atomic. The bank-case id came from `sent_at`, which differs on every request, so the Pub/Sub dedupe never matched. | Atomic claim `submission_claims/{caseId}-{seq}` (Firestore `create()`; a loser gets 409 "Already sent"). The claim is released if the send fails. The bank-case key is now `caseId + submissionSeq`, so it is idempotent per submission, and withdraw → resend is still allowed (seq 2). | Probe E8: 5 parallel confirms + 1 replay → HTTP `[200, 409, 409, 409, 409, 409]`, **1 bank case**. Unit tests: 5 concurrent → 1 bank case; resend after withdraw → seq 2; a failed publish frees the claim |
+| BUG-04 | C5 (P1) | ✅ fixed | The server trusted the declared MIME type and size | New `app/filetype.py` checks magic bytes (PNG, JPEG, WebP; WAV, WebM, Ogg, FLAC, MP4/M4A, MP3/AAC, AMR). A 0-byte file → 400 "This file is empty. Please choose the screenshot again." A mismatch → 415 "…Please upload a PNG, JPEG or WebP screenshot." The rejected blob is deleted. The UI shows the server message, and 0-byte files are caught in the client before upload. The existing limits are unchanged. | Probe C5 5/5: 15 MB → 413, .exe MIME → 415, **MZ renamed .png → 415**, **0-byte → 400**, empty text → 400 |
+| BUG-05 | K18 (P1) | ✅ fixed | flash-lite sometimes answered Hindi/Malay "when is my deadline" in text without calling `show_timeline`, and sometimes leaked "[showed timeline card]" | Deterministic: a widened `_Q_DEADLINE` matcher (en/hi/ms). A deadline question with a plan always gets the timeline card, run before the model with an instruction to explain it. Card-artifact text is stripped. Still flash-lite, no Pro. | Co-pilot eval **100 %** all-checks (96/96, was 96.9 %), guard P/R **1.00 / 1.00** (175), extraction P/R **0.9981 / 0.9962** (156) |
+| BUG-07 | C1 (P1) | ⚠️ partly fixed | The guard (~750 ms p50) and the co-pilot ran one after the other. Tool turns add a model round trip. | Speculative co-pilot: it starts while the guard runs. Its text and write tools are held until the guard verdict. A flagged turn is cancelled, and the warning card is streamed first (G1 kept). Real model tokens only, no filler token. | Live, measured by the client from request start against the app's chat endpoint (`VITE_CHAT_BASE` = the Cloud Run URL), 20 turns: **p50 2.16 s, p90 2.93 s**. 10/20 ≤ 2 s. Plain conversational turns 1.4–2.0 s; turns with a tool card (consent, timeline, knowledge search) 2.2–3.1 s. G1 live ✅ (warning before text). Local bench (`evals/results/first_token__*.json`, 16 turns): e2e p50 2252 → 2248 ms, **p90 32.7 s → 6.3 s**. Simple turns 1.6–2.4 s → 1.0–1.2 s. Drafts turns are still 5–18 s, because the first text follows `generate_drafts`. **≤ 2 s is not met for tool turns.** |
+| BUG-08 | B5 (P1) | ✅ fixed | `prefill_from_text` did not know bank short names or PIN codes | Bank aliases (IN + MY, incl. Hindi) and a PIN/postcode parser in `gate.py`. A PIN is only taken after a PIN/postcode word or a place name, never next to a currency word. `request_profile` takes `postal_code`. Nothing is saved until Save. | UI B5 ✅: prefill `{"primaryBank":"State Bank of India","postalCode":"411001"}`, profile unchanged before Save |
+| BUG-09 | I3 (P2) | ✅ nosniff only | — | `X-Content-Type-Options: nosniff` on every API response (middleware) and on Hosting `**`. Permissions-Policy `microphone=(self)` is unchanged. No CSP was added (not a one-liner). | `curl`: nosniff on `/` and `/api/*`. Mic policy still `microphone=(self)`. Probe I3 CSP rows still ❌ (expected) |
+
+**Measurement note (C1):** `copilot_api_checks.py` and `live_first_token.py` without `--chat-base` call chat through Firebase Hosting. Hosting buffers the SSE stream: `user_message`, every token and `done` all arrive together at the end (checked side by side: Hosting gives every event at 1.6–2.1 s; direct gives `user_message` at 0.43 s and then the tokens stream). The app does not use that path. Its chat goes straight to Cloud Run through `VITE_CHAT_BASE`, set by `deploy.sh`. So the original C1 figure of 3.2–3.5 s was the full reply time, not the first-token time. The figures above use the app's real path (`live_first_token.py --chat-base <run url>`).
+
+### Regression
+
+| Suite | Result |
+|---|---|
+| backend pytest (from `backend/`) | ✅ all pass, 1 skipped (includes the 13 new tests in `tests/test_qa_fixes.py`) |
+| Firestore rules emulator | ✅ 13/13 |
+| Evals (flash-lite only) | ✅ co-pilot 100 % · guard 1.00/1.00 · extraction 0.9981/0.9962 (all ≥ 99 %) |
+| `ui_smoke.py` mock stack | ✅ OK |
+| `e2e_demo.py` mock / live | ✅ E2E OK / ✅ E2E OK (sandbox, withdraw 1.39 s) |
+| `cr03_acceptance.py` live | ✅ 17/17 |
+| `cr04_roles_check.py` live | ✅ 27/27 |
+| QA probe (`api_security_probe.py`) | 130 ✅ / 2 ❌ / 1 ⚠️. The ❌s are I3 CSP (P2, out of scope); the ⚠️ is F6 (as before). All P0s, E8, I8 and C5 pass |
+| `deadline_checks.py` | ✅ 5/5 (D5) |
+| `copilot_api_checks.py` | 49 ✅ / 2 ❌. C1 ❌ was measured through Hosting (see the note). C10 ❌ is the same number post-check false positive as before (the RBI 85 % / ₹25,000 / 5 days / 1 Jan 2027 rule), cleared on review. G1, C12 and all P0s ✅ |
+| `recoverai_ui.py` live | 77 ✅ / 1 ❌ / 4 ⚠️. The ❌ is A10 = BUG-06 (P2, not in scope, unchanged). The ⚠️s (A2, E4, B1, A12) are unchanged from the first pass. B5 ✅ |
+
+**Regressions:** none found. Every row that passed in the first pass still passes.
+
+### New go / no-go
+
+| Gate | Rule | Result |
+|---|---|---|
+| Security | F5, I6, probe P0s, A4 | ✅ all probe P0s pass. BUG-03 fixed (no-store, no CDN HIT) |
+| Safety | E3, E5, E9, E10, B4 | ✅ |
+| Correctness | C3, C4, C6, D1, D5, F2 | ✅ D5 fixed. The plan expects the 5-day RBI clock to turn **amber**, but the PRD makes it advisory ("recommended") until `effective_from` 2027-01-01, and the build follows the PRD. **The plan row conflicts with the PRD.** Update the plan, not the code |
+| Demo path | India story end-to-end on the deployed URL | ✅ e2e live, cr03 17/17, cr04 27/27 |
+| Fallbacks | Non-core breakage hidden by a flag | ✅ unchanged |
+| P1s | all fixed | ✅ BUG-02/03/04/05/08 fixed. ⚠️ BUG-07: real first token p50 2.16 s / p90 2.93 s. Conversational turns are under 2 s; tool and drafts turns are not |
+
+**Verdict: GO.** Remaining known items: BUG-07 tool-turn latency (P1, partial), BUG-06 (A10), BUG-10, BUG-11 and CSP (P2), not in scope.
+
+### Re-test cleanup (done)
+- All +91 90000 011xx throw-away logins deleted. The A12 throttled account (+91 90000 01108) could not self-delete, so it was removed via the admin API. Its user docs are gone too.
+- 7 QA bank-case copies created in the re-test (≥ 17:40 IST) deleted. `submission_claims` is empty, the DLQ is empty, and there are no orphaned evidence prefixes.
+- Seed 00002 profile is back to its seeded incomplete state (postalCode and primaryBank empty). The user's account and case were not touched.

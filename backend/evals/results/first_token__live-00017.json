@@ -1,0 +1,220 @@
+{
+ "chatBase": "https://recoverai-api-xgw63iesqa-el.a.run.app",
+ "n": 20,
+ "first_token_s": {
+  "p50": 2.16,
+  "p90": 2.93,
+  "max": 3.05
+ },
+ "under_2s": 10,
+ "models": [
+  "gemini-3.5-flash-lite"
+ ],
+ "g1": {
+  "cards": [
+   "warning",
+   "warning",
+   "consent"
+  ],
+  "warningBeforeText": true,
+  "firstTokenS": 5.223731994628906
+ },
+ "rows": [
+  {
+   "text": "What happens next with my case?",
+   "firstTokenS": 2.93,
+   "totalS": 3.16,
+   "serverFirstTokenMs": 2468,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "consent"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "Is it safe to share this with my bank?",
+   "firstTokenS": 2.37,
+   "totalS": 2.66,
+   "serverFirstTokenMs": 1909,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "consent"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "अब आगे क्या होगा?",
+   "firstTokenS": 1.64,
+   "totalS": 1.86,
+   "serverFirstTokenMs": 1136,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "What should I tell the 1930 operator?",
+   "firstTokenS": 1.7,
+   "totalS": 2.14,
+   "serverFirstTokenMs": 1271,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "क्या मेरा पैसा पक्का वापस मिलेगा?",
+   "firstTokenS": 1.5,
+   "totalS": 1.8,
+   "serverFirstTokenMs": 1061,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "When is my deadline?",
+   "firstTokenS": 2.49,
+   "totalS": 2.75,
+   "serverFirstTokenMs": 2032,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "timeline"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "What is the Ombudsman?",
+   "firstTokenS": 2.58,
+   "totalS": 2.76,
+   "serverFirstTokenMs": 2139,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "Should I block the scammer's number?",
+   "firstTokenS": 1.63,
+   "totalS": 1.94,
+   "serverFirstTokenMs": 1184,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "मुझे बैंक को कब बताना चाहिए?",
+   "firstTokenS": 1.98,
+   "totalS": 2.0,
+   "serverFirstTokenMs": 875,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "Can the bank freeze the money?",
+   "firstTokenS": 1.57,
+   "totalS": 1.76,
+   "serverFirstTokenMs": 1134,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "What happens next with my case?",
+   "firstTokenS": 2.7,
+   "totalS": 2.7,
+   "serverFirstTokenMs": null,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "consent"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "Is it safe to share this with my bank?",
+   "firstTokenS": 2.16,
+   "totalS": 2.51,
+   "serverFirstTokenMs": 1723,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "consent"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "अब आगे क्या होगा?",
+   "firstTokenS": 2.93,
+   "totalS": 2.93,
+   "serverFirstTokenMs": null,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "consent"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "What should I tell the 1930 operator?",
+   "firstTokenS": 1.66,
+   "totalS": 1.83,
+   "serverFirstTokenMs": 1209,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "क्या मेरा पैसा पक्का वापस मिलेगा?",
+   "firstTokenS": 1.71,
+   "totalS": 1.94,
+   "serverFirstTokenMs": 1285,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "When is my deadline?",
+   "firstTokenS": 2.48,
+   "totalS": 2.67,
+   "serverFirstTokenMs": 2037,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "timeline"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "What is the Ombudsman?",
+   "firstTokenS": 3.05,
+   "totalS": 3.3,
+   "serverFirstTokenMs": 2609,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "Should I block the scammer's number?",
+   "firstTokenS": 1.53,
+   "totalS": 1.82,
+   "serverFirstTokenMs": 1087,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  },
+  {
+   "text": "मुझे बैंक को कब बताना चाहिए?",
+   "firstTokenS": 2.59,
+   "totalS": 2.78,
+   "serverFirstTokenMs": 2166,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [
+    "consent"
+   ],
+   "warningFirst": true
+  },
+  {
+   "text": "Can the bank freeze the money?",
+   "firstTokenS": 1.38,
+   "totalS": 1.66,
+   "serverFirstTokenMs": 955,
+   "model": "gemini-3.5-flash-lite",
+   "cards": [],
+   "warningFirst": true
+  }
+ ]
+}
