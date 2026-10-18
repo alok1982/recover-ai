@@ -77,6 +77,11 @@ class Api:
             for line in r.iter_lines():
                 if line.startswith("data: "):
                     evs.append(json.loads(line[6:]))
+        if body.get("text"):  # every co-pilot turn must write a real reply (blank-reply regression)
+            reply = text(evs).strip()
+            if not reply:
+                check(False, f"non-empty assistant reply for: {body['text']!r} (cards {kinds(evs)})")
+            REPLIES.append({"q": body["text"], "reply": reply[:160]})
         return evs
 
     def upload(self, cid, fname, mime):
@@ -226,6 +231,7 @@ def _done(evs):
 
 
 ROUTING: list[dict] = []
+REPLIES: list[dict] = []
 SANDBOX: dict = {}
 
 
@@ -290,6 +296,9 @@ def main() -> None:
     check(httpx.get(v.url("/api/health"), timeout=30).json().get("ok") is True, f"healthz {a.api}")
     india(v, bank)
     malaysia(v)
+    check(bool(REPLIES), f"all {len(REPLIES)} co-pilot chat turns had non-empty text")
+    for r in REPLIES:
+        print("   ", json.dumps(r, ensure_ascii=False))
     print("SANDBOX", json.dumps(SANDBOX))
     print("E2E OK")
 
