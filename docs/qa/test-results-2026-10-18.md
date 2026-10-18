@@ -11,6 +11,7 @@
 
 > **Update 18 Oct 2026, 18:00 IST:** BUG-01, BUG-02, BUG-03, BUG-04, BUG-05, BUG-07 (partial) and BUG-08 are fixed, plus BUG-09 (nosniff),
 > and the fixes are deployed as `recoverai-api-00017-qfh`. **New verdict: GO.** See [Re-test after fixes](#re-test-after-fixes) at the end.
+> **Update 18 Oct 2026, 20:15 IST:** the four P2s (BUG-06, BUG-09 CSP, BUG-10, BUG-11) are fixed too, deployed as `recoverai-api-00018-t5d`. See [Re-test after P2 fixes](#re-test-after-p2-fixes).
 
 | Gate | Rule | Result |
 |---|---|---|
@@ -391,6 +392,43 @@ CR-03 profile gate (412). Only eval tooling changed; production code is untouche
 **Verdict: GO.** Remaining known items: BUG-07 tool-turn latency (P1, partial), BUG-06 (A10), BUG-10, BUG-11 and CSP (P2), not in scope.
 
 ### Re-test cleanup (done)
-- All +91 90000 011xx throw-away logins deleted. The A12 throttled account (+91 90000 01108) could not self-delete, so it was removed via the admin API. Its user docs are gone too.
+- All +91 90000 011xx throw-away logins deleted. The A12 throttled account (+91 90000 01108) could not self-delete, so its login was removed via the admin API. *Correction:* its Firestore user doc was in fact left behind; it was found and deleted during the P2 pass, and `Throwaway.delete` now falls back to an admin cleanup (cases + user doc + login).
 - 7 QA bank-case copies created in the re-test (≥ 17:40 IST) deleted. `submission_claims` is empty, the DLQ is empty, and there are no orphaned evidence prefixes.
 - Seed 00002 profile is back to its seeded incomplete state (postalCode and primaryBank empty). The user's account and case were not touched.
+
+## Re-test after P2 fixes
+
+- **When:** 18 Oct 2026, 19:00–20:15 IST · **Code:** `main` @ `c590f3a` (the fixes) plus a doc and QA-script commit
+- **Deployed:** I checked first that no other deploy or build was running, then ran `./deploy/deploy.sh backend` + `frontend` → **`recoverai-api-00018-t5d`**, 100 % traffic. Env: `ALLOW_LIVE_SUBMISSION=false`, `SANDBOX_DEFAULT=true`, `DEMO_MODE=true`. `/api/health` (cache-busted): `allowLiveSubmission:false`, `sandboxDefault:true`. The bundle served is `assets/index-8j3wxpPO.js`, the new build.
+- **Scope:** BUG-06, BUG-09 (CSP), BUG-10 and BUG-11 only.
+
+| Bug | ID | Status | Root cause | Fix | Live evidence (00018) |
+|---|---|---|---|---|---|
+| BUG-06 | A10 (A9 kept) | ✅ fixed | `toE164` used libphonenumber `isValid()`, which accepts Indian non-mobile ranges such as `+91 100000001` (9 digits). The server never re-checked the number. | Explicit rules, the same on client (`lib/phone.ts`) and server (`profile.normalize_phone`). Spaces, dashes, dots, brackets, `+91`/`+60`/`0091`/`91…`/`60…` and a leading `0` are stripped first. **India:** exactly 10 digits starting 6–9. **Malaysia:** 9–10 digits after 60, starting 1. An explicit `+91`/`+60` selects that country's rule; any other country code is rejected. Signup **and** login show a country-specific error ("Enter a valid mobile number for India: 10 digits starting with 6, 7, 8 or 9." / Malaysia, in en/hi/ms). Server: `ensure_user` refuses to create a profile for a phone login with an invalid number (400 `INVALID_PHONE`). Existing users are not re-checked. All 6 live user numbers satisfy the rules. | UI suite A10 9/9: 5 digits, letters, IN starting 5, +91 with 9 digits, 11 digits, UK number, the Malaysian number with +91 (no account created). `p2_auth_checks.py`: 6 bad numbers × signup + login × Chromium + WebKit all rejected, and no Firebase login exists for +91100000001 or +915123456789. A9: all 4 formats still log in. Seeds 00001/00002/+60 10000 0001 still log in (cr03 17/17, UI suite, mock check). The user's number passes the rule in the unit tests; their account was not touched. 24 client + 29 server unit cases |
+| BUG-10 | A12 (A11 kept) | ✅ fixed | `mapFirebase` grouped `auth/too-many-requests` with the wrong-password codes | A new `throttled` AuthError code → "Too many attempts. Please wait a few minutes and try again." (`errTooMany`, en/hi/ms). Used on the victim login, the staff login (`/login?role=bank`), the bank desk (`/bank`, which previously showed the raw Firebase text) and `/admin/login`. Wrong password vs unknown number still map to the same generic message. | `p2_auth_checks.py` 41/41 on Chromium + WebKit, using throw-away logins throttled on purpose: victim en/hi/ms show the localised message; staff, bank desk and admin show "Too many attempts…". A11: two unknown numbers give the identical generic "incorrect" error. UI suite A12 ✅ (it was ⚠️) |
+| BUG-11 | C14 | ✅ fixed | Two sources wrote the same card in one turn: the guard's warning plus the co-pilot's `check_recovery_scam` on the same text, and a tool called twice (consent) | Backend: `chat_events` opens a per-turn scope. Inside it `append_message` stores only one card per kind + key (key = `clockId` / `key` / `id`, so two escalation clocks stay distinct) and returns the first message for the repeat. The stream also drops any event that repeats a message id or a card key. UI: `Chat.tsx` skips a repeated kind + key within a turn (defensive). Outside a turn nothing is deduplicated. | `copilot_api_checks.py` C14: 28 live turns, no duplicate card. G1 still shows the warning first. Co-pilot eval 100 % (96/96, `copilot__…__p2-fix-1018.json`). Unit tests: the scope stores one card; the stream drops a repeated id/key and keeps distinct escalation clocks |
+| BUG-09 | I3 | ✅ fixed (enforced) | No CSP | An **enforced** `Content-Security-Policy` in `firebase.json` (HTML) → `default-src 'self'`. `script-src` allows self plus apis.google.com and the reCAPTCHA paths (Firebase Auth). `connect-src` allows self, both Cloud Run URLs (chat SSE goes direct), identitytoolkit, securetoken, firestore (https + wss) and storage.googleapis.com (signed-URL PUT). `img-src` allows self, data:, blob: and storage.googleapis.com. `media-src` allows self, blob: and storage.googleapis.com. `font-src` allows self and data:. `style-src` allows self and `'unsafe-inline'`. `frame-src` allows self, `recoverai-511917.firebaseapp.com` and reCAPTCHA. `worker-src` allows self and blob:. `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. API JSON/SSE responses get `default-src 'none'; frame-ancestors 'none'`; images, PDFs and audio do not. Permissions-Policy `microphone=(self)` and nosniff are unchanged. `deploy.sh frontend` now stops if the Cloud Run URL is missing from the CSP. | **Pre-deploy:** `csp_check.py --inject` ran the policy on the live origin in real headless browsers. A negative control proved the injection is enforced. WebKit flagged inline style attributes and `<style>` elements with `style-src 'self'`, so only that directive was relaxed to `'unsafe-inline'`. After that, 0 violations in both browsers. **Live:** `csp_check.py` Chromium 18/18 and WebKit 17/17, **0 CSP violations and 0 CSP console errors** on home, signup, login, privacy, /cases, co-pilot history, co-pilot image upload (signed-URL PUT 200 + register 200) + streamed chat + mic recording/voice upload (Chromium), /profile, bank desk, bank case detail with the evidence image loaded from GCS, admin login and admin console. Hosting serves the CSP on 9/9 HTML documents. Probe I3 ✅ (was ❌) |
+
+### Regression (P2 pass)
+
+| Suite | Result |
+|---|---|
+| backend pytest | ✅ 227 passed, 1 skipped (includes the new `tests/test_p2_fixes.py`) |
+| Firestore rules emulator | ✅ 13/13 |
+| Evals | ✅ co-pilot 100 % (96/96). The guard and extraction code paths were not changed; their last scores stand (1.00/1.00, 0.9981/0.9962) |
+| `ui_smoke.py` mock stack (fresh in-memory store) | ✅ OK; `e2e_demo.py --mock` ✅ E2E OK |
+| `e2e_demo.py` live | ✅ E2E OK |
+| `cr03_acceptance.py` / `cr04_roles_check.py` live | ✅ 17/17 / ✅ 27/27 |
+| QA probe | ✅ 132 pass / 0 fail / 1 ⚠️ (F6, as before). I3 CSP rows now pass |
+| `recoverai_ui.py` live | ✅ 83 pass / 0 fail / 3 ⚠️ (A2, E4, B1, unchanged). A10 and A12 are now ✅ |
+| `copilot_api_checks.py` | 50 pass / 2 fail. C14 ✅ and G1 ✅. C1 ❌ is measured through Hosting, which buffers SSE (see the earlier note). C10 ❌ is the known number post-check false positive (RBI rule numbers and the RAI ref digits) |
+| `csp_check.py` live, `p2_auth_checks.py` live | ✅ 18/18 + 17/17, 0 violations / ✅ 41/41 |
+
+**Regressions:** none.
+
+**Go / no-go:** still **GO**. All P0 and P2 bugs from the QA pass are fixed. The only open item is BUG-07, partly fixed: tool turns have a first-token p90 of about 2.9 s.
+
+### Cleanup (P2 pass)
+- Throw-away logins +91 90000 01101–01120: none left. The 3 throttled logins (01116, 01117 and a work-email staff login) were deleted with their own sign-up tokens. The A12 account was removed by the new admin fallback (login, user doc, cases).
+- 9 QA sandbox bank copies from this pass deleted. `submission_claims` empty, DLQ empty, no orphaned evidence prefixes. 5 user docs remain (the user, seeds, pre-existing), no QA ones.
+- Seed 00002 is still in its seeded incomplete state. Account 9899319892 / case `c_6a99e7503a40418fbaa0` not touched; no `reset_demo`, no password changes.

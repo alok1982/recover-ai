@@ -242,8 +242,8 @@ def main() -> int:
         rec("K-WITHDRAW", "decision on a withdrawn bank case → 409", r.status_code == 409, f"HTTP {r.status_code}", "P1")
         # models used
         bad = [m for m in MODELS if "pro" in m.lower() or "gemma" in m.lower()]
-        dup = [(r["tag"], r["cards"]) for r in REPLIES
-               if len([c for c in r["cards"] if c != "escalation"]) != len({c for c in r["cards"] if c != "escalation"})]
+        dup = [(r["tag"], r.get("cards")) for r in REPLIES
+               if len([c for c in r.get("cards", []) if c != "escalation"]) != len({c for c in r.get("cards", []) if c != "escalation"})]
         rec("C14", f"no turn streams the same card twice ({len(REPLIES)} turns)", not dup, json.dumps(dup, ensure_ascii=False)[:300], "P2")
         rec("K-MODEL", "co-pilot turns answered by Flash-Lite tiers only (no Pro, no Gemma)", MODELS and not bad,
             f"models {sorted(set(MODELS))}", "P1")
