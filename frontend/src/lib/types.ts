@@ -2,7 +2,7 @@ export type Lang = "en" | "hi" | "ms";
 export type Country = "IN" | "MY";
 
 export interface Card {
-  kind: "upload" | "facts" | "plan" | "drafts" | "consent" | "timeline" | "escalation" | "warning" | "countries" | "withdraw";
+  kind: "upload" | "facts" | "plan" | "drafts" | "consent" | "timeline" | "escalation" | "warning" | "countries" | "withdraw" | "hotline" | "profile";
   data: any;
 }
 

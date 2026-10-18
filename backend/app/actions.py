@@ -97,7 +97,8 @@ def plan_card_data(case: dict) -> dict:
 
 
 def drafts_card_data(case: dict) -> dict:
-    return {"drafts": list((case.get("drafts") or {}).values()), "evidencePackAvailable": bool(case.get("evidencePackPath"))}
+    return {"drafts": list((case.get("drafts") or {}).values()), "evidencePackAvailable": bool(case.get("evidencePackPath")),
+            "stale": case.get("draftsStale")}
 
 
 def consent_card_data(case: dict) -> dict:
@@ -113,7 +114,18 @@ def consent_card_data(case: dict) -> dict:
             "amount": format_amount(ex.get("amount"), ex.get("currency")), "given": bool(case.get("consentGivenAt")),
             # CR-01 / F8.2: the destination and who receives it; the button only opens the confirmation sheet
             "destination": handoff.destination(case), "liveAllowed": handoff.live_allowed(),
-            "bankName": ex.get("payer_bank"), "beneficiaryMasked": handoff._mask(b.get("account_or_vpa"))}
+            "bankName": ex.get("payer_bank") or _profile_bank(case), "beneficiaryMasked": handoff._mask(b.get("account_or_vpa")),
+            "customerName": _profile_name(case)}
+
+
+def _profile_name(case: dict) -> str | None:
+    from . import gate
+    return gate.owner_profile(case).get("fullName") or None
+
+
+def _profile_bank(case: dict) -> str | None:
+    from . import gate, profile as P
+    return P.bank_name(gate.owner_profile(case))
 
 
 def timeline_card_data(case: dict) -> dict:
@@ -319,7 +331,7 @@ async def drafts_stream(case_id: str) -> AsyncIterator[dict]:
     from .handoff import watermark_draft  # CR-01: sandbox drafts carry "SANDBOX — NOT SUBMITTED"
     drafts = {k: watermark_draft(case, d) for k, d in drafts.items()}
     latency = int((time.perf_counter() - t0) * 1000)
-    update_case(case_id, {"drafts": drafts, "status": "filed" if case.get("status") in ("confirmed", "extracted") else case.get("status")})
+    update_case(case_id, {"drafts": drafts, "draftsStale": None, "status": "filed" if case.get("status") in ("confirmed", "extracted") else case.get("status")})
     try:
         await build_evidence_pack(case_id)
     except Exception:  # noqa: BLE001 - drafts are still useful without the PDF

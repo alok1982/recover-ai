@@ -18,9 +18,31 @@ REPO = Path(__file__).resolve().parents[2]
 FIX = REPO / "fixtures"
 
 
+DEFAULT_PROFILE = {"fullName": "Test Victim", "country": "IN", "language": "en", "state": "Uttar Pradesh",
+                   "district": "Lucknow", "postalCode": "226001", "primaryBank": "HDFC Bank"}
+
+
+class ProfiledStore(store.MemoryStore):
+    """Pre-CR-03 tests use bare mock uids ("victim1", "a", …): give them a complete profile so the existing story
+    runs unchanged. Phone accounts ("ph-…") and explicitly stored users behave exactly like production."""
+
+    def get_user(self, uid):
+        u = super().get_user(uid)
+        if u is None and uid and not uid.startswith("ph-"):
+            prof = dict(DEFAULT_PROFILE)
+            return {"uid": uid, "phoneE164": None, "phoneVerified": False, "profile": prof,
+                    "profileStatus": {"complete": True, "missing": []}}
+        return u
+
+    def update_user(self, uid, patch):
+        if uid not in self.db.setdefault("users", {}):
+            self.set_user(uid, self.get_user(uid) or {})
+        super().update_user(uid, patch)
+
+
 @pytest.fixture(autouse=True)
 def fresh_state(tmp_path):
-    store.set_store(store.MemoryStore())
+    store.set_store(ProfiledStore())
     storage.set_blobs(storage.LocalBlobStore(str(tmp_path / "blobs")))
     set_llm(None)
     bq.set_analytics(_shared_analytics())

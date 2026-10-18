@@ -21,7 +21,7 @@ Rules, arithmetic, amounts and dates are computed **in code**, never by the mode
 ```mermaid
 flowchart LR
   subgraph Client["Firebase Hosting"]
-    PWA["Victim co-pilot PWA<br/>React + Vite<br/>chat · cards · case panel<br/>(Anonymous Auth)"]
+    PWA["Victim co-pilot PWA<br/>React + Vite<br/>chat · cards · case panel<br/>(phone + password accounts)"]
     BANKUI["Bank dashboard /bank<br/>(email+password, claim role=bank)"]
   end
 
@@ -134,6 +134,16 @@ Open http://localhost:5173 for the victim co-pilot and http://localhost:5173/ban
 
 To run local mode against **real** Gemini, set `MOCK_MODE=false` and `AUTH_MODE=mock`, plus `GOOGLE_CLOUD_PROJECT`, after `gcloud auth application-default login`. This also needs Firestore and the bucket. See `.env.example`.
 
+## Accounts, profile gate and voice (CR-03)
+
+* **Home page `/`** is public: the national hotline strip (India *Call 1930 now · cybercrime.gov.in*, Malaysia *Call NSRC 997 now*, tap-to-call) never needs a login. *Get help now* → `/signup` (or `/login`) → `/cases` → *Start a new case* → co-pilot.
+* **Phone + password accounts** use Firebase **Email/Password** with a synthetic login: the phone is normalised to E.164 (`libphonenumber-js` in the app, `phonenumbers` on the server) and becomes `<digits>@phone.recoverai.app` (e.g. `919000000001@phone.recoverai.app`); it is never shown. `/cases`, `/cases/:id` and `/profile` redirect to `/login?next=…`. The backend verifies the ID token on every `/api/*` call and rejects **anonymous** tokens on victim routes (`401 SIGN_IN_REQUIRED`); old anonymous cases are left in Firestore untouched. The bank analyst login is unchanged.
+* **SMS / OTP verification is not implemented** (CR-03 SHOULD). Every account is stored with `phoneVerified: false`; anyone who knows a number can register it. Forgot-password via OTP is therefore not available either.
+* **Profile** lives in `users/{uid}` (`phoneE164, phoneVerified, termsAcceptedAt, termsVersion, profile{…}, profileStatus{complete, missing[]}`), readable only by its owner (`firestore.rules`) and written only by the backend. `backend/app/profile.py: compute_status()` is the single definition of "complete" (name, country, language, state, district/city, PIN 6 digits / postcode 5 digits, bank). Profile data is never written to BigQuery and never sent to Gemma.
+* **Gate:** `extract`, `plan`, `drafts`, `evidence-pack`, `send-to-bank/preview` and `send-to-bank` answer `412 {code: "PROFILE_INCOMPLETE", missing}` until the profile is complete. In chat the co-pilot shows the hotline card first (recent loss / distress), then a profile card with only the missing fields, pre-filled from the chat; the victim taps Save, and the co-pilot continues with evidence. Drafts, the evidence pack and the consent card carry the profile name, address and bank; changing the profile marks drafts *Profile changed — regenerate*.
+* **Seed users** (`python scripts/seed_users.py`, or `--api http://localhost:8080` for the mock backend; password `Demo@2026`): `+91 90000 00001` complete (India, Hindi), `+91 90000 00002` missing PIN code and bank (shows the gate), `+60 10000 0001` complete (Malaysia, English). Re-running resets the three profiles. Each account can hold at most `MAX_OPEN_CASES` (3) open cases, so scripts delete the cases they create.
+* **Voice notes:** the recorder picks `audio/webm;codecs=opus` → `audio/mp4` → `audio/ogg;codecs=opus`, records in 250 ms chunks (0.5 s minimum, 2 min cap) and posts to `POST /api/cases/{id}/voice`; the backend transcodes with ffmpeg to 16 kHz mono FLAC and Gemini transcribes it. A failed transcription shows an inline hint, never a chat bubble. `VOICE_ENABLED=false` hides the mic. Hosting sends `Permissions-Policy: microphone=(self)`.
+
 ## Tests
 
 ```bash
@@ -141,6 +151,8 @@ cd backend && pytest                              # 87 passed, 1 skipped (live-G
 python ../scripts/e2e_demo.py --mock              # both storylines over HTTP against the local backend
 python ../scripts/ui_smoke.py                     # headless-browser run of the India + bank story; writes docs/screenshots/
 cd ../frontend && npm run build
+cd ../firestore-tests && npm install && npm test  # Firestore rules on the emulator (needs Java): users/{uid} + cases isolation
+python ../scripts/voice_check.py --mock           # recorder with a fake microphone (Chromium desktop + Pixel, blocked mic, WebKit)
 ```
 
 The suite covers the playbook engine, deadlines (`effective_from` against the incident's local date, timezones), amount and lakh formatting, digit and scale-word normalisation in the post-check, lazy-clock idempotence (escalation posts exactly once), recovery-scam guard wiring (warning before any token, on chat and on pasted evidence), the draft string-check (UTR, amount and VPA in every draft in both languages), extraction against every fixture, the injection fixture, the Hindi PDF, bank rules, the ADK co-pilot with a scripted fake LLM, and the full IN and MY API storylines. For v2.2 it also covers the synthetic data shape (§12.3), the BigQuery SQL (transpiled with sqlglot and run on DuckDB) matching the Python reference, rules driven by features, BigQuery-down degradation, the BQML score bands, push auth (missing / bad / mock token, malformed bodies), redelivery idempotence (one bank case, one victim message), the decision round trip, anonymised case_events, and cited sources with the post-check.

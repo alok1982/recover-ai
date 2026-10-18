@@ -16,26 +16,79 @@ SHOTS = ROOT / "docs" / "screenshots"
 FIX = ROOT / "fixtures"
 
 
+def login(pg, base: str, phone: str, password: str = "Demo@2026") -> None:
+    pg.goto(base + "/login?next=/cases")
+    pg.select_option("[data-testid=cc]", "MY" if phone.startswith("+60") else "IN")
+    pg.fill("input[name=phone]", phone.replace("+60", "").strip())
+    pg.fill("input[name=password]", password)
+    pg.click("button[type=submit]")
+    pg.wait_for_url("**/cases")
+
+
+def logout(pg) -> None:
+    pg.click("[data-testid=account-menu]")
+    pg.click("[data-testid=logout]")
+    pg.wait_for_url(re.compile(r".*/$"))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:5173")
+    ap.add_argument("--api", default=None, help="mock backend for seeding (default: base with port 8080)")
     a = ap.parse_args()
     SHOTS.mkdir(parents=True, exist_ok=True)
+    import subprocess
+    import sys
+    api = a.api or a.base.replace(":5173", ":8080")
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "seed_users.py"), "--api", api], check=True)
     chrome = shutil.which("google-chrome") or shutil.which("chromium")
     with sync_playwright() as p:
         b = p.chromium.launch(executable_path=chrome) if chrome else p.chromium.launch()
         pg = b.new_page(viewport={"width": 1366, "height": 900})
         pg.on("pageerror", lambda e: print("PAGE ERROR:", e))
+        # CR-03 A: public home page; the hotline strip needs no login
         pg.goto(a.base)
-        pg.screenshot(path=str(SHOTS / "00-landing.png"))
-        on = lambda: pg.locator(".pickers .seg-btn.on").all_inner_texts()  # noqa: E731
-        assert "English" in on(), f"English must be the default language, got {on()}"
-        pg.locator(".pickers .seg-btn", has_text="Malaysia").click()
-        assert "English" in on(), f"switching country must keep English, got {on()}"
+        pg.wait_for_selector("[data-testid=hotline-IN]")
+        assert pg.locator("a[href='tel:1930']").count() >= 1 and pg.locator("a[href='tel:997']").count() >= 1
+        assert "Lost money to a scam? The first hour matters." in pg.inner_text("h1")
+        pg.screenshot(path=str(SHOTS / "00-landing.png"), full_page=True)
+        pg.goto(a.base + "/cases")
+        pg.wait_for_url("**/login?next=%2Fcases")
+        pg.goto(a.base + "/signup")
+        pg.wait_for_selector("input[name=terms]")
+        pg.screenshot(path=str(SHOTS / "14-signup.png"), full_page=True)
+        # CR-03 C: seeded 00002 (missing PIN + bank) → hotline card, then the profile card; Save → evidence step
+        login(pg, a.base, "90000 00002")
+        pg.wait_for_selector("[data-testid=profile-banner]")
+        pg.locator(".pickers .seg-btn", has_text="हिन्दी").click()
+        pg.click("[data-testid=start-case]")
+        pg.wait_for_url("**/cases/c_*")
+        pg.fill(".inputbar textarea", "मेरे साथ अभी 1,95,000 का फ्रॉड हुआ")
+        pg.keyboard.press("Enter")
+        pg.wait_for_selector("[data-testid=profile-card] [data-testid=profile-form]")
+        kinds = pg.eval_on_selector_all(".messages .card", "els => els.map(e => e.className)")
+        hi = next(i for i, k in enumerate(kinds) if "hotline-card" in k)
+        pi = next(i for i, k in enumerate(kinds) if "profile-card" in k)
+        assert hi < pi, kinds
+        assert not any("upload-card" in k for k in kinds), "no evidence before the profile"
+        fields = pg.eval_on_selector_all("[data-testid=profile-form] input, [data-testid=profile-form] select", "els => els.map(e => e.name)")
+        assert fields == ["postalCode", "primaryBank"], fields
+        pg.wait_for_timeout(600)
+        pg.screenshot(path=str(SHOTS / "16-profile-gate.png"))
+        pg.fill("[data-testid=profile-form] input[name=postalCode]", "208001")
+        pg.select_option("[data-testid=profile-form] select[name=primaryBank]", "State Bank of India")
+        pg.click("[data-testid=profile-save]")
+        pg.wait_for_selector(".upload-card")
+        logout(pg)
+        # the existing story as seeded 00001 (complete profile, Hindi)
+        login(pg, a.base, "90000 00001")
+        pg.wait_for_selector("[data-testid=greeting]:has-text('Asha')")
+        assert pg.locator("[data-testid=profile-banner]").count() == 0
+        pg.screenshot(path=str(SHOTS / "15-cases.png"), full_page=True)
         pg.locator(".pickers .seg-btn", has_text="India").click()
         pg.locator(".pickers .seg-btn", has_text="हिन्दी").click()  # the demo storyline picks Hindi explicitly
-        pg.get_by_role("button", name="मेरे साथ ठगी हुई — रिकवरी शुरू करें").click()
-        pg.wait_for_url("**/case/**")
+        pg.click("[data-testid=start-case]")
+        pg.wait_for_url("**/cases/c_*")
         pg.fill(".inputbar textarea", "मैंने CBI वाले को 1,95,000 भेज दिए")
         pg.keyboard.press("Enter")
         pg.wait_for_selector(".upload-card")

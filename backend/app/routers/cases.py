@@ -9,7 +9,7 @@ from typing import AsyncIterator
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
-from .. import actions
+from .. import actions, gate
 from ..agents import voice
 from ..agents import router as turn_router
 from ..auth import User, victim_user
@@ -216,7 +216,7 @@ async def _collect(gen: AsyncIterator[dict]) -> list[dict]:
 
 @router.post("/{case_id}/extract")
 async def run_extract(case_id: str, user: User = Depends(victim_user)) -> dict:
-    get_owned_case(user, case_id)
+    gate.require_profile(get_owned_case(user, case_id))
     msgs = await _collect(actions.extract(case_id))
     return {"case": _view(actions.load(case_id)), "messages": msgs}
 
@@ -230,14 +230,14 @@ def patch_extraction(case_id: str, req: ExtractionPatch, user: User = Depends(vi
 
 @router.post("/{case_id}/plan")
 async def run_plan(case_id: str, user: User = Depends(victim_user)) -> dict:
-    get_owned_case(user, case_id)
+    gate.require_profile(get_owned_case(user, case_id))
     msgs = await _collect(actions.plan_stream(case_id))
     return {"case": _view(actions.load(case_id)), "messages": msgs}
 
 
 @router.post("/{case_id}/drafts")
 async def run_drafts(case_id: str, user: User = Depends(victim_user)) -> dict:
-    get_owned_case(user, case_id)
+    gate.require_profile(get_owned_case(user, case_id))
     msgs = await _collect(actions.drafts_stream(case_id))
     return {"case": _view(actions.load(case_id)), "messages": msgs}
 
@@ -245,6 +245,7 @@ async def run_drafts(case_id: str, user: User = Depends(victim_user)) -> dict:
 @router.post("/{case_id}/evidence-pack")
 async def evidence_pack(case_id: str, rebuild: bool = False, user: User = Depends(victim_user)) -> dict:
     case = get_owned_case(user, case_id)
+    gate.require_profile(case)
     if rebuild or not case.get("evidencePackPath"):
         await actions.build_evidence_pack(case_id)
     return {"url": actions.evidence_pack_url(case_id), "expiresInSeconds": 900}
@@ -281,14 +282,14 @@ def set_sandbox(case_id: str, req: SandboxReq, user: User = Depends(victim_user)
 @router.post("/{case_id}/send-to-bank/preview")
 def send_preview(case_id: str, user: User = Depends(victim_user)) -> dict:
     """CR-01 / F8.2: summary for the confirmation sheet + a 5-minute confirmationToken. Publishes nothing."""
-    get_owned_case(user, case_id)
+    gate.require_profile(get_owned_case(user, case_id))
     return jsonable(handoff.preview(case_id))
 
 
 @router.post("/{case_id}/send-to-bank")
 async def send_to_bank(case_id: str, req: SendToBankReq, user: User = Depends(victim_user)) -> dict:
     """consent=false → "Not now". Otherwise {confirmationToken, confirmed: true} is required (409 if details changed)."""
-    get_owned_case(user, case_id)
+    gate.require_profile(get_owned_case(user, case_id))
     case, msgs = await actions.send_to_bank(case_id, req.consent, req.consentVersion, req.confirmationToken, req.confirmed)
     return {"case": _view(case), "messages": jsonable(msgs)}
 
@@ -357,7 +358,7 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
                 flagged = True
                 yield actions.msg_event(m)
 
-    if req.trigger in DIRECTED and not text:
+    if req.trigger in DIRECTED and not text and gate.status(actions.load(case_id))["complete"]:
         last = None
         async for ev in DIRECTED[req.trigger](case_id):
             last = ev

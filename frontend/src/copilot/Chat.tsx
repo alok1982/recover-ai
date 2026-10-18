@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { streamChat, type SseEvent } from "../lib/api";
 import type { CaseDoc, Message } from "../lib/types";
 import { useT } from "../i18n";
@@ -22,6 +22,17 @@ export function useCopilotController({ caseId, caseDoc, messages, addLocal, setC
   const [streaming, setStreaming] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+
+  // CR-03 C: any REST call answered 412 PROFILE_INCOMPLETE shows the profile card in the chat.
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent).detail || {};
+      addLocal([{ id: `local-profile-${Date.now()}`, role: "assistant", text: null,
+        card: { kind: "profile", data: { missing: d.missing || [], prefill: {} } }, seq: Date.now() * 1e6 } as any]);
+    };
+    window.addEventListener("recoverai:profile-incomplete", on);
+    return () => window.removeEventListener("recoverai:profile-incomplete", on);
+  }, [addLocal]);
 
   const run = useCallback(
     async (body: Record<string, unknown>) => {

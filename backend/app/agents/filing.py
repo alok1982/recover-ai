@@ -42,7 +42,7 @@ SCAM_LABELS = {
     "other": {"en": "Other online fraud", "hi": "अन्य ऑनलाइन धोखाधड़ी", "ms": "Penipuan dalam talian lain"},
 }
 TBF = {"en": "[to be filled]", "hi": "[भरना है]", "ms": "[untuk diisi]"}
-REQUIRED_KEYS = ("reference_id", "amount", "occurred_at", "beneficiary_account", "beneficiary_name")
+REQUIRED_KEYS = ("reference_id", "amount", "occurred_at", "beneficiary_account", "beneficiary_name", "victim_name")
 
 
 def draft_facts(case: dict, pb: dict, *, extra: dict | None = None) -> dict:
@@ -73,6 +73,15 @@ def draft_facts(case: dict, pb: dict, *, extra: dict | None = None) -> dict:
         "notes": pb.get("notes", {}),
         "today": format_date(utcnow(), tz),
     }
+    # CR-03 C: the complainant comes from the victim's saved profile (name, address, bank). Never the phone number.
+    from .. import gate, profile as P
+    prof = gate.owner_profile(case)
+    if prof:
+        facts["victim_name"] = prof.get("fullName") or None
+        facts["victim_address"] = P.address_line(prof) or None
+        facts["victim_bank"] = P.bank_name(prof)
+        if not facts.get("payer_bank"):
+            facts["payer_bank"] = facts["victim_bank"]
     if extra:
         facts.update(extra)
     return facts
@@ -113,11 +122,14 @@ def missing_values(text: str, facts: dict, case: dict, pb: dict) -> list[str]:
 
 LABELS = {
     "en": {"reference_id": "Reference / UTR", "amount": "Amount", "occurred_at": "Date and time",
-           "beneficiary_account": "Receiving account / UPI ID", "beneficiary_name": "Receiver name", "head": "Confirmed case details"},
+           "beneficiary_account": "Receiving account / UPI ID", "beneficiary_name": "Receiver name", "victim_name": "Complainant",
+           "head": "Confirmed case details"},
     "hi": {"reference_id": "रेफ़रेंस / UTR", "amount": "राशि", "occurred_at": "तारीख़ और समय",
-           "beneficiary_account": "पाने वाला खाता / UPI ID", "beneficiary_name": "पाने वाले का नाम", "head": "पुष्टि किए गए केस विवरण"},
+           "beneficiary_account": "पाने वाला खाता / UPI ID", "beneficiary_name": "पाने वाले का नाम", "victim_name": "शिकायतकर्ता",
+           "head": "पुष्टि किए गए केस विवरण"},
     "ms": {"reference_id": "Rujukan", "amount": "Jumlah", "occurred_at": "Tarikh dan masa",
-           "beneficiary_account": "Akaun penerima", "beneficiary_name": "Nama penerima", "head": "Butiran kes yang disahkan"},
+           "beneficiary_account": "Akaun penerima", "beneficiary_name": "Nama penerima", "victim_name": "Pengadu",
+           "head": "Butiran kes yang disahkan"},
 }
 
 
@@ -139,27 +151,27 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
     f = {k: _v(facts, k, lang) for k in (
         "reference_id", "amount", "occurred_at", "payment_method", "payer_bank", "beneficiary_name",
         "beneficiary_account", "beneficiary_bank", "beneficiary_code", "scammer_contacts", "urls", "hotline",
-        "case_id", "today", "bank_complaint_date", "bank_reference", "country")}
+        "case_id", "today", "bank_complaint_date", "bank_reference", "country", "victim_name", "victim_address")}
     narrative = facts.get("narrative_en") if lang == "en" else (facts.get("narrative_local") or facts.get("narrative_en"))
     rules = facts.get("rules_text") or {}
     st = facts.get("scam_type_key") or "other"
     scam = SCAM_LABELS.get(st, SCAM_LABELS["other"]).get(lang) or facts.get("scam_type")
     if template_id == "hotline_script":
         if lang == "hi":
-            return (f"1. नमस्ते, मैं साइबर धोखाधड़ी की शिकायत करना चाहता/चाहती हूँ। मेरे साथ ठगी हुई है ({scam})।\n"
+            return (f"1. नमस्ते, मेरा नाम {f['victim_name']} है ({f['victim_address']})। मैं साइबर धोखाधड़ी की शिकायत करना चाहता/चाहती हूँ। मेरे साथ ठगी हुई है ({scam})।\n"
                     f"2. मैंने {f['occurred_at']} पर {f['payment_method']} से {f['amount']} भेजे।\n"
                     f"3. ट्रांज़ैक्शन रेफ़रेंस / UTR: {f['reference_id']}।\n"
                     f"4. पैसा पाने वाला: {f['beneficiary_name']}, खाता / UPI ID: {f['beneficiary_account']}, बैंक: {f['beneficiary_bank']}।\n"
                     f"5. मेरा बैंक: {f['payer_bank']}। ठग का नंबर: {f['scammer_contacts']}।\n"
                     "6. कृपया पाने वाले खाते पर तुरंत रोक लगाइए और मुझे शिकायत / एक्नॉलेजमेंट नंबर दीजिए।")
         if lang == "ms":
-            return (f"1. Saya ingin melaporkan penipuan ({scam}).\n"
+            return (f"1. Nama saya {f['victim_name']} ({f['victim_address']}). Saya ingin melaporkan penipuan ({scam}).\n"
                     f"2. Saya memindahkan {f['amount']} melalui {f['payment_method']} pada {f['occurred_at']}.\n"
                     f"3. Nombor rujukan: {f['reference_id']}.\n"
                     f"4. Penerima: {f['beneficiary_name']}, akaun {f['beneficiary_account']}, bank {f['beneficiary_bank']}.\n"
                     f"5. Bank saya: {f['payer_bank']}. Nombor penipu: {f['scammer_contacts']}.\n"
                     "6. Sila bekukan akaun penerima segera dan berikan saya nombor rujukan laporan.")
-        return (f"1. Hello, I want to report a cyber fraud ({scam}).\n"
+        return (f"1. Hello, my name is {f['victim_name']} ({f['victim_address']}). I want to report a cyber fraud ({scam}).\n"
                 f"2. I paid {f['amount']} by {f['payment_method']} on {f['occurred_at']}.\n"
                 f"3. Transaction reference / UTR: {f['reference_id']}.\n"
                 f"4. Receiver: {f['beneficiary_name']}, account / UPI ID {f['beneficiary_account']}, bank {f['beneficiary_bank']}.\n"
@@ -167,12 +179,14 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
                 "6. Please freeze the receiving account now and give me the complaint / acknowledgement number.")
     if template_id == "ncrp_complaint":
         if lang == "hi":
-            return (f"श्रेणी: ऑनलाइन वित्तीय धोखाधड़ी\nउप-श्रेणी: {scam}\nघटना की तारीख़/समय: {f['occurred_at']}\n"
+            return (f"शिकायतकर्ता: {f['victim_name']}, {f['victim_address']}\n"
+                    f"श्रेणी: ऑनलाइन वित्तीय धोखाधड़ी\nउप-श्रेणी: {scam}\nघटना की तारीख़/समय: {f['occurred_at']}\n"
                     f"प्लेटफ़ॉर्म: फ़ोन कॉल / WhatsApp, भुगतान {f['payment_method']}\n"
                     f"संदिग्ध का विवरण: {f['scammer_contacts']}; पाने वाला {f['beneficiary_name']} ({f['beneficiary_account']}, {f['beneficiary_bank']})\n"
                     f"लेन-देन विवरण: बैंक {f['payer_bank']}, रेफ़रेंस {f['reference_id']}, राशि {f['amount']}, तारीख़ {f['occurred_at']}\n"
                     f"विवरण: {narrative}")
-        return (f"Category: Online Financial Fraud\nSub-category: {scam}\nIncident date/time: {f['occurred_at']}\n"
+        return (f"Complainant: {f['victim_name']}, {f['victim_address']}\n"
+                f"Category: Online Financial Fraud\nSub-category: {scam}\nIncident date/time: {f['occurred_at']}\n"
                 f"Platform: Phone call / WhatsApp; payment by {f['payment_method']}\n"
                 f"Suspect details: {f['scammer_contacts']}; receiver {f['beneficiary_name']} ({f['beneficiary_account']}, {f['beneficiary_bank']})\n"
                 f"Transaction details: bank {f['payer_bank']}, reference {f['reference_id']}, amount {f['amount']}, date {f['occurred_at']}\n"
@@ -186,7 +200,7 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
                     f"{f['beneficiary_name']} ({f['beneficiary_account']}, {f['beneficiary_bank']}) को भेजे।\n"
                     "कृपया पाने वाले खाते पर तुरंत रोक / लियन लगाएँ, राशि वापस मँगवाएँ (recall) और मेरी विवाद शिकायत दर्ज करें।\n"
                     + (f"संबंधित नियम (प्लेबुक से): {rule}\n" if rule else "")
-                    + f"\nभवदीय,\n{TBF['hi']}\nतारीख़: {f['today']}")
+                    + f"\nभवदीय,\n{f['victim_name']}\n{f['victim_address']}\nतारीख़: {f['today']}")
         if lang == "ms":
             return (f"Kepada:\nPengurus Cawangan / Meja Penipuan\n{f['payer_bank']}\n\n"
                     f"Perkara: Aduan transaksi penipuan — Rujukan {f['reference_id']}\n\n"
@@ -194,7 +208,7 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
                     f"kepada {f['beneficiary_name']} (akaun {f['beneficiary_account']}, {f['beneficiary_bank']}).\n"
                     "Saya memohon pihak bank membekukan akaun penerima, cuba memanggil balik dana, dan merekodkan pertikaian saya.\n"
                     + (f"Peraturan berkaitan (daripada playbook): {rule}\n" if rule else "")
-                    + f"\nYang benar,\n{TBF['ms']}\nTarikh: {f['today']}")
+                    + f"\nYang benar,\n{f['victim_name']}\n{f['victim_address']}\nTarikh: {f['today']}")
         return (f"To\nThe Branch Manager / Fraud Desk\n{f['payer_bank']}\n\n"
                 f"Subject: Report of fraudulent transaction — Reference {f['reference_id']}\n\n"
                 f"Dear Sir/Madam,\nI was the victim of a {scam.lower()} scam. On {f['occurred_at']} I transferred {f['amount']} by "
@@ -202,15 +216,15 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
                 "I request you to immediately freeze / place a lien on the receiving account, attempt a recall of the funds, "
                 "and register this dispute. Please acknowledge this complaint with a reference number.\n"
                 + (f"Relevant rule (from the playbook): {rule}\n" if rule else "")
-                + f"\nYours faithfully,\n{TBF['en']}\nDate: {f['today']}")
+                + f"\nYours faithfully,\n{f['victim_name']}\n{f['victim_address']}\nDate: {f['today']}")
     if template_id == "rbi_ombudsman_complaint":
         if lang == "hi":
-            return (f"RBI एकीकृत लोकपाल (https://cms.rbi.org.in) के लिए शिकायत सारांश\n"
+            return (f"RBI एकीकृत लोकपाल (https://cms.rbi.org.in) के लिए शिकायत सारांश\nशिकायतकर्ता: {f['victim_name']}, {f['victim_address']}\n"
                     f"बैंक: {f['payer_bank']}\nबैंक को शिकायत की तारीख़: {f['bank_complaint_date']}\nबैंक शिकायत रेफ़रेंस: {f['bank_reference']}\n"
                     f"लेन-देन: {f['amount']}, {f['occurred_at']}, रेफ़रेंस {f['reference_id']}, पाने वाला {f['beneficiary_name']} ({f['beneficiary_account']})\n"
                     "शिकायत: बैंक ने 30 दिनों में मेरी शिकायत का समाधान नहीं किया।\n"
                     "माँगी गई राहत: शिकायत की जाँच, राशि की वसूली के लिए बैंक को निर्देश, और लागू नियमों के अनुसार मुआवज़े पर विचार।")
-        return (f"Complaint summary for the RBI Integrated Ombudsman (https://cms.rbi.org.in)\n"
+        return (f"Complaint summary for the RBI Integrated Ombudsman (https://cms.rbi.org.in)\nComplainant: {f['victim_name']}, {f['victim_address']}\n"
                 f"Bank: {f['payer_bank']}\nDate complaint made to bank: {f['bank_complaint_date']}\nBank complaint reference: {f['bank_reference']}\n"
                 f"Transaction: {f['amount']} on {f['occurred_at']}, reference {f['reference_id']}, receiver {f['beneficiary_name']} ({f['beneficiary_account']})\n"
                 "Grievance: the bank has not resolved my complaint within 30 days.\n"

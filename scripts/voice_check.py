@@ -28,13 +28,38 @@ def default_wav() -> str:
     return str(out)
 
 
-def open_case(pg, base: str, login=None) -> None:
-    if login:
-        login(pg, base)
-        return
-    pg.goto(base)
-    pg.get_by_role("button", name="I've been scammed — start recovery").click()
-    pg.wait_for_url("**/case/**")
+def open_case(pg, base: str, phone: str = "90000 00001", password: str = "Demo@2026") -> None:
+    """CR-03: sign in as a seeded victim (complete profile) and start a new case."""
+    cleanup(base, MODE["mock"])  # one open case at a time (MAX_OPEN_CASES per user)
+    pg.goto(base + "/login?next=/cases")
+    pg.fill("input[name=phone]", phone)
+    pg.fill("input[name=password]", password)
+    pg.click("button[type=submit]")
+    pg.wait_for_url("**/cases", timeout=30000)
+    pg.wait_for_selector("[data-testid=start-case]")
+    pg.click("[data-testid=start-case]")
+    pg.wait_for_url("**/cases/c_*", timeout=30000)
+    pg.wait_for_selector(".bubble.assistant", timeout=30000)
+    CREATED.append(pg.url.rsplit("/", 1)[1])
+
+
+CREATED: list[str] = []
+MODE = {"mock": False}
+
+
+def cleanup(base: str, mock: bool) -> None:
+    """Delete only the cases this run created (seeded users may hold at most MAX_OPEN_CASES open cases)."""
+    import httpx
+    api = base.replace(":5173", ":8080") if mock else base
+    if mock:
+        tok = "mock:phone:+919000000001"
+    else:
+        from e2e_demo import phone_login
+        tok = phone_login("+919000000001").json()["idToken"]
+    while CREATED:
+        cid = CREATED.pop()
+        r = httpx.delete(f"{api}/api/cases/{cid}", headers={"Authorization": f"Bearer {tok}"}, timeout=30)
+        print("deleted" if r.status_code == 200 else f"delete failed {r.status_code}", cid)
 
 
 def record(pg, secs: float = 5.5) -> dict:
@@ -45,7 +70,7 @@ def record(pg, secs: float = 5.5) -> dict:
     pg.wait_for_selector(".inputbar .mic.rec", timeout=5000)
     pg.wait_for_timeout(int(secs * 1000))
     pg.click(".inputbar .mic")
-    pg.wait_for_selector(".msg.user .voice-tag, .msg.user:has-text('🎤')", timeout=90000)
+    pg.wait_for_selector(".msg.user .voice-tag", timeout=90000)
     pg.wait_for_timeout(500)
     bubbles = pg.locator(".bubble").all_inner_texts()
     return {"console": [x for x in logs if "[voice]" in x], "bubbles": bubbles}
@@ -57,8 +82,10 @@ def main() -> int:
     ap.add_argument("--wav", default=None)
     ap.add_argument("--shots", default=None, help="directory for screenshots")
     ap.add_argument("--only", default="", help="comma list: chrome,pixel,iphone,blocked")
+    ap.add_argument("--mock", action="store_true", help="local mock stack (cleanup with a mock token)")
     a = ap.parse_args()
     wav = a.wav or default_wav()
+    MODE["mock"] = a.mock
     only = set(filter(None, a.only.split(",")))
     want = lambda k: not only or k in only  # noqa: E731
     shots = Path(a.shots) if a.shots else None
@@ -96,8 +123,9 @@ def main() -> int:
                 hint = pg.inner_text("[data-testid=voice-hint]")
                 pg.fill(".inputbar textarea", "I typed instead")
                 pg.keyboard.press("Enter")
-                pg.wait_for_selector(".msg.user:has-text('I typed instead')", timeout=30000)
-                good = "Microphone is blocked" in hint
+                pg.wait_for_selector(".bubble.user:has-text('I typed instead')", timeout=30000)
+                pg.wait_for_selector(".upload-card", timeout=60000)  # the typed turn got a co-pilot answer
+                good = any(x in hint for x in ("Microphone is blocked", "माइक्रोफ़ोन ब्लॉक है", "Mikrofon disekat"))
                 ok &= good
                 print(f"blocked: {'PASS' if good else 'FAIL'} hint={hint!r}; typing still works")
                 if shots:
@@ -120,6 +148,7 @@ def main() -> int:
             if shots:
                 pg.screenshot(path=str(shots / "voice-iphone-webkit.png"))
             b.close()
+    cleanup(a.base, a.mock)
     print("OVERALL", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 

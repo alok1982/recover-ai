@@ -9,6 +9,8 @@ import { EscalationCard } from "./EscalationCard";
 import { WarningCard } from "./WarningCard";
 import { CountriesCard } from "./CountriesCard";
 import { WithdrawCard } from "./WithdrawCard";
+import { HotlineCard } from "./HotlineCard";
+import { ProfileCard } from "./ProfileCard";
 
 export function CardView({ card, messageId }: { card: Card; messageId: string }) {
   const p = { data: card.data, messageId };
@@ -23,6 +25,8 @@ export function CardView({ card, messageId }: { card: Card; messageId: string })
     case "warning": return <WarningCard {...p} />;
     case "countries": return <CountriesCard {...p} />;
     case "withdraw": return <WithdrawCard {...p} />;
+    case "hotline": return <HotlineCard {...p} />;
+    case "profile": return <ProfileCard {...p} />;
     default: return null;
   }
 }

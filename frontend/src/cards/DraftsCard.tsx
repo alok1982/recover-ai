@@ -11,7 +11,7 @@ export async function openEvidencePack(caseId: string) {
 }
 
 export function DraftsCard({ data }: CardProps) {
-  const { caseId } = useCopilot();
+  const { caseId, caseDoc, trigger, busy } = useCopilot();
   const t = useT();
   const drafts: any[] = data.drafts || [];
   const [tab, setTab] = useState(0);
@@ -25,6 +25,12 @@ export function DraftsCard({ data }: CardProps) {
   return (
     <div className="card drafts-card">
       <h3>{t("draftsTitle")}</h3>
+      {(caseDoc as any)?.draftsStale && (
+        <div className="drafts-stale" data-testid="drafts-stale">
+          <span>⚠️ {t("profileChanged")}</span>
+          <button className="btn small" disabled={busy} onClick={() => trigger("generate_all")}>↻</button>
+        </div>
+      )}
       <div className="tabs" role="tablist">
         {drafts.map((x, i) => (
           <button key={x.stepId} role="tab" aria-selected={i === tab} className={`tab ${i === tab ? "on" : ""}`} onClick={() => setTab(i)}>

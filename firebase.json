@@ -13,5 +13,6 @@
     ]
   },
   "firestore": { "rules": "firestore.rules" },
-  "storage": { "rules": "storage.rules" }
+  "storage": { "rules": "storage.rules" },
+  "emulators": { "firestore": { "port": 8181 }, "ui": { "enabled": false }, "singleProjectMode": true }
 }

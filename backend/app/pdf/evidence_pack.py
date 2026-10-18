@@ -59,6 +59,13 @@ def build_html(case: dict, pb: dict, evidence: list[dict], images: dict[str, byt
             v = _get(ex, key)
         src = "edited by victim" if key.lstrip("_") in (ex.get("edited_fields") or []) else ""
         rows.append(f"<tr><th>{label}</th><td>{_e(v)}</td><td class='muted'>{src}</td></tr>")
+    # CR-03 C: complainant from the saved profile (name, address, bank — never the phone number)
+    from .. import gate, profile as P
+    prof = gate.owner_profile(case)
+    if prof:
+        rows[:0] = [f"<tr><th>Complainant</th><td>{_e(prof.get('fullName'))}</td><td class='muted'>profile</td></tr>",
+                    f"<tr><th>Address</th><td>{_e(P.address_line(prof))}</td><td class='muted'>profile</td></tr>",
+                    f"<tr><th>Complainant's bank</th><td>{_e(P.bank_name(prof))}</td><td class='muted'>profile</td></tr>"]
     timeline = []
     timeline.append(f"<tr><td>{_e(format_dt(case.get('incidentAt'), tz))}</td><td>Incident (payment)</td><td></td></tr>")
     timeline.append(f"<tr><td>{_e(format_dt(case.get('createdAt'), tz))}</td><td>Case opened in RecoverAI</td><td></td></tr>")

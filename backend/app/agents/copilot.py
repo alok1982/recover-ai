@@ -13,7 +13,8 @@ import re
 import time
 from typing import Any, AsyncIterator
 
-from .. import actions
+from .. import actions, gate
+from .. import profile as profile_mod
 from ..config import get_settings
 from ..i18n import LANG_NAMES, t
 from ..knowledge.search import search_sources
@@ -41,11 +42,17 @@ You cannot send anything to a bank. To share the case, call request_bank_consent
 Never say the case was sent unless get_case_state() shows submission.status = "SENT". Say "sandbox (test)" when the case is in sandbox.
 If the victim wants to undo sharing, call request_withdraw_consent(); never say withdrawal is impossible.
 Refer to the case only by its publicRef (RAI-…); never show internal ids.
+Before evidence, plans, drafts or bank sharing, check get_profile_status(). If it is incomplete: when the loss is
+recent or the user is distressed, first show the urgent hotline step in one short message; then call request_profile()
+with any details the user already gave. Never save profile details yourself; the user saves them on the card.
+Use the profile name naturally; never read out the full phone number.
 """
 
 ADK_MODEL_OVERRIDE = None  # tests inject a fake ADK BaseLlm here
 
 STAGE_HINT = {
+    "profile": "Profile incomplete: if the loss is recent or the victim is distressed call show_hotline() first, then "
+               "request_profile() with any name, city or bank they already gave.",
     "evidence": "No evidence yet: reassure briefly, say the first hour matters, and call request_evidence().",
     "extract": "Evidence uploaded but not read: call extract_facts().",
     "confirm": "Facts extracted but not confirmed: ask the victim to check the Facts card (low-confidence fields first).",
@@ -57,9 +64,11 @@ STAGE_HINT = {
 }
 
 
-def stage(case: dict, evidence_count: int) -> str:
+def stage(case: dict, evidence_count: int, profile_ok: bool = True) -> str:
     if case.get("bankCaseId"):
         return "follow_up"
+    if not profile_ok:  # CR-03 C: evidence, plans, drafts and bank sharing wait for a complete profile
+        return "profile"
     if case.get("drafts"):
         return "consent"
     if case.get("plan"):
@@ -73,11 +82,13 @@ def stage(case: dict, evidence_count: int) -> str:
     return "evidence"
 
 
-def case_summary(case: dict, evidence_count: int) -> dict:
+def case_summary(case: dict, evidence_count: int, profile_status: dict | None = None) -> dict:
     ex = case.get("extraction") or {}
     plan = case.get("plan") or {}
+    ps = profile_status or {"complete": True, "missing": []}
     return {
-        "stage": stage(case, evidence_count),
+        "stage": stage(case, evidence_count, ps["complete"]),
+        "profile": {"complete": ps["complete"], "missing": ps["missing"]},
         "country": case["country"], "language": case.get("language"), "status": case.get("status"),
         "evidence_count": evidence_count,
         "facts": {"amount": format_amount(ex.get("amount"), ex.get("currency")), "reference_id": ex.get("reference_id"),
@@ -99,8 +110,9 @@ def case_summary(case: dict, evidence_count: int) -> dict:
 class Toolbox:
     """Tools for one turn. Each returns JSON for the model; cards are persisted and queued as SSE events."""
 
-    def __init__(self, case_id: str):
+    def __init__(self, case_id: str, user_text: str | None = None):
         self.case_id = case_id
+        self.user_text = user_text
         self.events: list[dict] = []
         self.calls: list[dict] = []
         self.results: list[Any] = []  # verified values for the post-check (never search snippets)
@@ -136,23 +148,72 @@ class Toolbox:
         m = actions.add_card(self.case_id, kind, data, self._lang(), text=text)
         self.events.append(actions.msg_event(m))
 
+    def _profile_block(self) -> dict | None:
+        """CR-03 C: gated tools answer PROFILE_INCOMPLETE until the victim saves the profile card."""
+        st = gate.status(self._case())
+        if st["complete"]:
+            return None
+        return {"error": "PROFILE_INCOMPLETE", "missing": st["missing"],
+                "next": "call request_profile() (show_hotline() first if the loss is recent or the victim is distressed)"}
+
+    def stage(self) -> str:
+        case = self._case()
+        return stage(case, len(get_store().list_evidence(self.case_id)), gate.status(case)["complete"])
+
     # ---- tools
+    async def get_profile_status(self) -> dict:
+        async def run():
+            case = self._case()
+            prof = gate.owner_profile(case)
+            st = profile_mod.compute_status(prof)
+            return {"complete": st["complete"], "missing": st["missing"], "first_name": profile_mod.first_name(prof)}
+        return await self._timed("get_profile_status", run())
+
+    async def show_hotline(self) -> dict:
+        async def run():
+            case = self._case()
+            if any(c["name"] == "show_hotline" and c["ok"] for c in self.calls) or gate.hotline_shown(self.case_id):
+                return {"shown": "hotline", "already": True}
+            d = gate.hotline_card_data(case)
+            self._add_card("hotline", d)
+            return {"shown": "hotline", "number": d["number"]}
+        return await self._timed("show_hotline", run())
+
+    async def request_profile(self, prefill: dict | None = None) -> dict:
+        case = self._case()
+        if gate.wants_hotline_first(case, self.user_text) and not any(c["name"] == "show_hotline" for c in self.calls):
+            await self.show_hotline()  # order: urgent hotline step first, then the profile card
+
+        async def run():
+            if any(c["name"] == "request_profile" and c["ok"] for c in self.calls):
+                return {"shown": "profile", "already": True}
+            d = gate.profile_card_data(self._case(), prefill)
+            if d["complete"]:
+                return {"complete": True}
+            self._add_card("profile", d)
+            return {"shown": "profile", "missing": d["missing"], "note": "The victim saves the card; do not save or repeat the fields."}
+        return await self._timed("request_profile", run())
+
     async def get_case_state(self) -> dict:
         async def run():
             case = self._case()
-            return jsonable(case_summary(case, len(get_store().list_evidence(self.case_id))))
+            return jsonable(case_summary(case, len(get_store().list_evidence(self.case_id)), gate.status(case)))
         r = await self._timed("get_case_state", run())
         self.results.append(r)
         return r
 
     async def request_evidence(self) -> dict:
         async def run():
+            if (blk := self._profile_block()):
+                return blk
             self._add_card("upload", actions.upload_card_data(self._lang()))
             return {"shown": "upload"}
         return await self._timed("request_evidence", run())
 
     async def extract_facts(self) -> dict:
         async def run():
+            if (blk := self._profile_block()):
+                return blk
             await self._drain(actions.extract(self.case_id))
             case = self._case()
             r = jsonable({"facts": actions.facts_card_data(case)["fields"], "missing": (case.get("extraction") or {}).get("missing_fields")})
@@ -162,6 +223,8 @@ class Toolbox:
 
     async def build_plan(self) -> dict:
         async def run():
+            if (blk := self._profile_block()):
+                return blk
             case = self._case()
             if not case.get("extraction"):
                 return {"error": "no facts yet; call extract_facts first"}
@@ -177,6 +240,8 @@ class Toolbox:
 
     async def generate_drafts(self) -> dict:
         async def run():
+            if (blk := self._profile_block()):
+                return blk
             await self._drain(actions.drafts_stream(self.case_id))
             case = self._case()
             return {"drafts": [d["title"] for d in (case.get("drafts") or {}).values()], "evidence_pack": bool(case.get("evidencePackPath"))}
@@ -184,6 +249,8 @@ class Toolbox:
 
     async def request_bank_consent(self) -> dict:
         async def run():
+            if (blk := self._profile_block()):
+                return blk
             case = self._case()
             if case.get("bankCaseId"):
                 return {"already_shared": True, "bank_status": case.get("bankStatus")}
@@ -247,6 +314,20 @@ class Toolbox:
             """Current case: stage, confirmed facts, plan steps, clocks/deadlines and bank status."""
             return await tb.get_case_state()
 
+        async def get_profile_status() -> dict:
+            """Whether the victim's profile (name, location, PIN/postcode, bank) is complete: {complete, missing, first_name}."""
+            return await tb.get_profile_status()
+
+        async def show_hotline() -> dict:
+            """Show the urgent national hotline card (India 1930, Malaysia NSRC 997) with tap-to-call."""
+            return await tb.show_hotline()
+
+        async def request_profile(full_name: str = "", district_or_city: str = "", bank: str = "") -> dict:
+            """Show the Profile card with only the missing fields, pre-filled with any name, city or bank the victim already
+            gave in the chat. The victim checks and taps Save; this tool never saves anything."""
+            pre = {"fullName": full_name, "district": district_or_city, "primaryBank": _match_bank(bank, tb._case())}
+            return await tb.request_profile({k: v for k, v in pre.items() if v})
+
         async def request_evidence() -> dict:
             """Show the Upload card so the victim can add screenshots, pasted messages or a voice note."""
             return await tb.request_evidence()
@@ -289,8 +370,16 @@ class Toolbox:
             """Show the coming-soon JAPAC markets card."""
             return await tb.show_countries()
 
-        return [get_case_state, request_evidence, extract_facts, build_plan, generate_drafts, request_bank_consent,
+        return [get_case_state, get_profile_status, show_hotline, request_profile, request_evidence, extract_facts, build_plan, generate_drafts, request_bank_consent,
                 show_timeline, check_recovery_scam, explain_rule, show_countries, request_withdraw_consent]
+
+
+def _match_bank(name: str, case: dict) -> str:
+    """Map a free-text bank name from the chat to the country's dropdown value ('' when unknown)."""
+    if not name:
+        return ""
+    country = gate.owner_profile(case).get("country") or case["country"]
+    return gate.prefill_from_text([name], country).get("primaryBank", "")
 
 
 # ------------------------------------------------------------------ deterministic co-pilot (offline / fallback)
@@ -310,8 +399,7 @@ async def stage_copilot(tb: Toolbox, text: str | None, flagged: bool) -> AsyncIt
     """Yields reply text chunks; tools push cards into tb.events."""
     case = tb._case()
     lang = case.get("language", "en")
-    n_ev = len(get_store().list_evidence(tb.case_id))
-    st = stage(case, n_ev)
+    st = tb.stage()
     parts: list[str] = []
     q = text or ""
     if _Q_DANGER.search(q):
@@ -333,6 +421,9 @@ async def stage_copilot(tb: Toolbox, text: str | None, flagged: bool) -> AsyncIt
     elif _Q_STATUS.search(q) and st in ("filings", "consent", "follow_up"):
         await tb.show_timeline()
         parts.append(t("status_next", lang))
+    elif st == "profile":
+        await tb.request_profile()
+        parts.append(t("profile_ask", lang))
     elif st == "evidence":
         await tb.request_evidence()
         parts.append(t("ask_evidence", lang))
@@ -414,7 +505,7 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
     settings = get_settings()
     lang = case.get("language", "en")
     n_ev = len(get_store().list_evidence(tb.case_id))
-    summary = case_summary(case, n_ev)
+    summary = case_summary(case, n_ev, gate.status(case))
     instruction = (
         SYSTEM_PROMPT.format(country={"IN": "India", "MY": "Malaysia"}[case["country"]], language=LANG_NAMES.get(lang, "English"))
         + "\n" + INJECTION_GUARD
@@ -493,7 +584,7 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
     store = get_store()
     case = actions.load(case_id)
     lang = case.get("language", "en")
-    tb = Toolbox(case_id)
+    tb = Toolbox(case_id, text)
     n_hist = get_settings().copilot_history_messages
     history = store.list_messages(case_id, limit=n_hist + 1)[:-1] if text else store.list_messages(case_id, limit=n_hist)
     llm = get_llm()
@@ -549,12 +640,15 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
         if first_token_ms is None:
             first_token_ms = int((time.perf_counter() - t0) * 1000)
         yield {"type": "token", "text": final_text}
-    # Stage nudge: a victim with no evidence must always see the Upload card.
-    case = actions.load(case_id)
-    if stage(case, len(store.list_evidence(case_id))) == "evidence" and not any(c["name"] == "request_evidence" for c in tb.calls):
+    # Stage nudges: an incomplete profile always gets the (hotline →) profile card; a victim with no evidence
+    # always sees the Upload card.
+    st_now = tb.stage()
+    if st_now == "profile" and not any(c["name"] == "request_profile" and c["ok"] for c in tb.calls):
+        await tb.request_profile()
+    elif st_now == "evidence" and not any(c["name"] == "request_evidence" for c in tb.calls):
         await tb.request_evidence()
-        while tb.events:
-            yield tb.events.pop(0)
+    while tb.events:
+        yield tb.events.pop(0)
     msg = None
     if final_text:
         rec = {"role": "assistant", "text": final_text, "card": None, "audioPath": None, "lang": lang, "toolCalls": tb.calls,
@@ -585,7 +679,7 @@ async def _text_fallback(case_id: str, tb: Toolbox, text: str | None, lang: str,
     case = actions.load(case_id)
     if use_llm:
         try:
-            summary = case_summary(case, len(get_store().list_evidence(case_id)))
+            summary = case_summary(case, len(get_store().list_evidence(case_id)), gate.status(case))
             shown = [e.get("name") for e in tb.calls]
             system = (SYSTEM_PROMPT.format(country={"IN": "India", "MY": "Malaysia"}[case["country"]],
                                            language=LANG_NAMES.get(lang, "English"))

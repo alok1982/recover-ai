@@ -75,6 +75,7 @@ export function ConfirmSheet({ onClose }: { onClose: () => void }) {
             </p>
             <dl className="kv">
               <dt>{t("publicRef")}</dt><dd><code>{s.publicRef}</code></dd>
+              {s.customerName && <><dt>{t("fullName")}</dt><dd>{s.customerName}</dd></>}
               <dt>{t("bankName")}</dt><dd>{s.bankName}</dd>
               <dt>{t("amount")}</dt><dd>{s.amount || "—"}</dd>
               <dt>{t("ref")}</dt><dd>{s.reference_id || "—"}</dd>

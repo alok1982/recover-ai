@@ -175,7 +175,8 @@ def summary(case: dict, evidence: list[dict]) -> dict:
     dest = destination(case)
     return {
         "publicRef": case.get("publicRef"), "destination": dest, "sandbox": dest == "SANDBOX", "liveAllowed": live_allowed(),
-        "bankName": ex.get("payer_bank") or ("your bank"), "amount": format_amount(ex.get("amount"), ex.get("currency")),
+        "bankName": ex.get("payer_bank") or actions._profile_bank(case) or ("your bank"), "customerName": actions._profile_name(case),
+        "amount": format_amount(ex.get("amount"), ex.get("currency")),
         "reference_id": ex.get("reference_id"),
         "beneficiary": {"name": b.get("name"), "account": _mask(b.get("account_or_vpa")), "bank": b.get("bank")},
         "scammerContacts": ex.get("scammer_contacts") or [], "urls": ex.get("urls") or [],

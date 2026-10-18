@@ -17,6 +17,12 @@ service cloud.firestore {
       }
     }
 
+    // CR-03: victim account + profile. Only the owner can read it; all writes go through the backend.
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     match /bank_cases/{id} {
       allow read: if isBank();
       allow write: if false;

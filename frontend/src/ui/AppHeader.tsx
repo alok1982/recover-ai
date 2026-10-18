@@ -34,7 +34,7 @@ export function AppHeader({ lang, setLang, children }: { lang?: Lang; setLang?: 
                 <div className="menu-pop" role="menu">
                   <Link role="menuitem" to="/cases" onClick={() => setOpen(false)}>{t("myCases")}</Link>
                   <Link role="menuitem" to="/profile" onClick={() => setOpen(false)}>{t("profile")}</Link>
-                  <button role="menuitem" className="link" onClick={async () => { setOpen(false); await victimSignOut(); nav("/"); }}>{t("logOut")}</button>
+                  <button role="menuitem" className="link" data-testid="logout" onClick={async () => { setOpen(false); await victimSignOut(); nav("/"); }}>{t("logOut")}</button>
                 </div>
               )}
             </div>

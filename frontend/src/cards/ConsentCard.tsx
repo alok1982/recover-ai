@@ -28,6 +28,7 @@ export function ConsentCard({ data, messageId }: CardProps) {
       <p>{data.text}</p>
       <dl className="kv">
         <dt>{t("destination")}</dt><dd><span className={`pill dest-${dest}`}>{t(`dest.${dest}`)}</span></dd>
+        {data.customerName && <><dt>{t("fullName")}</dt><dd>{data.customerName}</dd></>}
         {data.bankName && <><dt>{t("bankName")}</dt><dd>{data.bankName}</dd></>}
         {data.beneficiaryMasked && <><dt>{t("beneficiaryMasked")}</dt><dd>{data.beneficiaryMasked}</dd></>}
       </dl>

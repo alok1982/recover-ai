@@ -3,7 +3,8 @@
 
 Local mock stack:   python scripts/e2e_demo.py --mock --api http://localhost:8080
 Deployed stack:     API_BASE=$(cat deploy/.state/run_url) python scripts/e2e_demo.py
-  (anonymous victim sign-in + analyst password sign-in via the Firebase Auth REST API, using
+  (CR-03: seeded phone + password victims — scripts/seed_users.py — and the analyst sign in via the Firebase Auth
+   REST API; an anonymous token must be rejected. Uses
    deploy/.state/sdkconfig.json and deploy/.state/bank_password written by deploy/deploy.sh)
 Exits non-zero on the first failed check. DEMO_MODE must be on for the time-travel step.
 Checks the v2.2 backbone too: bank case created via the fraud-case-submitted Pub/Sub push with BigQuery features,
@@ -118,23 +119,91 @@ def text(evs):
     return "".join(e.get("text", "") for e in evs if e.get("type") == "token")
 
 
-def tokens(mock: bool) -> tuple[str, str]:
+SEED = {"in_complete": "+919000000001", "in_incomplete": "+919000000002", "my_complete": "+60100000001"}
+SEED_PASSWORD = "Demo@2026"  # CR-03 fictional seed accounts (scripts/seed_users.py)
+
+
+def _api_key() -> str:
+    return os.environ.get("FIREBASE_API_KEY") or json.loads((STATE / "sdkconfig.json").read_text())["apiKey"]
+
+
+def phone_login(e164: str, password: str = SEED_PASSWORD) -> httpx.Response:
+    """CR-03: phone + password = Firebase Email/Password with the synthetic <digits>@phone.recoverai.app login."""
+    email = e164.lstrip("+") + "@phone.recoverai.app"
+    return httpx.post(f"{IDT}:signInWithPassword?key={_api_key()}", json={"email": email, "password": password,
+                                                                         "returnSecureToken": True}, timeout=30)
+
+
+def tokens(mock: bool, api: str) -> tuple[dict[str, str], str, str]:
+    """Seeded victims (by role), the analyst, and an anonymous token (must be rejected on victim routes)."""
     if mock:
-        return f"mock:e2e-{uuid.uuid4().hex[:8]}", "mock:bank:E2E Analyst"
-    key = os.environ.get("FIREBASE_API_KEY") or json.loads((STATE / "sdkconfig.json").read_text())["apiKey"]
-    victim = httpx.post(f"{IDT}:signUp?key={key}", json={"returnSecureToken": True}, timeout=30).json()["idToken"]
+        import subprocess
+        subprocess.run([sys.executable, str(ROOT / "scripts" / "seed_users.py"), "--api", api], check=True,
+                       stdout=subprocess.DEVNULL)
+        return {k: f"mock:phone:{v}" for k, v in SEED.items()}, "mock:bank:E2E Analyst", f"mock:anon-{uuid.uuid4().hex[:8]}"
+    victims = {}
+    for k, e164 in SEED.items():
+        r = phone_login(e164)
+        r.raise_for_status()
+        victims[k] = r.json()["idToken"]
+    bad = phone_login(SEED["in_complete"], "Wrong-password-1")
+    check(bad.status_code == 400, f"wrong password rejected by Firebase ({bad.json().get('error', {}).get('message')})")
+    anon = httpx.post(f"{IDT}:signUp?key={_api_key()}", json={"returnSecureToken": True}, timeout=30).json()["idToken"]
     email = os.environ.get("BANK_USER_EMAIL", "analyst@recoverai-demo.example")
     pw = os.environ.get("BANK_USER_PASSWORD") or (STATE / "bank_password").read_text().strip()
-    r = httpx.post(f"{IDT}:signInWithPassword?key={key}", json={"email": email, "password": pw, "returnSecureToken": True}, timeout=30)
+    r = httpx.post(f"{IDT}:signInWithPassword?key={_api_key()}", json={"email": email, "password": pw, "returnSecureToken": True}, timeout=30)
     r.raise_for_status()
-    return victim, r.json()["idToken"]
+    return victims, r.json()["idToken"], anon
+
+
+GATE_MSG = "मेरे साथ अभी 1,95,000 का फ्रॉड हुआ"
+INCOMPLETE = {"postalCode": "", "primaryBank": ""}
+
+
+def accounts(v1: Api, anon: Api) -> None:
+    print("Accounts (CR-03 B)")
+    st, body = anon.post_status("/api/cases", {"country": "IN", "language": "en"})
+    check(st == 401, f"anonymous token rejected on victim routes ({st})")
+    me = v1.get("/api/me")
+    check(me["profileStatus"]["complete"] and me["phoneVerified"] is False and me["phoneMasked"].endswith("0001"),
+          f"seeded 00001: complete profile, phoneVerified=false, masked {me['phoneMasked']}")
+    check(isinstance(v1.get("/api/cases")["cases"], list), "GET /api/cases lists my cases")
+
+
+def profile_gate(v2: Api) -> None:
+    print("Profile gate (CR-03 C) as seeded 00002")
+    r = v2.c.put(v2.url("/api/me/profile"), json={"profile": INCOMPLETE})  # demo account: back to the seeded state
+    r.raise_for_status()
+    check(r.json()["profileStatus"]["missing"] == ["postalCode", "primaryBank"], "00002 is missing PIN code and bank")
+    cid = v2.post("/api/cases", {"country": "IN", "language": "hi"})["caseId"]
+    try:
+        evs = v2.chat(cid, {"text": GATE_MSG})
+        ks = kinds(evs)
+        check(ks[:2] == ["hotline", "profile"] and "upload" not in ks, f"hotline card, then profile card ({ks})")
+        check(card(evs, "hotline")["number"] == "1930", "hotline card: Call 1930")
+        check(card(evs, "profile")["missing"] == ["postalCode", "primaryBank"], "profile card asks only PIN code + bank")
+        for path in ("drafts", "send-to-bank/preview"):
+            st, body = v2.post_status(f"/api/cases/{cid}/{path}")
+            d = body.get("detail") or {}
+            check(st == 412 and d.get("code") == "PROFILE_INCOMPLETE" and d.get("missing") == ["postalCode", "primaryBank"],
+                  f"{path} → {st} {d.get('code')}")
+        r = v2.c.put(v2.url("/api/me/profile"), json={"profile": {"postalCode": "208001", "primaryBank": "State Bank of India"}})
+        check(r.status_code == 200 and r.json()["profileStatus"]["complete"], "victim saves the card → profile complete")
+        evs = v2.chat(cid, {"trigger": "profile_saved"})
+        check("upload" in kinds(evs), f"after Save the co-pilot asks for evidence ({kinds(evs)})")
+        st, _ = v2.post_status(f"/api/cases/{cid}/send-to-bank/preview")
+        check(st != 412, f"gate lifted after Save (preview → {st})")
+    finally:
+        v2.c.put(v2.url("/api/me/profile"), json={"profile": INCOMPLETE})  # keep the seeded demo state
+        v2.c.delete(v2.url(f"/api/cases/{cid}"))
 
 
 def india(v: Api, bank: Api) -> None:
     print("India storyline")
     t0 = time.time()
     cid = v.post("/api/cases", {"country": "IN", "language": "hi"})["caseId"]
-    check("upload" in kinds(v.chat(cid, {"text": "मैंने CBI वाले को 1,95,000 भेज दिए"})), "upload card")
+    ks = kinds(v.chat(cid, {"text": "मैंने CBI वाले को 1,95,000 भेज दिए"}))
+    check("upload" in ks and "profile" not in ks and "hotline" not in ks, f"complete profile → straight to evidence ({ks})")
     v.upload(cid, "in_upi_success.png", "image/png")
     w = v.paste(cid, "in_whatsapp_scam.txt")
     f = card(v.chat(cid, {"trigger": "evidence_added", "evidenceIds": [w["evidence"]["id"]]}), "facts")
@@ -149,6 +218,10 @@ def india(v: Api, bank: Api) -> None:
     evs = v.chat(cid, {"trigger": "generate_all"})
     check(kinds(evs) == ["drafts", "consent"], "drafts + consent cards")
     check(all("612345678901" in d["en"] and "612345678901" in d["local"] for d in card(evs, "drafts")["drafts"]), "drafts carry UTR")
+    prof = v.get("/api/me")["profile"]
+    letter = next(d for d in card(evs, "drafts")["drafts"] if d["templateId"] == "bank_dispute_letter")
+    check(prof["fullName"] in letter["en"] and prof["postalCode"] in letter["en"] and prof["district"] in letter["en"],
+          f"bank letter signed with the profile name + address ({prof['fullName']}, {prof['district']} {prof['postalCode']})")
     light_routing(v, cid, w["evidence"]["id"])
     pack = v.post(f"/api/cases/{cid}/evidence-pack")
     check(httpx.get(v.url(pack["url"]), timeout=60).content[:4] == b"%PDF", "evidence pack PDF downloads")
@@ -224,6 +297,8 @@ def india(v: Api, bank: Api) -> None:
     shown = " ".join(m.get("text") or "" for m in msgs if m["role"] != "system_event")
     check(case["bankCaseId"] not in shown and not re.search(r"\bb_[0-9a-f]{8,}", shown), "no internal ids in any co-pilot reply")
     SANDBOX["withdrawS"] = round(took, 2)
+    # CR-03: seeded accounts are shared (MAX_OPEN_CASES per user) → delete the victim case this run created
+    v.c.delete(v.url(f"/api/cases/{cid}"))
 
 
 def _done(evs):
@@ -291,11 +366,13 @@ def main() -> None:
     ap.add_argument("--api", default=os.environ.get("API_BASE", "http://localhost:8080"))
     ap.add_argument("--mock", action="store_true", help="use mock tokens (backend running with MOCK_MODE=true)")
     a = ap.parse_args()
-    vt, bt = tokens(a.mock)
-    v, bank = Api(a.api, vt), Api(a.api, bt)
+    vts, bt, at = tokens(a.mock, a.api)
+    v, bank = Api(a.api, vts["in_complete"]), Api(a.api, bt)
     check(httpx.get(v.url("/api/health"), timeout=30).json().get("ok") is True, f"healthz {a.api}")
+    accounts(v, Api(a.api, at))
+    profile_gate(Api(a.api, vts["in_incomplete"]))
     india(v, bank)
-    malaysia(v)
+    malaysia(Api(a.api, vts["my_complete"]))
     check(bool(REPLIES), f"all {len(REPLIES)} co-pilot chat turns had non-empty text")
     for r in REPLIES:
         print("   ", json.dumps(r, ensure_ascii=False))

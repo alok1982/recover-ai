@@ -158,6 +158,21 @@ T: dict[str, dict[str, str]] = {
         "hi": "आपके बैंक को बता दिया गया है कि आपने सहमति वापस ले ली है (रेफ़रेंस {ref})।",
         "ms": "Bank anda telah dimaklumkan bahawa anda menarik balik persetujuan (rujukan {ref}).",
     },
+    "hotline_title": {
+        "en": "Call {number} now — the first hour matters",
+        "hi": "अभी {number} पर कॉल करें — पहला घंटा सबसे ज़रूरी है",
+        "ms": "Hubungi {number} sekarang — jam pertama amat penting",
+    },
+    "hotline_body": {
+        "en": "Calling {number} quickly gives the best chance to freeze the money. Keep this chat open — I'll prepare everything else.",
+        "hi": "{number} पर जल्दी कॉल करने से पैसा फ़्रीज़ होने की संभावना सबसे ज़्यादा होती है। यह चैट खुली रखें — बाकी सब मैं तैयार करूँगा।",
+        "ms": "Menghubungi {number} dengan cepat memberi peluang terbaik untuk membekukan wang. Biarkan chat ini terbuka — saya akan sediakan yang lain.",
+    },
+    "profile_ask": {
+        "en": "Before I prepare your complaint, I need a few details for the bank and police. Please check them and tap Save.",
+        "hi": "आपकी शिकायत तैयार करने से पहले, बैंक और पुलिस के लिए कुछ जानकारी चाहिए। कृपया जाँचें और सेव दबाएँ।",
+        "ms": "Sebelum saya sediakan aduan anda, saya perlukan beberapa butiran untuk bank dan polis. Sila semak dan tekan Simpan.",
+    },
     "voice_unclear": {
         "en": "I couldn't hear that clearly — please try again or type your message.",
         "hi": "मैं साफ़ नहीं सुन पाया — कृपया फिर से बोलें या अपना संदेश टाइप करें।",
