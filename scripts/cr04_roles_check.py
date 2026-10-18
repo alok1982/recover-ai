@@ -136,8 +136,13 @@ def main() -> int:
             staff_login(pg, email, pw)
             pg.wait_for_url("**/bank", timeout=30000)
             pg.wait_for_selector("text=Inbox")
-            pg.wait_for_timeout(1500)
             ok("approved applicant re-login → bank desk", "/bank" in pg.url)
+            try:  # the desk's live Firestore listener must pass the rules (role=bank + APPROVED request)
+                pg.wait_for_function("() => /Sandbox \\(([1-9][0-9]*)\\)/.test(document.body.innerText)", timeout=15000)
+                ok("approved applicant: bank desk loads the queue (Firestore rules allow)", True,
+                   pg.inner_text(".sandbox-tab"))
+            except Exception:
+                ok("approved applicant: bank desk loads the queue (Firestore rules allow)", False, pg.inner_text("main")[:200])
             pg.screenshot(path=str(shots / "05-approved-bank-desk.png"), full_page=True)
             ok("approved applicant → 200 on bank API", bank_status(app_token()) == 200)
 
