@@ -6,7 +6,7 @@ import type { Country, Lang } from "../lib/types";
 import { Chat } from "../copilot/Chat";
 import { CasePanel } from "../panel/CasePanel";
 import { CountriesList } from "../cards/CountriesCard";
-import { COUNTRY_LANGS, LANG_LABEL, LangContext, translate } from "../i18n";
+import { COUNTRY_LANGS, DEFAULT_LANG, LANG_LABEL, LangContext, translate } from "../i18n";
 import { Disclaimer } from "./Disclaimer";
 
 export function CasePage() {
@@ -35,7 +35,7 @@ export function CasePage() {
             <div className="row">
               <select aria-label={t("country")} value={c.country} onChange={(e) => {
                 const country = e.target.value as Country;
-                change({ country, language: COUNTRY_LANGS[country].includes(lang) ? lang : COUNTRY_LANGS[country][0] });
+                change({ country, language: COUNTRY_LANGS[country].includes(lang) ? lang : DEFAULT_LANG });
               }}>
                 <option value="IN">🇮🇳 India</option>
                 <option value="MY">🇲🇾 Malaysia</option>

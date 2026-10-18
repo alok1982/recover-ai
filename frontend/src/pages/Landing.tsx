@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import type { Country, Lang } from "../lib/types";
-import { COMING_SOON, COUNTRY_LANGS, LANG_LABEL, LangContext, translate } from "../i18n";
+import { COMING_SOON, COUNTRY_LANGS, DEFAULT_LANG, LANG_LABEL, LangContext, translate } from "../i18n";
 import { Disclaimer } from "./Disclaimer";
 
 export function Landing() {
   const nav = useNavigate();
   const [country, setCountry] = useState<Country>("IN");
-  const [lang, setLang] = useState<Lang>("hi");
+  const [lang, setLang] = useState<Lang>(DEFAULT_LANG);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const last = localStorage.getItem("recoverai.lastCase");
@@ -38,7 +38,11 @@ export function Landing() {
             <div className="seg">
               {(["IN", "MY"] as Country[]).map((c) => (
                 <button key={c} className={`seg-btn ${country === c ? "on" : ""}`}
-                  onClick={() => { setCountry(c); setLang(COUNTRY_LANGS[c][0]); }}>
+                  onClick={() => {
+                    // Keep the user's language if the new country offers it (English always does).
+                    setCountry(c);
+                    setLang((cur) => (COUNTRY_LANGS[c].includes(cur) ? cur : DEFAULT_LANG));
+                  }}>
                   {c === "IN" ? "🇮🇳 India" : "🇲🇾 Malaysia"}
                 </button>
               ))}

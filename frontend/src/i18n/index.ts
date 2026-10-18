@@ -18,7 +18,9 @@ export function useT() {
 }
 
 export const LANG_LABEL: Record<Lang, string> = { en: "English", hi: "हिन्दी", ms: "Bahasa Melayu" };
-export const COUNTRY_LANGS: Record<string, Lang[]> = { IN: ["hi", "en"], MY: ["ms", "en"] };
+// English first: it is the default for new visitors; the local language stays one tap away.
+export const DEFAULT_LANG: Lang = "en";
+export const COUNTRY_LANGS: Record<string, Lang[]> = { IN: ["en", "hi"], MY: ["en", "ms"] };
 export const COMING_SOON = [
   { code: "SG", name: "Singapore", text: "Police report + bank; Shared Responsibility Framework payouts for covered phishing scams (since 16 Dec 2024)." },
   { code: "ID", name: "Indonesia", text: "Report to Indonesia Anti-Scam Centre (iasc.ojk.go.id) or your bank; accounts can be blocked and funds returned." },

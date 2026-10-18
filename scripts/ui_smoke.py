@@ -27,6 +27,12 @@ def main() -> None:
         pg.on("pageerror", lambda e: print("PAGE ERROR:", e))
         pg.goto(a.base)
         pg.screenshot(path=str(SHOTS / "00-landing.png"))
+        on = lambda: pg.locator(".pickers .seg-btn.on").all_inner_texts()  # noqa: E731
+        assert "English" in on(), f"English must be the default language, got {on()}"
+        pg.locator(".pickers .seg-btn", has_text="Malaysia").click()
+        assert "English" in on(), f"switching country must keep English, got {on()}"
+        pg.locator(".pickers .seg-btn", has_text="India").click()
+        pg.locator(".pickers .seg-btn", has_text="हिन्दी").click()  # the demo storyline picks Hindi explicitly
         pg.get_by_role("button", name="मेरे साथ ठगी हुई — रिकवरी शुरू करें").click()
         pg.wait_for_url("**/case/**")
         pg.fill(".inputbar textarea", "मैंने CBI वाले को 1,95,000 भेज दिए")
