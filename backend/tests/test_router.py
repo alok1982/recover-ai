@@ -93,7 +93,7 @@ def test_guard_label_decides_when_no_override(light_on):
 
 def test_guard_schema_and_mock_label():
     assert GuardResult(is_recovery_scam=False, reason="").route == "full"
-    assert "route" in guard.SYSTEM and "When unsure, \"full\"" in guard.SYSTEM
+    assert "route" in guard.SYSTEM and "you are unsure, \"full\"" in guard.SYSTEM and "अब मुझे क्या करना है?" in guard.SYSTEM
     assert asyncio.run(guard.check("अब मुझे क्या करना है?"))["route"] == "light"
     assert asyncio.run(guard.check("draft my complaint"))["route"] == "full"
 
