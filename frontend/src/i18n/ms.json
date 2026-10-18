@@ -213,5 +213,7 @@
  "fields.state": "Negeri",
  "fields.district": "Daerah atau bandar",
  "fields.postalCode": "Poskod",
- "fields.primaryBank": "Bank"
+ "fields.primaryBank": "Bank",
+ "deleteReauth": "Masukkan kata laluan anda untuk selesai memadam log masuk.",
+ "deleteReauthFailed": "Kes dan profil anda telah dipadam, tetapi log masuk tidak dapat dibuang. Log masuk semula dan ulang Padam akaun."
 }

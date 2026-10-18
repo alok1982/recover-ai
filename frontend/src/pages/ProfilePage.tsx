@@ -19,7 +19,12 @@ export function ProfilePage() {
   const del = async () => {
     if (!confirm(t("deleteAccountConfirm"))) return;
     await deleteMe();
-    await victimForget();
+    try {
+      await victimForget(() => prompt(t("deleteReauth")));
+    } catch {
+      alert(t("deleteReauthFailed"));
+      return;
+    }
     nav("/");
   };
   return (

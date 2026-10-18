@@ -62,10 +62,15 @@ def main() -> int:
         # E1: hotline without login; Get help now → signup → /cases → new case → co-pilot
         pg.goto(a.base)
         pg.wait_for_selector("[data-testid=emergency-strip]")
+        try:  # the ribbon appears once /api/health answers
+            pg.wait_for_selector("[data-testid=demo-ribbon]", timeout=10000)
+        except Exception:
+            pass
         ok("home: hotline strip without login", pg.locator("a[href='tel:1930']").count() >= 1
            and pg.locator("a[href='tel:997']").count() >= 1 and "cybercrime.gov.in" in pg.inner_text("[data-testid=emergency-strip]"))
         ok("home: hero, safety line, demo ribbon", "The first hour matters" in pg.inner_text("h1")
-           and "never ask you for money, OTPs or passwords" in pg.inner_text("main"), pg.inner_text("[data-testid=demo-ribbon]") if pg.locator("[data-testid=demo-ribbon]").count() else "no ribbon")
+           and "never ask you for money, OTPs or passwords" in pg.inner_text("main")
+           and pg.locator("[data-testid=demo-ribbon]").count() == 1, pg.inner_text("[data-testid=demo-ribbon]") if pg.locator("[data-testid=demo-ribbon]").count() else "no ribbon")
         pg.screenshot(path=str(shots / "01-home.png"), full_page=True)
         pg.click("[data-testid=get-help]")
         pg.wait_for_url("**/signup**")

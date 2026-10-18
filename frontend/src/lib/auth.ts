@@ -1,5 +1,6 @@
 import {
-  createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+  createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, getAuth, onAuthStateChanged,
+  reauthenticateWithCredential, signInWithEmailAndPassword, signOut,
 } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { MOCK } from "./config";
@@ -81,13 +82,31 @@ export async function victimSignOut(): Promise<void> {
   await signOut(victimAuth());
 }
 
-/** After DELETE /api/me: the server removed the Firebase user; drop the local session (mock: the local account too). */
-export async function victimForget(): Promise<void> {
+/** After DELETE /api/me removed the profile and cases: delete the login itself, then drop the local session.
+ *  The victim deletes their own Firebase user (no admin rights needed on the server); Firebase asks for a
+ *  recent sign-in, so on auth/requires-recent-login we re-check the password once. Mock: drop the local account. */
+export async function victimForget(askPassword?: () => string | null): Promise<void> {
   if (MOCK) {
     const p = localStorage.getItem(MOCK_SESSION);
     const acc = mockAccounts();
     if (p) delete acc[p];
     localStorage.setItem(MOCK_ACCOUNTS, JSON.stringify(acc));
+  } else {
+    const u = victimAuth().currentUser;
+    if (u) {
+      try {
+        await deleteUser(u);
+      } catch (e) {
+        const pw = (e as { code?: string })?.code === "auth/requires-recent-login" ? askPassword?.() : null;
+        if (!pw || !u.email) throw mapFirebase(e);
+        try {
+          await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, pw));
+          await deleteUser(u);
+        } catch (e2) {
+          throw mapFirebase(e2);
+        }
+      }
+    }
   }
   await victimSignOut();
 }

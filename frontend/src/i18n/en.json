@@ -213,5 +213,7 @@
  "fields.state": "State",
  "fields.district": "District or city",
  "fields.postalCode": "PIN code / postcode",
- "fields.primaryBank": "Bank"
+ "fields.primaryBank": "Bank",
+ "deleteReauth": "Enter your password to finish deleting your login.",
+ "deleteReauthFailed": "Your cases and profile were deleted, but the login could not be removed. Log in again and repeat Delete account."
 }

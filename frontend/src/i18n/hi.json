@@ -213,5 +213,7 @@
  "fields.state": "राज्य",
  "fields.district": "ज़िला या शहर",
  "fields.postalCode": "पिन कोड",
- "fields.primaryBank": "बैंक"
+ "fields.primaryBank": "बैंक",
+ "deleteReauth": "लॉगिन हटाना पूरा करने के लिए अपना पासवर्ड डालें।",
+ "deleteReauthFailed": "आपके केस और प्रोफ़ाइल हटा दिए गए, पर लॉगिन नहीं हट सका। फिर से लॉग इन करें और खाता हटाएँ दोबारा करें।"
 }
