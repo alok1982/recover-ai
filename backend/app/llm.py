@@ -82,16 +82,29 @@ class LLM:
                 "promptTokens": getattr(um, "prompt_token_count", None),
                 "outputTokens": getattr(um, "candidates_token_count", None),
                 "totalTokens": getattr(um, "total_token_count", None),
+                "thoughtsTokens": getattr(um, "thoughts_token_count", None),
+                "cachedTokens": getattr(um, "cached_content_token_count", None),
             },
         )
 
+    def _resolve(self, task: str | None, model: str | None) -> tuple[str, Any]:
+        """(model, extra config) for a task: per-task model, thinking and max_output_tokens from settings."""
+        if task is None:
+            return model or self.settings.gemini_model, {}
+        return model or self.settings.task_model(task), task_config(self.settings, task)
+
+    def _fallback(self, task: str | None, model: str) -> str | None:
+        fb = self.settings.task_fallback(task) if task else self.settings.gemini_model
+        return fb if fb != model else None
+
     async def _call(self, *, model: str, system: str, parts: Sequence[Part], temperature: float,
-                    schema: Any | None, step: str, case_id: str | None):
+                    schema: Any | None, step: str, case_id: str | None, extra: dict | None = None,
+                    fallback: str | None = None):
         if self.is_mock:
             raise LLMError("LLM called in mock mode")
         from google.genai import types
 
-        cfg = types.GenerateContentConfig(system_instruction=system, temperature=temperature)
+        cfg = types.GenerateContentConfig(system_instruction=system, temperature=temperature, **(extra or {}))
         if schema is not None:
             cfg.response_mime_type = "application/json"
             cfg.response_schema = schema
@@ -107,17 +120,25 @@ class LLM:
                 return resp
             except Exception as e:  # noqa: BLE001 - retry on any transport/model error
                 last = e
-                log.warning("gemini_call_failed", extra={"step": step, "caseId": case_id, "attempt": attempt, "err": str(e)[:300]})
+                log.warning("gemini_call_failed", extra={"step": step, "caseId": case_id, "attempt": attempt, "model": model,
+                                                         "err": str(e)[:300]})
                 if attempt < self.settings.gemini_retries:
+                    if _is_quota(e) and fallback and model != fallback:
+                        # A tier out of quota: retry on the task's fallback model with that model's own defaults
+                        # (no thinking / max_output overrides tuned for the first model).
+                        model = fallback
+                        cfg = types.GenerateContentConfig(system_instruction=system, temperature=temperature,
+                                                          response_mime_type=cfg.response_mime_type,
+                                                          response_schema=cfg.response_schema)
                     await asyncio.sleep(0.8 * (2 ** attempt))
         raise LLMError(f"{step}: {last}")
 
     async def generate_json(self, *, system: str, parts: Sequence[Part], schema: type[BaseModel],
                             temperature: float = 0.2, model: str | None = None, step: str = "json",
-                            case_id: str | None = None) -> BaseModel:
-        model = model or self.settings.gemini_model
+                            case_id: str | None = None, task: str | None = None) -> BaseModel:
+        model, extra = self._resolve(task, model)
         resp = await self._call(model=model, system=system, parts=parts, temperature=temperature,
-                                schema=schema, step=step, case_id=case_id)
+                                schema=schema, step=step, case_id=case_id, extra=extra, fallback=self._fallback(task, model))
         try:
             parsed = getattr(resp, "parsed", None)
             if isinstance(parsed, schema):
@@ -127,20 +148,31 @@ class LLM:
             raise LLMError(f"{step}: invalid JSON from model: {e}") from e
 
     async def generate_text(self, *, system: str, parts: Sequence[Part], temperature: float = 0.4,
-                            model: str | None = None, step: str = "text", case_id: str | None = None) -> str:
-        model = model or self.settings.gemini_model
+                            model: str | None = None, step: str = "text", case_id: str | None = None,
+                            task: str | None = None) -> str:
+        model, extra = self._resolve(task, model)
         resp = await self._call(model=model, system=system, parts=parts, temperature=temperature,
-                                schema=None, step=step, case_id=case_id)
+                                schema=None, step=step, case_id=case_id, extra=extra, fallback=self._fallback(task, model))
         return (resp.text or "").strip()
 
     async def stream_text(self, *, system: str, parts: Sequence[Part], temperature: float = 0.4,
-                          model: str | None = None, step: str = "stream", case_id: str | None = None) -> AsyncIterator[str]:
+                          model: str | None = None, step: str = "stream", case_id: str | None = None,
+                          task: str | None = None) -> AsyncIterator[str]:
         from google.genai import types
 
-        model = model or self.settings.gemini_model
-        cfg = types.GenerateContentConfig(system_instruction=system, temperature=temperature)
+        model, extra = self._resolve(task, model)
+        cfg = types.GenerateContentConfig(system_instruction=system, temperature=temperature, **extra)
         t0 = time.perf_counter()
-        stream = await self.client.aio.models.generate_content_stream(model=model, contents=self._parts(parts), config=cfg)
+        try:
+            stream = await self.client.aio.models.generate_content_stream(model=model, contents=self._parts(parts), config=cfg)
+        except Exception as e:  # noqa: BLE001
+            fb = self._fallback(task, model)
+            if not (_is_quota(e) and fb):
+                raise
+            log.warning("gemini_call_failed", extra={"step": step, "caseId": case_id, "attempt": 0, "model": model, "err": str(e)[:300]})
+            model = fb  # tier out of quota: the task's fallback model with its own defaults
+            cfg = types.GenerateContentConfig(system_instruction=system, temperature=temperature)
+            stream = await self.client.aio.models.generate_content_stream(model=model, contents=self._parts(parts), config=cfg)
         last = None
         async for chunk in stream:
             last = chunk
@@ -148,6 +180,28 @@ class LLM:
                 yield chunk.text
         if last is not None:
             self._log_usage(last, model=model, step=step, case_id=case_id, t0=t0, attempt=0)
+
+
+def _is_quota(e: Exception) -> bool:
+    t = str(e)
+    return "429" in t or "RESOURCE_EXHAUSTED" in t
+
+
+def task_config(settings: Any, task: str) -> dict:
+    """GenerateContentConfig kwargs for a task: thinking (level or budget) and max_output_tokens."""
+    from google.genai import types
+
+    out: dict[str, Any] = {}
+    th = settings.task_thinking(task)
+    if th:
+        if th.lstrip("-").isdigit():
+            out["thinking_config"] = types.ThinkingConfig(thinking_budget=int(th))
+        else:
+            out["thinking_config"] = types.ThinkingConfig(thinking_level=th.upper())
+    mo = settings.task_max_output(task)
+    if mo:
+        out["max_output_tokens"] = mo
+    return out
 
 
 _llm: LLM | None = None

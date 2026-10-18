@@ -64,7 +64,7 @@ async def stream_explanation(case: dict, plan: dict, clocks: list[dict]) -> Asyn
     try:
         async for chunk in llm.stream_text(
             system=SYSTEM.format(language=LANG_NAMES.get(lang, "English"), never_pay=never),
-            parts=[json.dumps(payload, ensure_ascii=False)], temperature=0.4, step="plan_explain", case_id=case.get("id"),
+            parts=[json.dumps(payload, ensure_ascii=False)], temperature=0.4, task="plan_explain", step="plan_explain", case_id=case.get("id"),
         ):
             text += chunk
             yield chunk

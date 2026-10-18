@@ -17,6 +17,24 @@ def _bool(name: str, default: bool) -> bool:
     return v.strip().lower() in {"1", "true", "yes", "on"}
 
 
+# Per-task Gemini tier, chosen by the evals (backend/evals/results/summary.md):
+#   (model alias or id, thinking, max_output_tokens incl. thinking (0 = model default), quota fallback alias or id)
+# Aliases: lite = GEMINI_LITE_MODEL, flash = GEMINI_MODEL, pro = GEMINI_PRO_MODEL. Override per task with
+# GEMINI_MODEL_<TASK>, GEMINI_THINKING_<TASK>, GEMINI_MAX_OUTPUT_<TASK>, GEMINI_FALLBACK_<TASK>; deploy.sh sets them.
+TASK_DEFAULTS: dict[str, tuple[str, str, int, str]] = {
+    "guard": ("lite", "", 256, "gemini-3.1-flash-lite"),  # Flash scored lower recall on the guard set
+    "intake": ("gemini-3.1-flash-lite", "", 4096, "flash"),
+    "intake_escalate": ("flash", "", 0, "flash"),  # cascade tier: schema failure / missing or low-confidence key field
+    "transcribe": ("gemini-3.1-flash-lite", "", 1024, "flash"),
+    "plan_explain": ("lite", "", 1024, "flash"),
+    "drafts": ("gemini-3.1-flash-lite", "", 4096, "flash"),
+    "bank_reason": ("lite", "", 512, "flash"),
+    "copilot": ("lite", "", 1024, "flash"),
+    "reply_fallback": ("lite", "", 512, "flash"),
+    "post_check_regen": ("lite", "", 512, "flash"),
+}
+
+
 @dataclass(frozen=True)
 class Settings:
     mock_mode: bool = field(default_factory=lambda: _bool("MOCK_MODE", False))
@@ -27,6 +45,7 @@ class Settings:
     gemini_location: str = field(default_factory=lambda: os.getenv("GEMINI_LOCATION", "") or os.getenv("GOOGLE_CLOUD_LOCATION", "global"))
     gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
     gemini_lite_model: str = field(default_factory=lambda: os.getenv("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"))
+    gemini_pro_model: str = field(default_factory=lambda: os.getenv("GEMINI_PRO_MODEL", "gemini-3.1-pro-preview"))
     # F17: light chat turns on Gemma 4 (Vertex AI MaaS). Empty = every turn goes to Gemini.
     chat_light_model: str = field(default_factory=lambda: os.getenv("CHAT_LIGHT_MODEL", "").strip())
     chat_light_location: str = field(default_factory=lambda: os.getenv("CHAT_LIGHT_LOCATION", "global"))
@@ -74,8 +93,31 @@ class Settings:
     max_image_bytes: int = 10 * 1024 * 1024
     max_audio_bytes: int = 8 * 1024 * 1024  # ~2 min of compressed audio
     max_text_chars: int = 20_000
+    # Co-pilot context: last N messages are replayed (the case state JSON in the instruction is authoritative).
+    copilot_history_messages: int = field(default_factory=lambda: int(os.getenv("COPILOT_HISTORY_MESSAGES", "12")))
     gemini_timeout_s: float = 45.0
     gemini_retries: int = 2
+
+    def task_model(self, task: str) -> str:
+        """Model for one Gemini task: GEMINI_MODEL_<TASK> (a model id or the alias lite / flash / pro), else the
+        tier chosen by the evals (backend/evals/results/summary.md)."""
+        v = (os.getenv(f"GEMINI_MODEL_{task.upper()}") or TASK_DEFAULTS[task][0]).strip()
+        return {"lite": self.gemini_lite_model, "flash": self.gemini_model, "pro": self.gemini_pro_model}.get(v, v)
+
+    def task_fallback(self, task: str) -> str:
+        """Model to retry on when the task's model is out of quota (429): GEMINI_FALLBACK_<TASK>, else the default."""
+        v = (os.getenv(f"GEMINI_FALLBACK_{task.upper()}") or TASK_DEFAULTS[task][3]).strip()
+        return {"lite": self.gemini_lite_model, "flash": self.gemini_model, "pro": self.gemini_pro_model}.get(v, v)
+
+    def task_thinking(self, task: str) -> str:
+        """GEMINI_THINKING_<TASK>: "" (model default), minimal / low / medium / high, or a token budget (e.g. 0, 512)."""
+        v = os.getenv(f"GEMINI_THINKING_{task.upper()}")
+        return (TASK_DEFAULTS[task][1] if v is None else v).strip().lower()
+
+    def task_max_output(self, task: str) -> int | None:
+        v = os.getenv(f"GEMINI_MAX_OUTPUT_{task.upper()}")
+        n = int(v) if v not in (None, "") else TASK_DEFAULTS[task][2]
+        return n or None
 
     @property
     def effective_event_bus(self) -> str:

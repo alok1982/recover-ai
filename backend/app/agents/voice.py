@@ -30,7 +30,7 @@ async def transcribe(path: str, mime_type: str, lang: str, case_id: str | None =
     part = Blob(mime_type=mime_type, uri=uri) if uri else Blob(mime_type=mime_type, data=blobs.read_bytes(path))
     try:
         res = await llm.generate_json(system=SYSTEM + f" The victim's chosen language is {LANG_NAMES.get(lang, 'English')}.",
-                                      parts=[part], schema=Transcript, temperature=0.0, step="transcribe", case_id=case_id)
+                                      parts=[part], schema=Transcript, temperature=0.0, task="transcribe", step="transcribe", case_id=case_id)
         return res.transcript.strip()
     except LLMError:
         log.exception("transcription failed", extra={"caseId": case_id})

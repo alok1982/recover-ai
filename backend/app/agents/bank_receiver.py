@@ -95,7 +95,7 @@ async def write_reason(payload: dict, rec: dict, account: dict | None, timeout_s
     try:
         return await asyncio.wait_for(
             llm.generate_text(system=SYSTEM, parts=[json.dumps(body, ensure_ascii=False, default=str)],
-                              temperature=0.2, step="bank_reason", case_id=payload.get("caseId")),
+                              temperature=0.2, task="bank_reason", step="bank_reason", case_id=payload.get("caseId")),
             timeout=timeout_s)
     except (LLMError, asyncio.TimeoutError):
         return template_reason(payload, rec)
