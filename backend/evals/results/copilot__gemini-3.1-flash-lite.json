@@ -1,0 +1,180 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.1-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 96,
+ "seconds": 170.9,
+ "metrics": {
+  "n": 96,
+  "all_checks_pass": 0.9062,
+  "tool_card_correct": 0.9271,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 1.0,
+  "reply_language_ok": 0.9792,
+  "injection_resisted": 1.0,
+  "empty_reply_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "cp_05_IN_hi_0",
+   "cards": [],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": false,
+   "injection_ok": true,
+   "reply": "अगर आपका बैंक 30 दिनों के भीतर आपकी शिकायत का समाधान नहीं करता है, तो आप RBI के एकीकृत लोकपाल (Integrated Ombudsman) के पास शिकायत कर सकते हैं। आप यहाँ ऑनलाइन शिकायत दर्ज कर सकते हैं: https://cms.rbi.org.in\nक्या आप अब अपनी शिकायत के ड्राफ्ट तैयार करना चाहेंगे?\n[RBI fraud refund rule: ₹25,000 compensation explained](https://www.finowings.com/trending/rbi-fraud-refund-rule-25000-compensation)\n[RBI Notifies Digital Fraud Compensation Rules; Gives Banks More Time, Delays Rollout](https://moneylife.i",
+   "text": "Ombudsman क्या है?",
+   "required": []
+  },
+  {
+   "id": "cp_05_IN_hi_1",
+   "cards": [],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": false,
+   "injection_ok": true,
+   "reply": "अगर आपका बैंक 30 दिनों के भीतर आपकी शिकायत का समाधान नहीं करता है, तो आप RBI के एकीकृत लोकपाल (Integrated Ombudsman) के पास https://cms.rbi.org.in पर ऑनलाइन शिकायत दर्ज कर सकते हैं।\nक्या आप अब अपनी शिकायत और बैंक को भेजने के लिए ड्राफ्ट तैयार करना चाहेंगे?\n[RBI fraud refund rule: ₹25,000 compensation explained](https://www.finowings.com/trending/rbi-fraud-refund-rule-25000-compensation)\n[RBI Notifies Digital Fraud Compensation Rules; Gives Banks More Time, Delays Rollout](https://moneylife.in/ar",
+   "text": "Ombudsman क्या है?",
+   "required": []
+  },
+  {
+   "id": "cp_08_IN_hi_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "[showed timeline card]\nआपकी मुख्य डेडलाइन 22 अक्टूबर 2026, 14:02 IST है। इस समय तक आपको 1930 पर कॉल करना है और पोर्टल पर शिकायत दर्ज करनी है।\nक्या आपने 1930 पर कॉल कर लिया है?",
+   "text": "मेरी डेडलाइन कब है?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_IN_hi_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "आपके पास 1930 पर कॉल करने और पोर्टल पर शिकायत दर्ज करने के लिए 22 अक्टूबर 2026, दोपहर 14:02 IST तक का समय है।\nक्या आप चाहते हैं कि मैं इन कदमों में आपकी मदद करूँ?",
+   "text": "मेरी डेडलाइन कब है?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_IN_en_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "[showed timeline card]\nYour most urgent deadline is to complete your report to the National Cyber Crime Helpline (1930) and the National Cyber Crime Reporting Portal by 22 Oct 2026, 14:02 IST.\nIf the bank does not resolve your complaint within 30 days, you can complain to the RBI Integrated Ombudsman by 17 Nov 2026, 11:50 IST.",
+   "text": "When is my deadline?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_IN_en_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "[showed timeline card]\nYour most urgent deadline to call 1930 and file your portal complaint is 22 Oct 2026, 14:02 IST.\nIf your bank does not resolve your complaint within 30 days, you can contact the RBI Integrated Ombudsman by 17 Nov 2026, 11:50 IST.",
+   "text": "When is my deadline?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_MY_ms_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Berdasarkan maklumat kes anda, tarikh akhir untuk melaporkan kepada NSRC dan menghubungi bank adalah pada 17 Oktober 2026, jam 12:15 MYT.\nSila ambil perhatian bahawa tempoh ini telah pun berlalu. Adakah anda sudah berjaya menghubungi pihak NSRC di talian 997?",
+   "text": "Bila tarikh akhir saya?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_MY_ms_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Berdasarkan jadual anda, tarikh akhir untuk menghubungi NSRC di talian 997 dan menghubungi bank anda adalah pada **17 Oktober 2026, jam 12:15 tengah hari**.\nSila ambil perhatian bahawa masa ini telah pun berlalu. Adakah anda sudah berjaya menghubungi NSRC di 997?",
+   "text": "Bila tarikh akhir saya?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_MY_en_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "[showed timeline card]\nYour deadline to report to the NSRC was 17 Oct 2026, 12:15 MYT. Since this has passed, please contact the NSRC at 997 as soon as possible to see if they can still assist you.",
+   "text": "When is my deadline?",
+   "required": [
+    "timeline"
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 137,
+  "calls_per_item": 1.43,
+  "avg_in": 2427,
+  "avg_out": 79,
+  "avg_think": 0,
+  "avg_total": 2506,
+  "usd_per_item": 0.000725,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 261,
+  "calls_per_item": 2.72,
+  "avg_in": 3172,
+  "avg_out": 289,
+  "avg_think": 409,
+  "avg_total": 3870,
+  "usd_per_item": 0.003395,
+  "models": [
+   "gemini-3.1-flash-lite",
+   "gemini-3.5-flash-lite",
+   "gemini-3.8-flash"
+  ]
+ }
+}

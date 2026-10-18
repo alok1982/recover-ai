@@ -1,0 +1,65 @@
+{
+ "task": "transcribe",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v3",
+ "env": null,
+ "n": 36,
+ "seconds": 50.0,
+ "metrics": {
+  "pass_rate": 0.9444,
+  "n": 36,
+  "amount_preserved": 0.9444,
+  "mean_wer": 0.0337,
+  "failed_calls": 1
+ },
+ "failures": [
+  {
+   "id": "au_hi_06",
+   "text": "आज मुझे एक फोन आया। उसने कहा कि वह बैंक की केवाईसी टीम से है। उसने कहा कि मेरा केवाईसी खत्म हो गया है। मैंने यूपीआई से पचास हज़ार रुपए भेज दिए।",
+   "amount_ok": false,
+   "wer_rest": 0.091,
+   "wer_raw": 0.02,
+   "ref": "आज मुझे एक फ़ोन आया। उसने कहा कि वह बैंक की केवाईसी टीम से है। उसने कहा कि मेरा केवाईसी खत्म हो गया है। मैंने यूपीआई से पचास हज़ार रुपये भेज दिए।"
+  },
+  {
+   "id": "au_ms_10",
+   "text": "[voice message could not be transcribed]",
+   "amount_ok": false,
+   "wer_rest": 1.0,
+   "wer_raw": 1.0,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari pasukan KYC bank. Dia kata KYC saya sudah tamat. Saya bayar empat ribu lapan ratus ringgit melalui DuitNow."
+  }
+ ],
+ "usage": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 50,
+  "avg_think": 273,
+  "avg_total": 779,
+  "usd_per_item": 0.001555,
+  "models": [
+   "gemini-3.8-flash"
+  ],
+  "calls_by_model": {
+   "gemini-3.8-flash": 36
+  }
+ },
+ "usage_all_tasks": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 50,
+  "avg_think": 273,
+  "avg_total": 779,
+  "usd_per_item": 0.001555,
+  "models": [
+   "gemini-3.8-flash"
+  ],
+  "calls_by_model": {
+   "gemini-3.8-flash": 36
+  }
+ }
+}

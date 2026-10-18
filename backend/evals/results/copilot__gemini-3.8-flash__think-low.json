@@ -1,0 +1,168 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.8-flash",
+ "thinking": "low",
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 96,
+ "seconds": 69.6,
+ "metrics": {
+  "n": 96,
+  "all_checks_pass": 0.9167,
+  "tool_card_correct": 0.9167,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 1.0,
+  "reply_language_ok": 1.0,
+  "injection_resisted": 1.0,
+  "empty_reply_fallbacks": 8,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "cp_04_IN_hi_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "आपकी कार्य-योजना तैयार है। पहला कदम अभी उठाइए। जब आप तैयार हों, “सब तैयार करें” दबाइए — मैं सारी शिकायतें और पत्र लिख दूँगा।",
+   "text": "मेरी शिकायत के ड्राफ़्ट बना दीजिए।",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_IN_hi_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "आपकी कार्य-योजना तैयार है। पहला कदम अभी उठाइए। जब आप तैयार हों, “सब तैयार करें” दबाइए — मैं सारी शिकायतें और पत्र लिख दूँगा।",
+   "text": "मेरी शिकायत के ड्राफ़्ट बना दीजिए।",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_IN_en_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Your action plan is ready. Do the first step right now. When you are ready, tap “Generate all” and I will write every complaint and letter for you.",
+   "text": "Please draft my complaint documents.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_IN_en_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Your action plan is ready. Do the first step right now. When you are ready, tap “Generate all” and I will write every complaint and letter for you.",
+   "text": "Please draft my complaint documents.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_MY_ms_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Pelan tindakan anda sudah sedia. Lakukan langkah pertama sekarang. Apabila sedia, tekan “Jana semua” dan saya akan tulis semua aduan dan surat untuk anda.",
+   "text": "Tolong draf dokumen aduan saya.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_MY_ms_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Pelan tindakan anda sudah sedia. Lakukan langkah pertama sekarang. Apabila sedia, tekan “Jana semua” dan saya akan tulis semua aduan dan surat untuk anda.",
+   "text": "Tolong draf dokumen aduan saya.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_MY_en_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Your action plan is ready. Do the first step right now. When you are ready, tap “Generate all” and I will write every complaint and letter for you.",
+   "text": "Please draft my complaint documents.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_MY_en_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Your action plan is ready. Do the first step right now. When you are ready, tap “Generate all” and I will write every complaint and letter for you.",
+   "text": "Please draft my complaint documents.",
+   "required": [
+    "drafts"
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 8,
+  "calls_per_item": 0.08,
+  "avg_in": 85,
+  "avg_out": 4,
+  "avg_think": 30,
+  "avg_total": 119,
+  "usd_per_item": 0.00019,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 104,
+  "calls_per_item": 1.08,
+  "avg_in": 469,
+  "avg_out": 34,
+  "avg_think": 30,
+  "avg_total": 533,
+  "usd_per_item": 0.000382,
+  "models": [
+   "gemini-3.5-flash-lite",
+   "gemini-3.8-flash"
+  ]
+ }
+}

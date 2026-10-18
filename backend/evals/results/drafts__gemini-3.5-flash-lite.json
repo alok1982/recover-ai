@@ -1,0 +1,289 @@
+{
+ "task": "drafts",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 120,
+ "seconds": 28.4,
+ "metrics": {
+  "n": 120,
+  "first_attempt_pass": 0.7417,
+  "pass_after_1_regen (production)": 0.9,
+  "regen_rate": 0.2583,
+  "local_language_ok": 0.9917,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "dr_IN-hi_3_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_4_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_5_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_6_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_8_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_2_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_2_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_3_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_5_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_8_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_9_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_9_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_MY-ms_9_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 151,
+  "calls_per_item": 1.26,
+  "avg_in": 930,
+  "avg_out": 611,
+  "avg_think": 0,
+  "avg_total": 1540,
+  "usd_per_item": 0.001805,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 151,
+  "calls_per_item": 1.26,
+  "avg_in": 930,
+  "avg_out": 611,
+  "avg_think": 0,
+  "avg_total": 1540,
+  "usd_per_item": 0.001805,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "task": "transcribe",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v4",
+ "env": null,
+ "n": 36,
+ "seconds": 24.3,
+ "metrics": {
+  "pass_rate": 0.9722,
+  "n": 36,
+  "amount_preserved": 1.0,
+  "mean_wer": 0.0398,
+  "failed_calls": 0
+ },
+ "failures": [
+  {
+   "id": "au_hi_10",
+   "text": "Aaj mujhe ek phone aaya. Usne kaha ki vah bank ki KYC team se hai. Usne kaha ki mera KYC khatm ho gaya hai. Maine UPI se 25000 rupe bhej diye.",
+   "amount_ok": true,
+   "wer_rest": 1.0,
+   "wer_raw": 1.0,
+   "ref": "आज मुझे एक फ़ोन आया। उसने कहा कि वह बैंक की केवाईसी टीम से है। उसने कहा कि मेरा केवाईसी खत्म हो गया है। मैंने यूपीआई से पच्चीस हज़ार रुपये भेज दिए।"
+  }
+ ],
+ "usage": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 55,
+  "avg_think": 0,
+  "avg_total": 510,
+  "usd_per_item": 0.000275,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 36
+  }
+ },
+ "usage_all_tasks": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 55,
+  "avg_think": 0,
+  "avg_total": 510,
+  "usd_per_item": 0.000275,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 36
+  }
+ }
+}

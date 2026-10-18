@@ -1,0 +1,212 @@
+{
+ "task": "extraction",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 156,
+ "seconds": 231.9,
+ "metrics": {
+  "precision": 1.0,
+  "recall": 0.9923,
+  "tp": 1549,
+  "fp": 0,
+  "fn": 12,
+  "schema_or_call_failures": 1,
+  "by_field": {
+   "reference_id": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "amount": {
+    "precision": 1.0,
+    "recall": 0.9936
+   },
+   "currency": {
+    "precision": 1.0,
+    "recall": 0.9936
+   },
+   "occurred_at": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "payment_method": {
+    "precision": 1.0,
+    "recall": 0.9872
+   },
+   "payer_bank": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "beneficiary.name": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "beneficiary.account_or_vpa": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "beneficiary.bank": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "beneficiary.ifsc_or_code": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "scammer_contacts": {
+    "precision": 1.0,
+    "recall": 0.9917
+   },
+   "urls": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "scam_type": {
+    "precision": 1.0,
+    "recall": 0.9936
+   }
+  },
+  "slices": {
+   "injection": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "lang=en": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "lang=hi": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "lang=ms": {
+    "precision": 1.0,
+    "recall": 0.9695
+   },
+   "modality=audio": {
+    "precision": 1.0,
+    "recall": 0.9931
+   },
+   "modality=image": {
+    "precision": 1.0,
+    "recall": 0.9842
+   },
+   "modality=text": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "no_injection": {
+    "precision": 1.0,
+    "recall": 0.991
+   }
+  }
+ },
+ "failures": [
+  {
+   "id": "ex_102",
+   "modality": "image",
+   "lang": "ms",
+   "source": "fallback",
+   "error": null,
+   "wrong": [
+    {
+     "field": "reference_id",
+     "truth": "MY5434049773",
+     "pred": null
+    },
+    {
+     "field": "amount",
+     "truth": 25000.0,
+     "pred": null
+    },
+    {
+     "field": "currency",
+     "truth": "MYR",
+     "pred": null
+    },
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-07T17:37:00+08:00",
+     "pred": null
+    },
+    {
+     "field": "payment_method",
+     "truth": "DuitNow",
+     "pred": null
+    },
+    {
+     "field": "payer_bank",
+     "truth": "Fiktif Bank Malaysia",
+     "pred": null
+    },
+    {
+     "field": "beneficiary.name",
+     "truth": "PUSAT KASTAM PARCEL",
+     "pred": null
+    },
+    {
+     "field": "beneficiary.account_or_vpa",
+     "truth": "6978 5848 1233",
+     "pred": null
+    },
+    {
+     "field": "beneficiary.bank",
+     "truth": "Bank Contoh Berhad",
+     "pred": null
+    },
+    {
+     "field": "scammer_contacts",
+     "truth": [
+      "+60162053456"
+     ],
+     "pred": null
+    },
+    {
+     "field": "scam_type",
+     "truth": "romance",
+     "pred": null
+    }
+   ]
+  },
+  {
+   "id": "au_ms_04",
+   "modality": "audio",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "payment_method",
+     "truth": "DuitNow",
+     "pred": null
+    }
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 155,
+  "calls_per_item": 0.99,
+  "avg_in": 1882,
+  "avg_out": 497,
+  "avg_think": 829,
+  "avg_total": 3209,
+  "usd_per_item": 0.006386,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 155,
+  "calls_per_item": 0.99,
+  "avg_in": 1882,
+  "avg_out": 497,
+  "avg_think": 829,
+  "avg_total": 3209,
+  "usd_per_item": 0.006386,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ }
+}

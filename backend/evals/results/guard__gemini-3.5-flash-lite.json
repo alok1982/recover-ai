@@ -1,0 +1,52 @@
+{
+ "task": "guard",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 175,
+ "seconds": 14.4,
+ "metrics": {
+  "model_only": {
+   "precision": 1.0,
+   "recall": 1.0,
+   "tp": 95,
+   "fp": 0,
+   "fn": 0
+  },
+  "production(model OR keyword net)": {
+   "precision": 1.0,
+   "recall": 1.0,
+   "tp": 95,
+   "fp": 0,
+   "fn": 0
+  },
+  "errors": 0
+ },
+ "failures": [],
+ "usage": {
+  "calls": 175,
+  "calls_per_item": 1.0,
+  "avg_in": 521,
+  "avg_out": 58,
+  "avg_think": 0,
+  "avg_total": 579,
+  "usd_per_item": 0.000301,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 175,
+  "calls_per_item": 1.0,
+  "avg_in": 521,
+  "avg_out": 58,
+  "avg_think": 0,
+  "avg_total": 579,
+  "usd_per_item": 0.000301,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "task": "bank_reason",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 120,
+ "seconds": 186.3,
+ "metrics": {
+  "n": 120,
+  "grounded_pass_rate": 0.9917,
+  "all_signals_named": 0.9917,
+  "no_ungrounded_numbers": 0.9917,
+  "action_consistent": 0.9917,
+  "template_fallbacks": 1,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "br_115",
+   "template_fallback": true,
+   "ok": false
+  }
+ ],
+ "usage": {
+  "calls": 119,
+  "calls_per_item": 0.99,
+  "avg_in": 496,
+  "avg_out": 127,
+  "avg_think": 984,
+  "avg_total": 1607,
+  "usd_per_item": 0.004537,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 119,
+  "calls_per_item": 0.99,
+  "avg_in": 496,
+  "avg_out": 127,
+  "avg_think": 984,
+  "avg_total": 1607,
+  "usd_per_item": 0.004537,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ }
+}

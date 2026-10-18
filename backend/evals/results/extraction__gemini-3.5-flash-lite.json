@@ -1,0 +1,356 @@
+{
+ "task": "extraction",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 156,
+ "seconds": 65.3,
+ "metrics": {
+  "precision": 0.9898,
+  "recall": 0.9898,
+  "tp": 1545,
+  "fp": 16,
+  "fn": 16,
+  "schema_or_call_failures": 0,
+  "by_field": {
+   "reference_id": {
+    "precision": 0.9917,
+    "recall": 0.9917
+   },
+   "amount": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "currency": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "occurred_at": {
+    "precision": 0.95,
+    "recall": 0.95
+   },
+   "payment_method": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "payer_bank": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "beneficiary.name": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "beneficiary.account_or_vpa": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "beneficiary.bank": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "beneficiary.ifsc_or_code": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "scammer_contacts": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "urls": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "scam_type": {
+    "precision": 0.9423,
+    "recall": 0.9423
+   }
+  },
+  "slices": {
+   "injection": {
+    "precision": 0.9911,
+    "recall": 0.9911
+   },
+   "lang=en": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "lang=hi": {
+    "precision": 0.9775,
+    "recall": 0.9775
+   },
+   "lang=ms": {
+    "precision": 0.9822,
+    "recall": 0.9822
+   },
+   "modality=audio": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "modality=image": {
+    "precision": 0.977,
+    "recall": 0.977
+   },
+   "modality=text": {
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "no_injection": {
+    "precision": 0.9895,
+    "recall": 0.9895
+   }
+  }
+ },
+ "failures": [
+  {
+   "id": "ex_006",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "reference_id",
+     "truth": "MY5238353357",
+     "pred": "MY523833357"
+    }
+   ]
+  },
+  {
+   "id": "ex_012",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "kyc_update",
+     "pred": "investment_trading"
+    }
+   ]
+  },
+  {
+   "id": "ex_020",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "kyc_update",
+     "pred": "fake_courier_customs"
+    }
+   ]
+  },
+  {
+   "id": "ex_028",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "kyc_update",
+     "pred": "investment_trading"
+    }
+   ]
+  },
+  {
+   "id": "ex_032",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-09T08:01:00+05:30",
+     "pred": "9 Oct 2026, 8:01 AM"
+    }
+   ]
+  },
+  {
+   "id": "ex_038",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-16T13:58:00+08:00",
+     "pred": "2026-10-16 1:58 PM"
+    }
+   ]
+  },
+  {
+   "id": "ex_042",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "investment_trading",
+     "pred": "fake_courier_customs"
+    }
+   ]
+  },
+  {
+   "id": "ex_044",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-15T18:57:00+05:30",
+     "pred": "15 Oct 2026, 6:57 PM"
+    }
+   ]
+  },
+  {
+   "id": "ex_070",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "romance",
+     "pred": "fake_courier_customs"
+    }
+   ]
+  },
+  {
+   "id": "ex_074",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-03T13:35:00+08:00",
+     "pred": "2026-10-03 1:35 PM"
+    }
+   ]
+  },
+  {
+   "id": "ex_080",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-16T08:22:00+05:30",
+     "pred": "16 Oct 2026, 8:22 AM"
+    }
+   ]
+  },
+  {
+   "id": "ex_088",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "digital_arrest",
+     "pred": "fake_courier_customs"
+    }
+   ]
+  },
+  {
+   "id": "ex_096",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "digital_arrest",
+     "pred": "fake_courier_customs"
+    }
+   ]
+  },
+  {
+   "id": "ex_104",
+   "modality": "image",
+   "lang": "hi",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "occurred_at",
+     "truth": "2026-10-10T19:26:00+05:30",
+     "pred": "10 Oct 2026, 7:26 PM"
+    }
+   ]
+  },
+  {
+   "id": "ex_106",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "investment_trading",
+     "pred": "fake_courier_customs"
+    }
+   ]
+  },
+  {
+   "id": "ex_110",
+   "modality": "image",
+   "lang": "ms",
+   "source": "gemini",
+   "error": null,
+   "wrong": [
+    {
+     "field": "scam_type",
+     "truth": "romance",
+     "pred": "job_task"
+    }
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 156,
+  "calls_per_item": 1.0,
+  "avg_in": 1898,
+  "avg_out": 545,
+  "avg_think": 0,
+  "avg_total": 2443,
+  "usd_per_item": 0.001931,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 156,
+  "calls_per_item": 1.0,
+  "avg_in": 1898,
+  "avg_out": 545,
+  "avg_think": 0,
+  "avg_total": 2443,
+  "usd_per_item": 0.001931,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ }
+}

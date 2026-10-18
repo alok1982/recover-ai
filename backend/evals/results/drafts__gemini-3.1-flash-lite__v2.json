@@ -1,0 +1,56 @@
+{
+ "task": "drafts",
+ "model": "gemini-3.1-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v2",
+ "env": null,
+ "n": 120,
+ "seconds": 103.1,
+ "metrics": {
+  "n": 120,
+  "first_attempt_pass": 0.9833,
+  "pass_after_1_regen (production)": 1.0,
+  "regen_rate": 0.0167,
+  "local_language_ok": 0.9917,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "dr_MY-ms_9_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 122,
+  "calls_per_item": 1.02,
+  "avg_in": 708,
+  "avg_out": 508,
+  "avg_think": 144,
+  "avg_total": 1360,
+  "usd_per_item": 0.001579,
+  "models": [
+   "gemini-3.1-flash-lite",
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 122,
+  "calls_per_item": 1.02,
+  "avg_in": 708,
+  "avg_out": 508,
+  "avg_think": 144,
+  "avg_total": 1360,
+  "usd_per_item": 0.001579,
+  "models": [
+   "gemini-3.1-flash-lite",
+   "gemini-3.8-flash"
+  ]
+ }
+}

@@ -1,0 +1,172 @@
+{
+ "task": "bank_reason",
+ "model": "gemini-3.1-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 120,
+ "seconds": 25.8,
+ "metrics": {
+  "n": 120,
+  "grounded_pass_rate": 0.875,
+  "all_signals_named": 0.9667,
+  "no_ungrounded_numbers": 0.9667,
+  "action_consistent": 0.8917,
+  "template_fallbacks": 3,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "br_002",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [
+    "14"
+   ],
+   "action_ok": true,
+   "text": "This transaction is flagged for analyst review due to a confirmed VICTIM_REPORT, which includes provided evidence of a fake courier customs scam. Additionally, the account triggered a PROFILE_MISMATCH signal, as the beneficiary’s 24-hour credit volume is over 140 times their typical monthly average despite being registered as a homemaker. Given these indicators of potential money mule activity, the case requires further investigation to verify the legitimacy of the funds."
+  },
+  {
+   "id": "br_008",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the RECENT_TXN signal, indicating the account received funds very shortly before this transfer. The FAN_IN signal identifies a high volume of distinct senders in the last 24 hours, while the PROFILE_MISMATCH signal highlights that the account's recent credit activity significantly exceeds its stated monthly average for a student profile. Additionally, the FLAGGED_NUMBER signal confirms the involvement of a known high-risk entity, necessitating further investigation into this suspicious activity."
+  },
+  {
+   "id": "br_030",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the RECENT_TXN signal, which indicates the account was involved in activity within the last 24 hours. The NEW_ACCOUNT signal further increases risk, as the beneficiary account is less than 90 days old and shows a credit volume significantly higher than its historical average. Additionally, the FLAGGED_NUMBER signal confirms the involvement of a contact associated with high-risk activity, necessitating a manual investigation into this digital arrest scam report."
+  },
+  {
+   "id": "br_033",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the **NEW_ACCOUNT** signal, as the beneficiary account is only 12 days old. The **FAN_IN** signal indicates a high volume of activity from 15 distinct senders in the last 24 hours, which is inconsistent with the account's **PROFILE_MISMATCH** status as a homemaker receiving credits significantly higher than their monthly average. Additionally, the **RECENT_TXN** signal confirms the account is currently experiencing rapid, high-frequency activity that warrants further investigation."
+  },
+  {
+   "id": "br_034",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to a confirmed VICTIM_REPORT that includes supporting evidence of a fake courier scam. The RECENT_TXN signal indicates the payment occurred within the last 24 hours, suggesting an active fraud scenario. Furthermore, the FLAGGED_NUMBER signal confirms the beneficiary is associated with a known high-risk contact, necessitating an immediate analyst investigation."
+  },
+  {
+   "id": "br_044",
+   "ok": false,
+   "missing_signals": [
+    "FLAGGED_NUMBER"
+   ],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": true,
+   "text": "The recommended temporary debit hold is necessary because the VICTIM_REPORT confirms this transaction is linked to a digital arrest scam. The beneficiary account exhibits suspicious behavior, including being a NEW_ACCOUNT and showing a high FAN_IN of distinct senders within 24 hours. Furthermore, the account shows a clear PROFILE_MISMATCH, as the recent credit volume significantly exceeds the user's declared monthly average."
+  },
+  {
+   "id": "br_052",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the NEW_ACCOUNT signal, as the beneficiary account is only 45 days old. The FAN_IN signal indicates suspicious activity with 7 distinct senders contributing to the account within 24 hours. Furthermore, the PROFILE_MISMATCH signal highlights that the student profile received credits significantly exceeding their typical monthly average, suggesting potential money mule activity."
+  },
+  {
+   "id": "br_058",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the **NEW_ACCOUNT** signal, as the beneficiary account is only 12 days old. The **FAN_IN** signal indicates high-velocity activity with 14 distinct senders in the last 24 hours, while the **PROFILE_MISMATCH** signal highlights that the credit volume significantly exceeds the account holder's declared monthly average. Additionally, the **RECENT_TXN** signal confirms the account is currently experiencing rapid, suspicious movement of funds consistent with the reported fake courier customs scam."
+  },
+  {
+   "id": "br_081",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the RECENT_TXN signal, as the payment occurred within the last 24 hours. The FAN_IN signal indicates a high volume of activity from 12 distinct senders, which is inconsistent with typical personal account usage. Furthermore, the PROFILE_MISMATCH signal highlights that the account holder's 24-hour credit volume significantly exceeds their declared student profile's monthly average, warranting further investigation."
+  },
+  {
+   "id": "br_089",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the RECENT_TXN signal, as the payment occurred within the last 24 hours. The NEW_ACCOUNT signal indicates the beneficiary account is less than 90 days old, which is inconsistent with typical established banking behavior. Furthermore, the FAN_IN signal confirms the account received funds from nine distinct senders in the last day, suggesting high-velocity activity that warrants further investigation."
+  },
+  {
+   "id": "br_098",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the NEW_ACCOUNT signal, as the beneficiary account is less than 90 days old. The FAN_IN signal indicates suspicious activity with eight distinct senders in the last 24 hours, and the PROFILE_MISMATCH signal highlights that the homemaker profile received credits significantly exceeding their typical monthly average. These combined factors suggest potential money mule activity, warranting further investigation by an analyst."
+  },
+  {
+   "id": "br_101",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [],
+   "action_ok": false,
+   "text": "This transaction is flagged for review due to the FAN_IN signal, as the beneficiary account received credits from eight distinct senders within a 24-hour period. Additionally, the RAPID_OUTFLOW signal was triggered because over 87% of the credited funds were moved out of the account within 60 minutes. These patterns, combined with the high credit volume relative to the account's monthly average, warrant a manual investigation to rule out potential money mule activity."
+  },
+  {
+   "id": "br_111",
+   "template_fallback": true,
+   "ok": false
+  },
+  {
+   "id": "br_114",
+   "template_fallback": true,
+   "ok": false
+  },
+  {
+   "id": "br_119",
+   "template_fallback": true,
+   "ok": false
+  }
+ ],
+ "usage": {
+  "calls": 117,
+  "calls_per_item": 0.97,
+  "avg_in": 489,
+  "avg_out": 90,
+  "avg_think": 0,
+  "avg_total": 580,
+  "usd_per_item": 0.000258,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 117,
+  "calls_per_item": 0.97,
+  "avg_in": 489,
+  "avg_out": 90,
+  "avg_think": 0,
+  "avg_total": 580,
+  "usd_per_item": 0.000258,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ }
+}

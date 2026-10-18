@@ -1,0 +1,43 @@
+{
+ "task": "plan_explain",
+ "model": "gemini-3.1-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 100,
+ "seconds": 22.8,
+ "metrics": {
+  "n": 100,
+  "pass_rate": 1.0,
+  "post_check_ok": 1.0,
+  "lang_ok": 1.0,
+  "first_step_contact": 1.0,
+  "mean_words": 100.6
+ },
+ "failures": [],
+ "usage": {
+  "calls": 88,
+  "calls_per_item": 0.88,
+  "avg_in": 371,
+  "avg_out": 148,
+  "avg_think": 0,
+  "avg_total": 518,
+  "usd_per_item": 0.000314,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 88,
+  "calls_per_item": 0.88,
+  "avg_in": 371,
+  "avg_out": 148,
+  "avg_think": 0,
+  "avg_total": 518,
+  "usd_per_item": 0.000314,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ }
+}

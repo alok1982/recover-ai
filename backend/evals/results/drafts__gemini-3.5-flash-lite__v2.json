@@ -1,0 +1,134 @@
+{
+ "task": "drafts",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v2",
+ "env": null,
+ "n": 120,
+ "seconds": 59.1,
+ "metrics": {
+  "n": 120,
+  "first_attempt_pass": 0.9667,
+  "pass_after_1_regen (production)": 1.0,
+  "regen_rate": 0.0333,
+  "local_language_ok": 0.925,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "dr_IN-en_0_hotline_script",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_0_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_1_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_4_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_5_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_6_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_7_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_9_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_MY-en_7_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [],
+     "local_lang_ok": false,
+     "empty": false
+    }
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 124,
+  "calls_per_item": 1.03,
+  "avg_in": 719,
+  "avg_out": 543,
+  "avg_think": 0,
+  "avg_total": 1261,
+  "usd_per_item": 0.001572,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 124,
+  "calls_per_item": 1.03,
+  "avg_in": 719,
+  "avg_out": 543,
+  "avg_think": 0,
+  "avg_total": 1261,
+  "usd_per_item": 0.001572,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ }
+}

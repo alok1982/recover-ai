@@ -1,0 +1,89 @@
+{
+ "task": "transcribe",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 36,
+ "seconds": 26.2,
+ "metrics": {
+  "pass_rate": 0.7778,
+  "n": 36,
+  "mean_wer": 0.1064
+ },
+ "failures": [
+  {
+   "id": "au_en_04",
+   "text": "I got a call from someone saying he was from the CBI. He said I was under digital arrest. I paid 1,95,000 rupees by UPI this afternoon.",
+   "wer": 0.161,
+   "ref": "I got a call from someone saying he was from the CBI. He said I was under digital arrest. I paid one lakh ninety five thousand rupees by UPI this afternoon."
+  },
+  {
+   "id": "au_hi_00",
+   "text": "आज मुझे एक फोन आया उसने कहा कि वह सीबीआई से है उसने कहा कि मैं डिजिटल अरेस्ट में हूं मैंने यूपीआई से ₹25000 भेज दिए",
+   "wer": 0.156,
+   "ref": "आज मुझे एक फ़ोन आया। उसने कहा कि वह सीबीआई से है। उसने कहा कि मैं डिजिटल अरेस्ट में हूँ। मैंने यूपीआई से पच्चीस हज़ार रुपये भेज दिए।"
+  },
+  {
+   "id": "au_hi_02",
+   "text": "आज मुझे एक फोन आया। उसने कहा कि वह बैंक की केवाईसी टीम से है। उसने कहा कि मेरा केवाईसी खत्म हो गया है। मैंने यूपीआई से ₹1,95,000 भेज दिए।",
+   "wer": 0.17,
+   "ref": "आज मुझे एक फ़ोन आया। उसने कहा कि वह बैंक की केवाईसी टीम से है। उसने कहा कि मेरा केवाईसी खत्म हो गया है। मैंने यूपीआई से एक लाख पचानवे हज़ार रुपये भेज दिए।"
+  },
+  {
+   "id": "au_ms_00",
+   "text": "Saya terima panggilan daripada seseorang yang mengaku dari polis. Dia kata saya ditahan secara digital. Saya bayar RM4,800 melalui DuitNow.",
+   "wer": 0.208,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari polis. Dia kata saya ditahan secara digital. Saya bayar empat ribu lapan ratus ringgit melalui DuitNow."
+  },
+  {
+   "id": "au_ms_01",
+   "text": "Saya terima panggilan daripada seseorang yang mengaku dari Jabatan Kastam. Dia kata bungkusan saya ditahan. Saya bayar RM1,500 melalui DuitNow.",
+   "wer": 0.174,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari jabatan kastam. Dia kata bungkusan saya ditahan. Saya bayar seribu lima ratus ringgit melalui DuitNow."
+  },
+  {
+   "id": "au_ms_06",
+   "text": "[voice message could not be transcribed]",
+   "wer": 1.0,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari pasukan KYC bank. Dia kata KYC saya sudah tamat. Saya bayar seribu lima ratus ringgit melalui DuitNow."
+  },
+  {
+   "id": "au_ms_08",
+   "text": "Saya terima panggilan daripada seseorang yang mengaku dari polis. Dia kata saya ditahan secara digital. Saya bayar RM980 melalui DuitNow.",
+   "wer": 0.208,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari polis. Dia kata saya ditahan secara digital. Saya bayar sembilan ratus lapan puluh ringgit melalui DuitNow."
+  },
+  {
+   "id": "au_ms_10",
+   "text": "Saya terima panggilan daripada seseorang yang mengaku dari pasukan KYC bank. Dia kata KYC saya sudah tamat. Saya bayar 4,800 ringgit melalui DuitNow.",
+   "wer": 0.154,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari pasukan KYC bank. Dia kata KYC saya sudah tamat. Saya bayar empat ribu lapan ratus ringgit melalui DuitNow."
+  }
+ ],
+ "usage": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 50,
+  "avg_think": 261,
+  "avg_total": 766,
+  "usd_per_item": 0.001508,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 50,
+  "avg_think": 261,
+  "avg_total": 766,
+  "usd_per_item": 0.001508,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ }
+}

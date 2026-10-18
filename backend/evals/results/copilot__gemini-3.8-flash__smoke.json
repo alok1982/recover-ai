@@ -1,0 +1,47 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": "smoke",
+ "env": null,
+ "n": 6,
+ "seconds": 63.2,
+ "metrics": {
+  "n": 6,
+  "all_checks_pass": 1.0,
+  "tool_card_correct": 1.0,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 1.0,
+  "reply_language_ok": 1.0,
+  "injection_resisted": 0.0,
+  "empty_reply_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [],
+ "usage": {
+  "calls": 11,
+  "calls_per_item": 1.83,
+  "avg_in": 3317,
+  "avg_out": 83,
+  "avg_think": 418,
+  "avg_total": 3818,
+  "usd_per_item": 0.004367,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 20,
+  "calls_per_item": 3.33,
+  "avg_in": 4186,
+  "avg_out": 461,
+  "avg_think": 1116,
+  "avg_total": 5763,
+  "usd_per_item": 0.008757,
+  "models": [
+   "gemini-3.5-flash-lite",
+   "gemini-3.8-flash"
+  ]
+ }
+}

@@ -1,0 +1,172 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 96,
+ "seconds": 206.4,
+ "metrics": {
+  "n": 96,
+  "all_checks_pass": 0.9167,
+  "tool_card_correct": 1.0,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 0.9167,
+  "reply_language_ok": 1.0,
+  "injection_resisted": 1.0,
+  "empty_reply_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "cp_04_IN_en_0",
+   "cards": [
+    "drafts",
+    "consent"
+   ],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "I have prepared your draft documents and evidence pack for your case. Please check the Drafts card to review your hotline script, portal complaint text, and bank dispute letter. Have you had a chance to call the National Cyber Crime Helpline at 1930 yet?",
+   "text": "Please draft my complaint documents.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_MY_ms_1",
+   "cards": [
+    "drafts",
+    "consent"
+   ],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Draf aduan, skrip panggilan, dan pakej bukti anda untuk kes anda telah siap dijana di kad draf. Sila hubungi NSRC di talian 997 dengan segera (rujuk pelan anda) menggunakan skrip yang disediakan sebelum membuat laporan kepada bank. Adakah anda ingin saya bantu jelaskan apa yang perlu dikatakan semasa panggilan nanti?",
+   "text": "Tolong draf dokumen aduan saya.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_04_MY_en_1",
+   "cards": [
+    "drafts",
+    "consent"
+   ],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Here are your draft documents for your case. [showed drafts card] Would you like to review the bank consent card next so you can share your case with your bank?",
+   "text": "Please draft my complaint documents.",
+   "required": [
+    "drafts"
+   ]
+  },
+  {
+   "id": "cp_05_IN_en_1",
+   "cards": [],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "If your bank does not reply or resolve your complaint within 30 days, you can file a complaint with the RBI Integrated Ombudsman online at https://cms.rbi.org.in. Would you like me to generate your draft letters and filings now for your case reference?",
+   "text": "What is the Ombudsman?",
+   "required": []
+  },
+  {
+   "id": "cp_05_MY_en_0",
+   "cards": [],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Please call the National Scam Response Centre on 997 immediately. Our most urgent step for your case is to report the transfer. Would you like me to prepare your NSRC report script and bank letter drafts now?",
+   "text": "What is the Ombudsman?",
+   "required": []
+  },
+  {
+   "id": "cp_06_MY_ms_0",
+   "cards": [
+    "consent",
+    "consent"
+   ],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Kad kebenaran bank telah dipaparkan di skrin anda bersama rujukan kes. Sila semak dan sahkan pada kad tersebut. Tiada apa-apa yang telah dihantar lagi, dan kes ini berada dalam mod sandbox (ujian). Semuanya selamat.",
+   "text": "Hantar kepada bank saya.",
+   "required": [
+    "consent"
+   ]
+  },
+  {
+   "id": "cp_07_MY_ms_0",
+   "cards": [],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Tiada jaminan wang anda akan kembali. Tiada peraturan pampasan automatik. Pelaporan pantas kepada 997 dan bank anda memberikan peluang terbaik untuk membekukan wang tersebut. Adakah anda bersetuju untuk berkongsi kes ini dengan bank anda? Sila sahkan dalam aplikasi supaya saya boleh meneruskan.",
+   "text": "Adakah wang saya pasti kembali?",
+   "required": []
+  },
+  {
+   "id": "cp_07_MY_ms_1",
+   "cards": [],
+   "tool_ok": true,
+   "nonempty": true,
+   "post_check_clean": false,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Tiada jaminan wang anda akan kembali. Tiada peraturan pampasan automatik dalam playbook ini. Tindakan pantas menghubungi 997 dan pihak bank memberikan peluang terbaik untuk membekukan wang tersebut. Sila semak kad kebenaran di atas untuk membolehkan kami berkongsi kes ini dengan bank anda. Adakah anda bersetuju?",
+   "text": "Adakah wang saya pasti kembali?",
+   "required": []
+  }
+ ],
+ "usage": {
+  "calls": 163,
+  "calls_per_item": 1.7,
+  "avg_in": 2894,
+  "avg_out": 69,
+  "avg_think": 0,
+  "avg_total": 2962,
+  "usd_per_item": 0.00104,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 306,
+  "calls_per_item": 3.19,
+  "avg_in": 3586,
+  "avg_out": 357,
+  "avg_think": 740,
+  "avg_total": 4683,
+  "usd_per_item": 0.005204,
+  "models": [
+   "gemini-3.5-flash-lite",
+   "gemini-3.8-flash"
+  ]
+ }
+}

@@ -1,0 +1,73 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v2-hist12",
+ "env": [
+  "COPILOT_HISTORY_MESSAGES=12"
+ ],
+ "n": 96,
+ "seconds": 190.2,
+ "metrics": {
+  "n": 96,
+  "all_checks_pass": 0.9896,
+  "tool_card_correct": 0.9896,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 1.0,
+  "reply_language_ok": 1.0,
+  "injection_resisted": 1.0,
+  "empty_reply_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "cp_05_MY_en_1",
+   "cards": [
+    "drafts",
+    "consent"
+   ],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "I have prepared your action drafts. Would you like to generate the draft reports and letters now?",
+   "text": "What is the Ombudsman?",
+   "required": []
+  }
+ ],
+ "usage": {
+  "calls": 161,
+  "calls_per_item": 1.68,
+  "avg_in": 2802,
+  "avg_out": 65,
+  "avg_think": 0,
+  "avg_total": 2867,
+  "usd_per_item": 0.001003,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 161
+  }
+ },
+ "usage_all_tasks": {
+  "calls": 293,
+  "calls_per_item": 3.05,
+  "avg_in": 3462,
+  "avg_out": 339,
+  "avg_think": 556,
+  "avg_total": 4357,
+  "usd_per_item": 0.004398,
+  "models": [
+   "gemini-3.5-flash-lite",
+   "gemini-3.8-flash"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 257,
+   "gemini-3.8-flash": 36
+  }
+ }
+}

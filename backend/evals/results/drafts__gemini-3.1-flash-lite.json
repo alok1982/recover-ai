@@ -1,0 +1,655 @@
+{
+ "task": "drafts",
+ "model": "gemini-3.1-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": null,
+ "env": null,
+ "n": 120,
+ "seconds": 46.6,
+ "metrics": {
+  "n": 120,
+  "first_attempt_pass": 0.3667,
+  "pass_after_1_regen (production)": 0.3833,
+  "regen_rate": 0.1833,
+  "local_language_ok": 0.55,
+  "errors": 54
+ },
+ "failures": [
+  {
+   "id": "dr_IN-hi_0_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_1_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_2_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_4_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_5_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_5_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_6_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_6_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_8_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_account",
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_8_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_8_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_9_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-hi_9_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_0_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_1_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_1_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_2_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_2_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_3_ncrp_complaint",
+   "error": "LLMError: draft:ncrp_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_3_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_3_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_4_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_4_rbi_ombudsman_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name",
+      "reference_id"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_5_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_5_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_6_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_6_bank_dispute_letter",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_6_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_7_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_7_ncrp_complaint",
+   "error": "LLMError: draft:ncrp_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_7_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_8_ncrp_complaint",
+   "attempts": [
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    },
+    {
+     "missing": [
+      "beneficiary_name"
+     ],
+     "local_lang_ok": true,
+     "empty": false
+    }
+   ]
+  },
+  {
+   "id": "dr_IN-en_8_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_8_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_9_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_9_ncrp_complaint",
+   "error": "LLMError: draft:ncrp_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_9_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_IN-en_9_rbi_ombudsman_complaint",
+   "error": "LLMError: draft:rbi_ombudsman_complaint: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_0_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_0_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_1_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_2_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_2_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_3_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_4_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_5_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_6_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_6_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_7_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_7_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_8_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_8_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_9_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-ms_9_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_0_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_0_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_1_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_1_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_2_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_2_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_3_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_3_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_4_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_4_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_5_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_5_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_6_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_6_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_7_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_7_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_8_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_8_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_9_hotline_script",
+   "error": "LLMError: draft:hotline_script: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  },
+  {
+   "id": "dr_MY-en_9_bank_dispute_letter",
+   "error": "LLMError: draft:bank_dispute_letter: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}"
+  }
+ ],
+ "usage": {
+  "calls": 91,
+  "calls_per_item": 0.76,
+  "avg_in": 569,
+  "avg_out": 347,
+  "avg_think": 0,
+  "avg_total": 916,
+  "usd_per_item": 0.000662,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 91,
+  "calls_per_item": 0.76,
+  "avg_in": 569,
+  "avg_out": 347,
+  "avg_think": 0,
+  "avg_total": 916,
+  "usd_per_item": 0.000662,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ }
+}

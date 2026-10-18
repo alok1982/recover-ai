@@ -1,0 +1,69 @@
+{
+ "task": "guard",
+ "model": "gemini-3.1-flash-lite",
+ "thinking": null,
+ "max_output": 256,
+ "tag": "trim2-r1",
+ "env": null,
+ "n": 175,
+ "seconds": 26.4,
+ "metrics": {
+  "model_only": {
+   "precision": 0.9794,
+   "recall": 1.0,
+   "tp": 95,
+   "fp": 2,
+   "fn": 0
+  },
+  "production(model OR keyword net)": {
+   "precision": 0.9794,
+   "recall": 1.0,
+   "tp": 95,
+   "fp": 2,
+   "fn": 0
+  },
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "g_116",
+   "label": false,
+   "model": true,
+   "prod": true,
+   "error": null,
+   "text": "The caller said the fee was RM 500 and I paid it. Was that a scam?"
+  },
+  {
+   "id": "g_117",
+   "label": false,
+   "model": true,
+   "prod": true,
+   "error": null,
+   "text": "The caller said the fee was ₹4,999 and I paid it. Was that a scam?"
+  }
+ ],
+ "usage": {
+  "calls": 175,
+  "calls_per_item": 1.0,
+  "avg_in": 368,
+  "avg_out": 26,
+  "avg_think": 0,
+  "avg_total": 394,
+  "usd_per_item": 0.000131,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 175,
+  "calls_per_item": 1.0,
+  "avg_in": 368,
+  "avg_out": 26,
+  "avg_think": 0,
+  "avg_total": 394,
+  "usd_per_item": 0.000131,
+  "models": [
+   "gemini-3.1-flash-lite"
+  ]
+ }
+}

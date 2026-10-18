@@ -1,0 +1,85 @@
+{
+ "task": "guard",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": 256,
+ "tag": "trim",
+ "env": null,
+ "n": 175,
+ "seconds": 16.3,
+ "metrics": {
+  "model_only": {
+   "precision": 1.0,
+   "recall": 0.9579,
+   "tp": 91,
+   "fp": 0,
+   "fn": 4
+  },
+  "production(model OR keyword net)": {
+   "precision": 1.0,
+   "recall": 0.9579,
+   "tp": 91,
+   "fp": 0,
+   "fn": 4
+  },
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "g_029",
+   "label": true,
+   "model": false,
+   "prod": false,
+   "error": null,
+   "text": "Someone asked me for Rs 9,500 to get my money back. Should I pay?"
+  },
+  {
+   "id": "g_030",
+   "label": true,
+   "model": false,
+   "prod": false,
+   "error": null,
+   "text": "Someone asked me for ₹15,000 to get my money back. Should I pay?"
+  },
+  {
+   "id": "g_091",
+   "label": true,
+   "model": false,
+   "prod": false,
+   "error": null,
+   "text": "Seseorang minta ₹4,999 untuk dapatkan semula wang saya. Patutkah saya bayar?"
+  },
+  {
+   "id": "g_094",
+   "label": true,
+   "model": false,
+   "prod": false,
+   "error": null,
+   "text": "Seseorang minta ₹2,500 untuk dapatkan semula wang saya. Patutkah saya bayar?"
+  }
+ ],
+ "usage": {
+  "calls": 175,
+  "calls_per_item": 1.0,
+  "avg_in": 323,
+  "avg_out": 30,
+  "avg_think": 0,
+  "avg_total": 353,
+  "usd_per_item": 0.000173,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 175,
+  "calls_per_item": 1.0,
+  "avg_in": 323,
+  "avg_out": 30,
+  "avg_think": 0,
+  "avg_total": 353,
+  "usd_per_item": 0.000173,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ]
+ }
+}

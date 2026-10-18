@@ -1,0 +1,57 @@
+{
+ "task": "transcribe",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v3",
+ "env": null,
+ "n": 36,
+ "seconds": 10.3,
+ "metrics": {
+  "pass_rate": 0.9722,
+  "n": 36,
+  "amount_preserved": 0.9722,
+  "mean_wer": 0.0213,
+  "failed_calls": 0
+ },
+ "failures": [
+  {
+   "id": "au_hi_08",
+   "text": "आज मुझे एक फोन आया, उसने कहा कि वह सीबीआई से है, उसने कहा कि मैं डिजिटल अरेस्ट में हूँ, मैंने यूपीआई से दस हजार रुपए भेज दिए।",
+   "amount_ok": false,
+   "wer_rest": 0.079,
+   "wer_raw": 0.023,
+   "ref": "आज मुझे एक फ़ोन आया। उसने कहा कि वह सीबीआई से है। उसने कहा कि मैं डिजिटल अरेस्ट में हूँ। मैंने यूपीआई से दस हज़ार रुपये भेज दिए।"
+  }
+ ],
+ "usage": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 55,
+  "avg_think": 0,
+  "avg_total": 510,
+  "usd_per_item": 0.000274,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 36
+  }
+ },
+ "usage_all_tasks": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 55,
+  "avg_think": 0,
+  "avg_total": 510,
+  "usd_per_item": 0.000274,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 36
+  }
+ }
+}

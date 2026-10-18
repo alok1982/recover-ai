@@ -1,0 +1,59 @@
+{
+ "task": "transcribe",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": "v2",
+ "env": null,
+ "n": 36,
+ "seconds": 52.8,
+ "metrics": {
+  "pass_rate": 0.9444,
+  "n": 36,
+  "amount_preserved": 0.9444,
+  "mean_wer": 0.0302,
+  "failed_calls": 1
+ },
+ "failures": [
+  {
+   "id": "au_en_04",
+   "text": "I got a call from someone saying he was from the CBI. He said I was under digital arrest. I paid 1 lakh 95,000 rupees by UPI this afternoon.",
+   "amount_ok": false,
+   "wer_rest": 0.04,
+   "wer_raw": 0.129,
+   "ref": "I got a call from someone saying he was from the CBI. He said I was under digital arrest. I paid one lakh ninety five thousand rupees by UPI this afternoon."
+  },
+  {
+   "id": "au_ms_07",
+   "text": "[voice message could not be transcribed]",
+   "amount_ok": false,
+   "wer_rest": 1.0,
+   "wer_raw": 1.0,
+   "ref": "Saya terima panggilan daripada seseorang yang mengaku dari syarikat pinjaman. Dia kata pinjaman saya perlu yuran pemprosesan. Saya bayar dua ribu ringgit melalui DuitNow."
+  }
+ ],
+ "usage": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 50,
+  "avg_think": 252,
+  "avg_total": 757,
+  "usd_per_item": 0.001473,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 36,
+  "calls_per_item": 1.0,
+  "avg_in": 455,
+  "avg_out": 50,
+  "avg_think": 252,
+  "avg_total": 757,
+  "usd_per_item": 0.001473,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ }
+}

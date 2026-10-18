@@ -1,0 +1,56 @@
+{
+ "task": "bank_reason",
+ "model": "gemini-3.8-flash",
+ "thinking": null,
+ "max_output": null,
+ "tag": "smoke",
+ "env": null,
+ "n": 4,
+ "seconds": 53.2,
+ "metrics": {
+  "n": 4,
+  "grounded_pass_rate": 0.75,
+  "all_signals_named": 1.0,
+  "no_ungrounded_numbers": 0.75,
+  "action_consistent": 1.0,
+  "template_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "br_000",
+   "ok": false,
+   "missing_signals": [],
+   "unfired_mentioned": [],
+   "ungrounded_numbers": [
+    "14"
+   ],
+   "action_ok": true,
+   "text": "The recommended action to Monitor account with a hold limit of ₹0 is appropriate given the overall low risk score of 10 for this ₹4,999 transaction. The rule signal PROFILE_MISMATCH fired because the beneficiary holds a declared student profile yet accumulated 24-hour credits totaling over 14 times their normal monthly average credit. With no higher-severity alerts triggered, placing the account under observation rather than initiating an immediate hold aligns with the current transaction facts."
+  }
+ ],
+ "usage": {
+  "calls": 4,
+  "calls_per_item": 1.0,
+  "avg_in": 401,
+  "avg_out": 114,
+  "avg_think": 846,
+  "avg_total": 1361,
+  "usd_per_item": 0.003902,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ },
+ "usage_all_tasks": {
+  "calls": 4,
+  "calls_per_item": 1.0,
+  "avg_in": 401,
+  "avg_out": 114,
+  "avg_think": 846,
+  "avg_total": 1361,
+  "usd_per_item": 0.003902,
+  "models": [
+   "gemini-3.8-flash"
+  ]
+ }
+}
