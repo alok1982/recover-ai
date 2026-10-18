@@ -29,7 +29,7 @@ export function ConsentCard({ data, messageId }: CardProps) {
       <dl className="kv">
         <dt>{t("destination")}</dt><dd><span className={`pill dest-${dest}`}>{t(`dest.${dest}`)}</span></dd>
         {data.customerName && <><dt>{t("fullName")}</dt><dd>{data.customerName}</dd></>}
-        {data.bankName && <><dt>{t("bankName")}</dt><dd>{data.bankName}</dd></>}
+        {data.bankName && <><dt>{t(data.receivingBank ? "receivedBy" : "bankName")}</dt><dd data-testid="consent-bank">{data.bankName}</dd></>}
         {data.beneficiaryMasked && <><dt>{t("beneficiaryMasked")}</dt><dd>{data.beneficiaryMasked}</dd></>}
       </dl>
       <b>{t("willShare")}:</b>

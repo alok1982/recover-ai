@@ -220,5 +220,7 @@
  "roleVictim": "Saya telah ditipu",
  "roleBank": "Saya bekerja di bank (pasukan penipuan)",
  "roleBankHint": "Akaun kakitangan bank perlu kelulusan admin sebelum boleh melihat sebarang data.",
- "roleBankApply": "Mohon akses bank"
+ "roleBankApply": "Mohon akses bank",
+ "receivedBy": "Diterima oleh",
+ "demoDesk": "Meja {bank} (demo — tiada bank sebenar menerimanya)"
 }

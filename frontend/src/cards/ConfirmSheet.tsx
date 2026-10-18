@@ -72,11 +72,12 @@ export function ConfirmSheet({ onClose }: { onClose: () => void }) {
           <>
             <p className={`dest dest-${s.destination}`}>
               <b>{t("destination")}:</b> {sandbox ? t("sandboxNote") : t(`dest.${s.destination}`)}
+              {s.receivingBank && <> · {t("demoDesk").replace("{bank}", s.receivingBank.name)}</>}
             </p>
             <dl className="kv">
               <dt>{t("publicRef")}</dt><dd><code>{s.publicRef}</code></dd>
               {s.customerName && <><dt>{t("fullName")}</dt><dd>{s.customerName}</dd></>}
-              <dt>{t("bankName")}</dt><dd>{s.bankName}</dd>
+              <dt>{t(s.receivingBank ? "receivedBy" : "bankName")}</dt><dd data-testid="confirm-bank">{s.bankName}</dd>
               <dt>{t("amount")}</dt><dd>{s.amount || "—"}</dd>
               <dt>{t("ref")}</dt><dd>{s.reference_id || "—"}</dd>
               <dt>{t("receiver")}</dt><dd>{[s.beneficiary?.name, s.beneficiary?.account, s.beneficiary?.bank].filter(Boolean).join(" · ") || "—"}</dd>

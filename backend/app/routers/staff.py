@@ -14,6 +14,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from .. import demobank
 from .. import profile as P
 from .. import roles as R
 from ..auth import User, admin_user, current_user
@@ -63,7 +64,11 @@ def request_access(req: AccessReq, user: User = Depends(current_user)) -> dict:
     if user.role in ("bank", "admin") and not R.request_blocks_bank(user.uid):
         raise HTTPException(409, {"code": "ALREADY_STAFF", "message": "This account already has a staff role."})
     bank = req.bankName.strip()
-    if bank != P.OTHER_BANK and bank not in P.BANKS.get(req.country, []):
+    if demobank.active() and bank != demobank.name(req.country):
+        # DEMO_MODE: the bank side is only ever the fictional demo bank
+        raise HTTPException(422, {"code": "BANK_REQUEST_INVALID",
+                                  "errors": {"bankName": f"Only {demobank.name(req.country)} is available in the demo."}})
+    if not demobank.active() and bank != P.OTHER_BANK and bank not in P.BANKS.get(req.country, []):
         raise HTTPException(422, {"code": "BANK_REQUEST_INVALID", "errors": {"bankName": "Pick a bank from the list or Other."}})
     if bank == P.OTHER_BANK and not (req.bankOther or "").strip():
         raise HTTPException(422, {"code": "BANK_REQUEST_INVALID", "errors": {"bankOther": "Enter the bank name."}})
@@ -106,7 +111,10 @@ def approve(uid: str, req: ApproveReq | None = None, user: User = Depends(admin_
     if r.get("status") == R.APPROVED:
         raise HTTPException(409, "already approved")
     bank = r.get("bankOther") if r.get("bankName") == P.OTHER_BANK else r.get("bankName")
-    bank_id = (req.bankId if req and req.bankId else None) or R.bank_id_for(bank or "other", r.get("country", "IN"))
+    if demobank.active():
+        bank_id = demobank.DEMO_BANK_ID  # DEMO_MODE: approved staff always belong to the fictional demo bank
+    else:
+        bank_id = (req.bankId if req and req.bankId else None) or R.bank_id_for(bank or "other", r.get("country", "IN"))
     try:
         claims = R.get_claims(uid)
     except Exception as e:  # noqa: BLE001

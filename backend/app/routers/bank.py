@@ -21,6 +21,13 @@ from ..timeutil import utcnow
 log = logging.getLogger("recoverai.bank")
 
 
+def _desk(b: dict) -> dict:
+    """DEMO_MODE: every bank case is received by the fictional demo bank (legacy docs without the field too)."""
+    from .. import demobank
+    rb = demobank.receiving_bank(b.get("country"))
+    return {"receivingBankId": rb["bankId"], "receivingBankName": rb["name"]} if rb else {}
+
+
 def make_router(prefix: str) -> APIRouter:
     r = APIRouter(prefix=prefix, tags=["bank"])
 
@@ -43,7 +50,8 @@ def make_router(prefix: str) -> APIRouter:
             v = jsonable({k: b.get(k) for k in ("id", "caseId", "country", "receivedAt", "amount", "currency", "amountDisplay",
                                                 "scam_type", "riskLevel", "riskScore", "recommendedAction",
                                                 "recommendedActionLabel", "status", "holdLimitDisplay", "occurredAt",
-                                                "sandbox", "publicRef")})
+                                                "sandbox", "publicRef", "receivingBankId", "receivingBankName")})
+            v.update(_desk(b))
             occ = b.get("occurredAt")
             v["hoursSinceTxn"] = round((now - occ).total_seconds() / 3600, 1) if occ else None
             out.append(v)
@@ -66,7 +74,7 @@ def make_router(prefix: str) -> APIRouter:
                     item["previewUrl"] = None
             item.pop("gcsPath", None)
             ev.append(item)
-        return {"case": jsonable({**b, "evidence": ev}), "account": jsonable(b.get("txnFeatures")),
+        return {"case": jsonable({**b, "evidence": ev, **_desk(b)}), "account": jsonable(b.get("txnFeatures")),
                 "audit": jsonable(store.list_audit(bank_case_id=bank_case_id))}
 
     @r.post("/cases/{bank_case_id}/decision")

@@ -37,6 +37,16 @@ def _get(d: dict, dotted: str):
     return v
 
 
+def _desk_line(case: dict) -> str:
+    """DEMO_MODE: name the receiving bank desk as the fictional demo bank (the complainant's own bank stays below)."""
+    from .. import demobank
+    rb = demobank.receiving_bank(case.get("country"))
+    if not rb:
+        return ""
+    return (f"<div><b>Receiving bank desk:</b> {_e(rb['name'])} — demo only; no real bank receives this pack "
+            f"from RecoverAI</div>")
+
+
 def build_html(case: dict, pb: dict, evidence: list[dict], images: dict[str, bytes]) -> str:
     tz = pb["timezone"]
     ex = case.get("extraction") or {}
@@ -115,7 +125,7 @@ pre {{ white-space: pre-wrap; font-family: 'Noto Sans', 'Noto Sans Devanagari', 
 {wm_body}
 <div class="cover"><h1>Evidence pack</h1>
 <div><b>Case reference:</b> {cid} &nbsp; <b>Country:</b> {_e(pb['name'])} &nbsp; <b>Playbook:</b> {_e(pb['version'])}</div>
-<div><b>Generated:</b> {_e(gen)} &nbsp; <b>Status:</b> {_e(case.get('status'))} &nbsp; <b>Bank status:</b> {_e(case.get('bankStatus'))}</div></div>
+<div><b>Generated:</b> {_e(gen)} &nbsp; <b>Status:</b> {_e(case.get('status'))} &nbsp; <b>Bank status:</b> {_e(case.get('bankStatus'))}</div>{_desk_line(case)}</div>
 <h2>Incident summary</h2><p>{_e(ex.get('narrative_en'))}</p>{'<p>' + _e(ex.get('narrative_local')) + '</p>' if ex.get('narrative_local') and ex.get('narrative_local') != ex.get('narrative_en') else ''}
 <h2>Extracted and confirmed facts</h2><table>{''.join(rows)}</table>
 <h2>Timeline</h2><table>{''.join(timeline)}</table>

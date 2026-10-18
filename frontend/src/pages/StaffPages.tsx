@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthError } from "../lib/auth";
 import { passwordOk } from "../lib/phone";
+import { useHealth } from "../lib/health";
+import { DEMO_BANK_NAME } from "../lib/demobank";
+import { DemoRibbon } from "../ui/AppHeader";
 import {
   requestBankAccess, routeStaff, staffDeleteAccount, staffMe, staffSignIn, staffSignOut, staffSignUp, StaffApiError,
   type StaffMe,
@@ -36,7 +39,8 @@ export function BankSignupForm({ next }: { next: string | null }) {
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setF({ ...f, [k]: e.target.value });
-  const banks = FALLBACK_BANKS[f.country];
+  const demo = !!useHealth()?.demo;
+  const banks = demo ? [DEMO_BANK_NAME] : FALLBACK_BANKS[f.country];
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const problem = !EMAIL_RE.test(f.email.trim()) ? "Enter your work email."
@@ -66,6 +70,7 @@ export function BankSignupForm({ next }: { next: string | null }) {
   return (
     <form className="form" onSubmit={submit} noValidate data-testid="bank-signup">
       <p className="small muted">Bank staff accounts give no access until an admin approves them. Victims never see this data.</p>
+      {demo && <p className="small demo-note" data-testid="demo-bank-note">Demo: the only bank here is <b>{DEMO_BANK_NAME}</b>. No real bank is connected.</p>}
       <label>Work email<input name="email" type="email" autoComplete="email" value={f.email} onChange={set("email")} /></label>
       <label>Password<input name="password" type="password" autoComplete="new-password" value={f.password} onChange={set("password")} /></label>
       <label>Confirm password<input name="password2" type="password" autoComplete="new-password" value={f.password2} onChange={set("password2")} /></label>
@@ -79,7 +84,7 @@ export function BankSignupForm({ next }: { next: string | null }) {
         <select name="bankName" value={f.bankName} onChange={set("bankName")}>
           <option value="">Choose your bank</option>
           {banks.map((b) => <option key={b} value={b}>{b}</option>)}
-          <option value="Other">Other</option>
+          {demo ? <option value="Other" disabled>Other – not available in demo</option> : <option value="Other">Other</option>}
         </select>
       </label>
       {f.bankName === "Other" && <label>Bank name<input name="bankOther" maxLength={80} value={f.bankOther} onChange={set("bankOther")} /></label>}
@@ -149,6 +154,8 @@ export function PendingPage() {
   const r = me?.request;
   const status = me?.requestStatus;
   return (
+    <>
+    <DemoRibbon />
     <main className="landing staff-page" data-testid="pending-page">
       <header className="row staff-top"><b>✔ RecoverAI · Bank staff</b>
         <button className="link" data-testid="staff-logout" onClick={async () => { await staffSignOut(); nav("/"); }}>Log out</button></header>
@@ -191,5 +198,6 @@ export function PendingPage() {
       )}
       <Link className="link small" to="/">← RecoverAI home</Link>
     </main>
+    </>
   );
 }

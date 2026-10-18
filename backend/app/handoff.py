@@ -19,6 +19,7 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from . import actions
+from . import demobank
 from .config import REPO_DIR, get_settings
 from .events import pubsub
 from .i18n import t
@@ -175,7 +176,8 @@ def summary(case: dict, evidence: list[dict]) -> dict:
     dest = destination(case)
     return {
         "publicRef": case.get("publicRef"), "destination": dest, "sandbox": dest == "SANDBOX", "liveAllowed": live_allowed(),
-        "bankName": ex.get("payer_bank") or actions._profile_bank(case) or ("your bank"), "customerName": actions._profile_name(case),
+        "bankName": actions._receiving_bank_name(case) or ("your bank"), "customerName": actions._profile_name(case),
+        "receivingBank": demobank.receiving_bank(case.get("country")),
         "amount": format_amount(ex.get("amount"), ex.get("currency")),
         "reference_id": ex.get("reference_id"),
         "beneficiary": {"name": b.get("name"), "account": _mask(b.get("account_or_vpa")), "bank": b.get("bank")},
@@ -277,7 +279,7 @@ async def withdraw(case_id: str, confirmed: bool) -> tuple[dict, list[dict]]:
     ref = ensure_public_ref(case)
     sandbox = is_sandbox(case) if not case.get("submission") else case["submission"].get("destination") == "SANDBOX"
     now = utcnow()
-    envelope = {"from_agent": "recoverai.victim_copilot", "to_agent": f"bank.fraud_case_receiver.{case['country'].lower()}",
+    envelope = {"from_agent": "recoverai.victim_copilot", "to_agent": actions.desk_agent(case["country"]),
                 "intent": "fraud_case.withdraw", "sent_at": to_iso(now),
                 "payload": {"caseId": case_id, "bankCaseId": case.get("bankCaseId"), "publicRef": ref, "withdrawnAt": to_iso(now)}}
     s = get_settings()

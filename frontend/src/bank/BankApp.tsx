@@ -2,18 +2,30 @@ import { useState } from "react";
 import { Route, Routes, Link } from "react-router-dom";
 import { bankLogin, bankLogout, currentBankUser, type BankUser } from "../lib/auth";
 import { MOCK } from "../lib/config";
+import { useHealth } from "../lib/health";
+import { DEMO_BANK_NAME } from "../lib/demobank";
+import { DemoRibbon } from "../ui/AppHeader";
+
+/** DEMO_MODE: the desk belongs to the fictional demo bank, never a real bank. */
+export function useDeskName(): string {
+  const h = useHealth();
+  return h?.demo ? `${DEMO_BANK_NAME} · Fraud desk` : "Bank fraud desk";
+}
 import { Inbox } from "./Inbox";
 import { CaseDetail } from "./CaseDetail";
 import { ScamIntelligence } from "./ScamIntelligence";
 
 function Login({ onDone }: { onDone: (u: BankUser) => void }) {
+  const desk = useDeskName();
   const [name, setName] = useState("Rahul");
   const [email, setEmail] = useState("analyst@recoverai-demo.example");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   return (
+    <>
+    <DemoRibbon />
     <main className="bank-login">
-      <h1>🏦 Bank fraud desk</h1>
+      <h1 data-testid="desk-title">🏦 {desk}</h1>
       <p className="muted">Demo analyst login {MOCK ? "(offline mock: any name)" : "(Firebase email/password, role=bank)"}</p>
       <label>Name<input value={name} onChange={(e) => setName(e.target.value)} /></label>
       {!MOCK && (
@@ -27,16 +39,19 @@ function Login({ onDone }: { onDone: (u: BankUser) => void }) {
       }}>Sign in</button>
       {err && <p className="error">{err}</p>}
     </main>
+    </>
   );
 }
 
 export function BankApp() {
   const [user, setUser] = useState<BankUser | null>(currentBankUser());
+  const desk = useDeskName();
   if (!user) return <Login onDone={setUser} />;
   return (
     <div className="bank">
+      <DemoRibbon />
       <header className="top bank-top">
-        <Link className="brand small" to="/bank">🏦 RecoverAI · Bank fraud desk</Link>
+        <Link className="brand small" to="/bank" data-testid="desk-title">🏦 {desk}</Link>
         <nav className="row">
           <Link to="/bank">Inbox</Link>
           <Link to="/bank/intel">Scam intelligence</Link>

@@ -26,8 +26,9 @@ def main() -> None:
     except auth.UserNotFoundError:
         user = auth.create_user(email=email, password=password, display_name=name, email_verified=True)
         action = "created"
-    auth.set_custom_user_claims(user.uid, {"role": "bank", "name": name})
-    print(f"{action} bank analyst {email} (uid {user.uid}) with claim role=bank")
+    bank_id = os.environ.get("BANK_ID", "demo-recoverai-bank")  # DEMO_MODE: the fictional demo bank
+    auth.set_custom_user_claims(user.uid, {"role": "bank", "name": name, "bankId": bank_id})
+    print(f"{action} bank analyst {email} (uid {user.uid}) with claim role=bank, bankId={bank_id}")
 
 
 if __name__ == "__main__":

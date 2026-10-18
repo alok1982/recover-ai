@@ -3,12 +3,13 @@ from app import roles as R
 from app.store import get_store
 
 ADMIN = {"Authorization": "Bearer mock:admin:Root"}
-APPLICANT_EMAIL = "priya.nair@hdfc-demo.example"
+APPLICANT_EMAIL = "priya.nair@demo-bank.example"
 APP = {"Authorization": f"Bearer mock:staff:{APPLICANT_EMAIL}"}
 APP_UID = R.mock_uid_for_email(APPLICANT_EMAIL)
 VICTIM = {"Authorization": "Bearer mock:phone:+919000000001"}
 ANALYST = {"Authorization": "Bearer mock:bank:Demo"}
-FORM = {"fullName": "Priya Nair", "country": "IN", "bankName": "HDFC Bank", "employeeId": "HD-1042",
+DEMO_BANK = "RecoverAI Demo Bank (fictional)"
+FORM = {"fullName": "Priya Nair", "country": "IN", "bankName": DEMO_BANK, "employeeId": "DM-1042",
         "designation": "Fraud analyst", "note": "Cyber fraud desk, Mumbai"}
 
 
@@ -45,11 +46,19 @@ def test_victim_phone_account_cannot_apply(client):
     assert client.get("/api/me", headers=VICTIM).json()["role"] == "victim"
 
 
-def test_validation(client):
+def test_validation(client, monkeypatch):
+    # DEMO_MODE: only the fictional demo bank can be chosen (no real bank on the bank side)
+    assert _apply(client, form={**FORM, "bankName": "HDFC Bank"}).status_code == 422
+    assert _apply(client, form={**FORM, "bankName": "Other", "bankOther": "Saraswat Co-op Bank"}).status_code == 422
+    assert _apply(client, form={**FORM, "country": "SG"}).status_code == 422
+    assert client.get("/api/me", headers=APP).json()["banks"] == {"IN": [DEMO_BANK], "MY": [DEMO_BANK]}
+    # outside DEMO_MODE the per-country list (or Other) applies
+    from app import demobank
+    monkeypatch.setattr(demobank, "active", lambda: False)
     assert _apply(client, form={**FORM, "bankName": "Fake Bank"}).status_code == 422
     assert _apply(client, form={**FORM, "bankName": "Other"}).status_code == 422
     assert _apply(client, form={**FORM, "bankName": "Other", "bankOther": "Saraswat Co-op Bank"}).status_code == 200
-    assert _apply(client, form={**FORM, "country": "SG"}).status_code == 422
+    assert _apply(client, form={**FORM, "bankName": "HDFC Bank"}).status_code == 200
 
 
 def test_approve_reject_revoke_with_audit(client):
@@ -57,8 +66,8 @@ def test_approve_reject_revoke_with_audit(client):
     lst = client.get("/api/admin/bank-requests?status=pending", headers=ADMIN).json()
     assert [r["uid"] for r in lst["requests"]] == [APP_UID] and lst["counts"]["PENDING"] == 1
     r = client.post(f"/api/admin/bank-requests/{APP_UID}/approve", json={}, headers=ADMIN)
-    assert r.status_code == 200 and r.json()["status"] == "APPROVED" and r.json()["bankId"] == "in-hdfc-bank"
-    assert R.mock_claims(APP_UID)["role"] == "bank" and R.mock_claims(APP_UID)["bankId"] == "in-hdfc-bank"
+    assert r.status_code == 200 and r.json()["status"] == "APPROVED" and r.json()["bankId"] == "demo-recoverai-bank"
+    assert R.mock_claims(APP_UID)["role"] == "bank" and R.mock_claims(APP_UID)["bankId"] == "demo-recoverai-bank"
     me = client.get("/api/me", headers=APP).json()
     assert me["role"] == "bank" and me["requestStatus"] == "APPROVED"
     assert client.get("/api/bank/cases", headers=APP).status_code == 200

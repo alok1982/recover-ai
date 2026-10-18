@@ -9,6 +9,7 @@ import asyncio
 import time
 
 from ..analytics import bq
+from .. import demobank
 from ..analytics.synthetic import beneficiary_hash
 from ..bank.rules import normalize_account_key, recommend
 from ..llm import LLMError, get_llm
@@ -38,7 +39,7 @@ def build_envelope(case: dict, evidence: list[dict], effective_now) -> dict:
     ex = case.get("extraction") or {}
     return {
         "from_agent": "recoverai.victim_copilot",
-        "to_agent": f"bank.fraud_case_receiver.{case['country'].lower()}",
+        "to_agent": desk_agent(case["country"]),
         "intent": "fraud_case.submit",
         "sent_at": to_iso(utcnow()),
         "payload": {
@@ -54,8 +55,20 @@ def build_envelope(case: dict, evidence: list[dict], effective_now) -> dict:
             "evidence_count": len(evidence),
             "consent": {"givenAt": to_iso(case.get("consentGivenAt")), "version": case.get("consentVersion")},
             "effective_now": to_iso(effective_now),
+            # DEMO_MODE: the receiving desk is the fictional demo bank (Pub/Sub handoff destination label)
+            "receivingBank": demobank.receiving_bank(case["country"]),
         },
     }
+
+
+def desk_agent(country: str) -> str:
+    from ..actions import desk_agent as _d
+    return _d(country)
+
+
+def _receiving(p: dict) -> dict:
+    rb = p.get("receivingBank") or demobank.receiving_bank(p.get("country"))
+    return {"receivingBankId": rb["bankId"], "receivingBankName": rb["name"]} if rb else {}
 
 
 def template_reason(payload: dict, rec: dict) -> str:
@@ -149,12 +162,13 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
         "holdLimitDisplay": format_amount(rec["holdLimitAmount"], p.get("currency")) if rec["holdLimitAmount"] else None,
         "holdNote": rec["note"], "reason_en": reason, "reasonSource": "template", "reasonPending": True, "status": "NEW",
         "envelope": {k: v for k, v in envelope.items() if k != "payload"},
+        **_receiving(p),
         "delivery": {"messageId": (meta or {}).get("messageId"), "subscription": (meta or {}).get("subscription")},
     }
     if not store.create_bank_case_if_absent(bank_case_id, doc):  # lost a race with a concurrent redelivery
         return store.get_bank_case(bank_case_id)
     store.add_audit({"actor": envelope.get("from_agent"), "action": "CASE_RECEIVED", "bankCaseId": bank_case_id,
-                     "caseId": p["caseId"], "details": {"riskScore": rec["riskScore"], "recommendedAction": rec["recommendedAction"],
+                     "caseId": p["caseId"], **_receiving(p), "details": {"riskScore": rec["riskScore"], "recommendedAction": rec["recommendedAction"],
                                                         "txnStatus": fx["status"], "messageId": (meta or {}).get("messageId")}})
     log.info("bank_case_received", extra={"caseId": p["caseId"], "bankCaseId": bank_case_id, "step": "a2a",
                                           "riskScore": rec["riskScore"], "txnStatus": fx["status"], "bqMs": fx["queryMs"]})
@@ -203,7 +217,7 @@ async def withdraw(envelope: dict, meta: dict | None = None) -> dict:
         "status": "WITHDRAWN_BY_CUSTOMER", "withdrawnAt": parse_iso(p.get("withdrawnAt")) or utcnow(), "statusBeforeWithdrawal": bc.get("status"),
         "evidence": [], "scammer_contacts": [], "urls": [], "narrative_en": None, "dataHidden": True, "hiddenEvidenceCount": ev_count,
     })
-    store.add_audit({"actor": envelope.get("from_agent"), "action": "CONSENT_WITHDRAWN", "bankCaseId": bank_case_id,
+    store.add_audit({"actor": envelope.get("from_agent"), "action": "CONSENT_WITHDRAWN", "bankCaseId": bank_case_id, **_receiving(bc),
                      "caseId": p.get("caseId"), "details": {"publicRef": p.get("publicRef"), "messageId": (meta or {}).get("messageId"),
                                                             "previousStatus": bc.get("status")}})
     log.info("bank_case_withdrawn", extra={"caseId": p.get("caseId"), "bankCaseId": bank_case_id, "step": "a2a_withdraw"})

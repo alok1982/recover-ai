@@ -36,8 +36,8 @@ USERS = [
 
 
 APPLICANT = {"email": "pending.applicant@demo-bank.example", "fullName": "Kavya Menon", "country": "IN",
-             "bankName": "ICICI Bank", "employeeId": "ICI-55821", "designation": "Fraud risk officer",
-             "note": "Demo applicant (fictional) — Chennai fraud operations"}
+             "bankName": "RecoverAI Demo Bank (fictional)", "employeeId": "DEMO-55821", "designation": "Fraud risk officer",
+             "note": "Demo applicant (fictional) — demo bank fraud operations"}
 
 
 def applicant_api(base: str) -> None:

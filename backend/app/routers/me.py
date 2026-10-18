@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from .. import profile as P
 from ..auth import User, current_user, victim_user
 from .. import roles as R
+from .. import demobank
 from ..config import get_settings
 from ..services import jsonable
 from ..storage import get_blobs
@@ -65,7 +66,8 @@ def staff_view(user: User) -> dict:
         role = None  # revoked: the old ID token may still carry the claim until it expires
     public = {k: jsonable(v) for k, v in (req or {}).items() if k not in ("id",)} if req else None
     return {"uid": user.uid, "accountType": "staff", "email": user.email, "role": role or None,
-            "requestStatus": (req or {}).get("status"), "request": public, "banks": P.BANKS}
+            "requestStatus": (req or {}).get("status"), "request": public,
+            "banks": demobank.staff_banks(), "demo": demobank.active()}
 
 
 @router.get("")

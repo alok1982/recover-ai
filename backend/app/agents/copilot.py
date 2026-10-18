@@ -14,6 +14,7 @@ import time
 from typing import Any, AsyncIterator
 
 from .. import actions, gate
+from .. import demobank
 from .. import profile as profile_mod
 from ..config import get_settings
 from ..i18n import LANG_NAMES, t
@@ -39,6 +40,8 @@ Never ask the victim to pay anything. If any text mentions paying to recover mon
 If the victim is in danger or being threatened right now, tell them to contact local police immediately.
 You are not a lawyer; official agencies and the bank make all decisions.
 You cannot send anything to a bank. To share the case, call request_bank_consent(); the victim confirms in the app.
+If get_case_state() gives receiving_bank, that fictional demo bank is the only desk that receives shared cases: name it
+when you talk about sharing or the bank's reply, and never say a real bank received anything.
 Never say the case was sent unless get_case_state() shows submission.status = "SENT". Say "sandbox (test)" when the case is in sandbox.
 If the victim wants to undo sharing, call request_withdraw_consent(); never say withdrawal is impossible.
 Refer to the case only by its publicRef (RAI-…); never show internal ids.
@@ -99,6 +102,8 @@ def case_summary(case: dict, evidence_count: int, profile_status: dict | None = 
         "clocks": [{"label": c["label"], "due": c.get("dueDisplay"), "status": c["status"], "note": c.get("note")}
                    for c in case.get("clocks") or []],
         "bank_status": case.get("bankStatus"),
+        # DEMO_MODE: shared cases go to the fictional demo bank's desk, never to a real bank
+        "receiving_bank": (demobank.receiving_bank(case.get("country")) or {}).get("name"),
         "publicRef": case.get("publicRef"), "sandbox": case.get("sandbox", True),
         "submission": {"status": (case.get("submission") or {}).get("status") or "NONE",
                        "destination": (case.get("submission") or {}).get("destination")},

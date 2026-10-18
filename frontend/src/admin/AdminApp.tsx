@@ -1,8 +1,11 @@
 /** CR-04: admin console (/admin). Needs the `role: admin` custom claim (checked by the server on every call). */
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useHealth } from "../lib/health";
+import { DEMO_BANK_ID } from "../lib/demobank";
+import { DemoRibbon } from "../ui/AppHeader";
 import { AuthError } from "../lib/auth";
-import { staffApi, StaffApiError, staffMe, staffSignOut, type AccessRequest, type RequestStatus, type StaffMe } from "../lib/staff";
+import { ADMIN_EMAIL, staffApi, StaffApiError, staffMe, staffSignIn, staffSignOut, type AccessRequest, type RequestStatus, type StaffMe } from "../lib/staff";
 
 interface AuditEntry { id: string; at: string; actorEmail: string | null; action: string; targetUid: string; reason?: string | null; bankId?: string }
 const TABS: RequestStatus[] = ["PENDING", "APPROVED", "REJECTED", "REVOKED"];
@@ -12,8 +15,9 @@ function suggestBankId(r: AccessRequest): string {
   return `${r.country.toLowerCase()}-${b.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)}`;
 }
 
-function Row({ r, onDone }: { r: AccessRequest; onDone: (msg: string) => void }) {
-  const [bankId, setBankId] = useState(r.bankId || suggestBankId(r));
+function Row({ r, onDone, demo }: { r: AccessRequest; onDone: (msg: string) => void; demo: boolean }) {
+  // DEMO_MODE: approved staff always belong to the fictional demo bank (the server enforces it too)
+  const [bankId, setBankId] = useState(demo ? DEMO_BANK_ID : r.bankId || suggestBankId(r));
   const [reason, setReason] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const act = async (path: string, body: unknown, msg: string) => {
@@ -31,7 +35,7 @@ function Row({ r, onDone }: { r: AccessRequest; onDone: (msg: string) => void })
       <td className="actions">
         {r.status !== "APPROVED" && (
           <div className="row">
-            <input aria-label="bankId" value={bankId} onChange={(e) => setBankId(e.target.value)} size={16} />
+            <input aria-label="bankId" value={bankId} readOnly={demo} title={demo ? "Demo: fixed to the fictional demo bank" : undefined} onChange={(e) => setBankId(e.target.value)} size={16} />
             <button className="btn primary" data-testid="approve" onClick={() => act(`/api/admin/bank-requests/${r.uid}/approve`, { bankId }, `Approved ${r.email} (${bankId})`)}>Approve</button>
           </div>
         )}
@@ -50,8 +54,60 @@ function Row({ r, onDone }: { r: AccessRequest; onDone: (msg: string) => void })
   );
 }
 
+const LOGIN = "/admin/login?next=/admin";
+
+/** /admin/login: email + password only. Non-admins are told "Admin access required" and signed out. */
+export function AdminLogin() {
+  const nav = useNavigate();
+  const [params] = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [denied, setDenied] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const next = params.get("next");
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null); setDenied(null);
+    if (!email.trim() || !pw) return setErr("Email or password is incorrect.");
+    setBusy(true);
+    try {
+      await staffSignIn(email, pw);
+      const me = await staffMe(true);
+      if (me.role === "admin") {
+        nav(next && next.startsWith("/admin") && !next.startsWith("/admin/login") ? next : "/admin", { replace: true });
+        return;
+      }
+      await staffSignOut();
+      setDenied(me.email || email);
+    } catch (x) {
+      setErr(x instanceof AuthError && x.code === "bad_credentials" ? "Email or password is incorrect."
+        : x instanceof Error ? x.message : "Something went wrong — please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <DemoRibbon />
+      <main className="bank-login admin-login" data-testid="admin-login">
+        <h1>🛡️ RecoverAI Admin</h1>
+        <p className="muted">Admin console sign-in. Requires the admin role.</p>
+        <form className="form" onSubmit={submit} noValidate>
+          <label>Email<input name="email" type="email" autoComplete="username" placeholder={ADMIN_EMAIL} value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+          <label>Password<input name="password" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
+          {err && <p className="error" role="alert" data-testid="auth-error">{err}</p>}
+          {denied && <p className="error" role="alert" data-testid="admin-required"><b>Admin access required.</b> {denied} is not an admin and has been signed out.</p>}
+          <button className="btn primary cta" type="submit" disabled={busy}>Sign in</button>
+        </form>
+      </main>
+    </>
+  );
+}
+
 export function AdminApp() {
   const nav = useNavigate();
+  const health = useHealth();
   const [me, setMe] = useState<StaffMe | null>(null);
   const [denied, setDenied] = useState(false);
   const [tab, setTab] = useState<RequestStatus>("PENDING");
@@ -72,23 +128,27 @@ export function AdminApp() {
       if (m.role !== "admin") { setDenied(true); return; }
       refresh();
     }).catch((e) => {
-      if (e instanceof AuthError || (e instanceof StaffApiError && e.status === 401)) nav("/login?role=bank&next=/admin", { replace: true });
+      if (e instanceof AuthError || (e instanceof StaffApiError && e.status === 401)) nav(LOGIN, { replace: true });
       else setDenied(true);
     });
   }, []);
-  const logout = async () => { await staffSignOut(); nav("/login?role=bank&next=/admin"); };
+  const logout = async () => { await staffSignOut(); nav(LOGIN); };
   if (denied) {
     return (
+      <>
+      <DemoRibbon />
       <main className="landing staff-page" data-testid="admin-denied">
         <h2>Admin access required</h2>
         <p>{me?.email} does not have the admin role.</p>
         <button className="btn" onClick={logout}>Sign in as an admin</button>
       </main>
+      </>
     );
   }
   if (!me) return <div className="loading">…</div>;
   return (
     <div className="bank admin" data-testid="admin-console">
+      <DemoRibbon />
       <header className="top bank-top">
         <span className="brand small">🛡️ RecoverAI · Admin console</span>
         <nav className="row"><span className="muted">{me.email}</span><button className="link" onClick={logout}>Sign out</button></nav>
@@ -106,7 +166,7 @@ export function AdminApp() {
         {rows.length === 0 ? <p className="muted">No {tab.toLowerCase()} requests.</p> : (
           <table className="table admin-table">
             <thead><tr><th>Applicant</th><th>Bank</th><th>Employee ID / designation</th><th>Note</th><th>Dates</th><th>Action</th></tr></thead>
-            <tbody>{rows.map((r) => <Row key={r.uid + r.status} r={r} onDone={(m) => { setFlash(m); refresh(); }} />)}</tbody>
+            <tbody>{rows.map((r) => <Row key={r.uid + r.status} r={r} demo={!!health?.demo} onDone={(m) => { setFlash(m); refresh(); }} />)}</tbody>
           </table>
         )}
         <h3>Audit log</h3>

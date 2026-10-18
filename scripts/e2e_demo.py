@@ -120,7 +120,8 @@ def text(evs):
 
 
 SEED = {"in_complete": "+919000000001", "in_incomplete": "+919000000002", "my_complete": "+60100000001"}
-SEED_PASSWORD = "Demo@2026"  # CR-03 fictional seed accounts (scripts/seed_users.py)
+SEED_PASSWORD = "Demo@2026"
+DEMO_BANK, DEMO_BANK_ID = "RecoverAI Demo Bank (fictional)", "demo-recoverai-bank"  # DEMO_MODE bank side  # CR-03 fictional seed accounts (scripts/seed_users.py)
 
 
 def _api_key() -> str:
@@ -232,6 +233,8 @@ def india(v: Api, bank: Api) -> None:
     ref = pv["summary"]["publicRef"]
     check(pv["summary"]["destination"] == "SANDBOX" and re.fullmatch(r"RAI-IN-\d{8}-\d{4}", ref or "") is not None,
           f"preview: destination SANDBOX, readable reference {ref}")
+    check(pv["summary"]["bankName"] == DEMO_BANK and (pv["summary"].get("receivingBank") or {}).get("bankId") == DEMO_BANK_ID,
+          f"preview: received by {pv['summary']['bankName']} (no real bank)")
     time.sleep(2)  # the client's 10 s undo = simply never calling send-to-bank
     check({r["id"] for r in bank.get("/api/bank/cases")["cases"]} == sent_before and v.get(f"/api/cases/{cid}")["case"]["bankStatus"] == "NONE",
           "preview / undo publishes nothing")
@@ -254,6 +257,8 @@ def india(v: Api, bank: Api) -> None:
     check(d is not None, f"bank case created by Pub/Sub push ({time.time() - t_send:.1f}s after consent)")
     d = d["case"]
     check(d.get("sandbox") is True and d.get("publicRef") == ref, "bank case stored with sandbox=true + publicRef (Sandbox tab)")
+    check(d.get("receivingBankId") == DEMO_BANK_ID and d.get("receivingBankName") == DEMO_BANK
+          and DEMO_BANK_ID in ((d.get("envelope") or {}).get("to_agent") or ""), f"bank case received by {d.get('receivingBankName')}")
     check(live_queue(bank) == live_before, f"live queue unchanged by this run ({len(live_before)} pre-existing live-tab case(s))")
     SANDBOX.update({"caseId": cid, "publicRef": ref, "bankCaseId": case["bankCaseId"]})
     check(d["riskLevel"] == "HIGH" and d["recommendedAction"] == "TEMPORARY_HOLD", "bank: HIGH risk, temporary hold recommended")
@@ -371,7 +376,7 @@ def roles(api: str, mock: bool, victim: Api, analyst: Api) -> None:
     print("Roles (CR-04)")
     email = f"cr04.e2e.{uuid.uuid4().hex[:8]}@demo-bank.example"
     pw = "E2e-" + uuid.uuid4().hex[:10] + "9"
-    form = {"fullName": "E2E Applicant", "country": "IN", "bankName": "Axis Bank", "employeeId": "AX-0001",
+    form = {"fullName": "E2E Applicant", "country": "IN", "bankName": DEMO_BANK, "employeeId": "DEMO-0001",
             "designation": "Fraud analyst", "note": "e2e test account (deleted at the end)"}
     if mock:
         app_tok = lambda: f"mock:staff:{email}"  # noqa: E731
@@ -387,6 +392,8 @@ def roles(api: str, mock: bool, victim: Api, analyst: Api) -> None:
     try:
         st, _ = victim.post_status("/api/bank-access/request", form)
         check(st == 409, f"a victim phone account cannot apply for bank access ({st})")
+        st, _ = app.post_status("/api/bank-access/request", {**form, "bankName": "HDFC Bank"})
+        check(st == 422, f"demo mode: a real bank cannot be chosen for bank staff ({st})")
         req = app.post("/api/bank-access/request", {**form, "role": "bank", "status": "APPROVED"})
         check(req["status"] == "PENDING" and req["bankId"] is None, "applicant request is PENDING; body role/status ignored")
         uid = req["uid"]
@@ -401,7 +408,7 @@ def roles(api: str, mock: bool, victim: Api, analyst: Api) -> None:
         pend = adm.get("/api/admin/bank-requests?status=PENDING")["requests"]
         check(any(r["uid"] == uid for r in pend), f"admin sees the request in the pending queue ({len(pend)} pending)")
         ok = adm.post(f"/api/admin/bank-requests/{uid}/approve", {})
-        check(ok["status"] == "APPROVED" and ok["bankId"] == "in-axis-bank", f"admin approves (bankId {ok['bankId']})")
+        check(ok["status"] == "APPROVED" and ok["bankId"] == DEMO_BANK_ID, f"admin approves (bankId {ok['bankId']})")
         app2 = Api(api, app_tok())
         check(app2.get("/api/me")["role"] == "bank", "after re-login the token carries role=bank")
         check(app2.c.get(app2.url("/api/bank/cases")).status_code == 200, "approved applicant → 200 on bank APIs")

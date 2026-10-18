@@ -220,5 +220,7 @@
  "roleVictim": "I've been scammed",
  "roleBank": "I work at a bank (fraud team)",
  "roleBankHint": "Bank staff accounts need admin approval before they see any data.",
- "roleBankApply": "Request bank access"
+ "roleBankApply": "Request bank access",
+ "receivedBy": "Received by",
+ "demoDesk": "{bank} desk (demo — no real bank receives it)"
 }

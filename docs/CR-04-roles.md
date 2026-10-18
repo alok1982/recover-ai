@@ -60,3 +60,22 @@ Status: implemented (Oct 2026). Builds on CR-03 (phone + password victim account
 ## Tests
 `backend/tests/test_roles.py`, `firestore-tests/rules.test.mjs` (CR-04 block), `scripts/e2e_demo.py` (Roles
 section, mock + live), `scripts/cr04_roles_check.py` (browser flow, mock + live).
+
+## Fictional demo bank and admin login (follow-up)
+
+- In `DEMO_MODE` the bank side never presents as a real bank. Every shared case is received by
+  **RecoverAI Demo Bank (fictional)** (`bankId: demo-recoverai-bank`, same for IN and MY): bank desk header, case
+  detail ("Received by"), audit entries, the Pub/Sub handoff `to_agent`
+  (`bank.demo-recoverai-bank.fraud_case_receiver.<cc>`), consent card / confirm sheet destination, bank decision
+  messages to the victim, and the evidence-pack cover line. Bank cases carry `receivingBankId` / `receivingBankName`.
+- Bank desk, admin console, admin login and the pending page show the "Demo — synthetic data, sandbox only" banner.
+- Real bank names stay only in the victim's own primary-bank dropdown, the victim's own drafts to their bank, and
+  the synthetic evidence (payer / beneficiary bank on the screenshot).
+- Bank-staff signup offers only the demo bank (plus a disabled "Other – not available in demo"); the API rejects any
+  other bank with `422 BANK_REQUEST_INVALID`, and approval always sets `bankId: demo-recoverai-bank`.
+- Existing data: `GOOGLE_CLOUD_PROJECT=<project> python scripts/migrate_demo_bank.py [--dry-run]` (idempotent) moves
+  bank cases, access requests (`originalBankName` kept) and `role: bank` claims to the demo bank. Users with changed
+  claims pick up the new `bankId` at their next sign-in or token refresh.
+- **Admin login `/admin/login`**: email + password only, titled "RecoverAI Admin". After sign-in the role is checked:
+  admins go to `/admin` (or a safe `next=/admin…`), anyone else sees "Admin access required" and is signed out.
+  Signed out, `/admin` redirects to `/admin/login?next=/admin`. Served by the Hosting rewrite `** → /index.html`.

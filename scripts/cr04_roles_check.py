@@ -89,7 +89,10 @@ def main() -> int:
             pg.fill(f + "input[name=password]", pw)
             pg.fill(f + "input[name=password2]", pw)
             pg.fill(f + "input[name=fullName]", "Neha Sharma")
-            pg.select_option(f + "select[name=bankName]", "Kotak Mahindra Bank")
+            opts = pg.eval_on_selector_all(f + "select[name=bankName] option", "els => els.map(e => [e.value, e.disabled])")
+            ok("demo: staff signup offers only the demo bank (Other disabled)",
+               [o for o in opts if o[0] and not o[1]] == [["RecoverAI Demo Bank (fictional)", False]], str(opts))
+            pg.select_option(f + "select[name=bankName]", "RecoverAI Demo Bank (fictional)")
             pg.fill(f + "input[name=employeeId]", "KMB-77310")
             pg.fill(f + "input[name=designation]", "Fraud investigation officer")
             pg.fill(f + "textarea[name=note]", "UI check account — deleted after the test")
@@ -112,9 +115,24 @@ def main() -> int:
             admc = b.new_context(**vp)
             ag = admc.new_page()
             ag.goto(a.base + "/admin")
-            ag.wait_for_url(lambda u: "/login" in u and "role=bank" in u and "next=" in u and "admin" in u, timeout=30000)
-            ok("signed-out /admin → staff login with next=/admin", True, ag.url)
-            staff_login(ag, ADMIN_EMAIL, admin_pw, "/admin")
+            ag.wait_for_url(lambda u: "/admin/login" in u and "next=" in u, timeout=30000)
+            ok("signed-out /admin → /admin/login?next=/admin", "next=/admin" in ag.url or "next=%2Fadmin" in ag.url, ag.url)
+            ag.wait_for_selector("[data-testid=admin-login]")
+            ok("admin login page: 'RecoverAI Admin', email + password only, demo banner",
+               "RecoverAI Admin" in ag.inner_text("h1") and ag.locator("[data-testid=admin-login] input").count() == 2
+               and ag.locator("[data-testid=demo-ribbon]").count() == 1)
+            ag.screenshot(path=str(shots / "00-admin-login.png"), full_page=True)
+            # a non-admin (the existing analyst) is refused and signed out
+            ag.fill("[data-testid=admin-login] input[name=email]", ANALYST_EMAIL)
+            ag.fill("[data-testid=admin-login] input[name=password]", analyst_pw)
+            ag.click("[data-testid=admin-login] button[type=submit]")
+            ag.wait_for_selector("[data-testid=admin-required]", timeout=30000)
+            ag.goto(a.base + "/admin")
+            ag.wait_for_url(lambda u: "/admin/login" in u, timeout=30000)
+            ok("non-admin on /admin/login → 'Admin access required' and signed out", True)
+            ag.fill("[data-testid=admin-login] input[name=email]", ADMIN_EMAIL)
+            ag.fill("[data-testid=admin-login] input[name=password]", admin_pw)
+            ag.click("[data-testid=admin-login] button[type=submit]")
             ag.wait_for_url("**/admin", timeout=30000)
             uid = httpx.get(api + "/api/me", headers={"Authorization": "Bearer " + app_token()}, timeout=30).json()["uid"]
             ag.wait_for_selector(f"[data-testid='req-{uid}']", timeout=30000)
@@ -123,7 +141,9 @@ def main() -> int:
             ag.screenshot(path=str(shots / "04-admin-console.png"), full_page=True)
             ag.click(f"[data-testid='req-{uid}'] [data-testid=approve]")
             ag.wait_for_selector("[data-testid=admin-flash]")
-            ok("admin approves", "Approved" in ag.inner_text("[data-testid=admin-flash]"), ag.inner_text("[data-testid=admin-flash]"))
+            ok("admin approves with bankId demo-recoverai-bank", "Approved" in ag.inner_text("[data-testid=admin-flash]")
+               and "demo-recoverai-bank" in ag.inner_text("[data-testid=admin-flash]"), ag.inner_text("[data-testid=admin-flash]"))
+            ok("admin console shows the demo banner", ag.locator("[data-testid=demo-ribbon]").count() == 1)
 
             # 3. applicant: "Check again" (forced token refresh) → bank desk; and a fresh re-login → bank desk
             pg.goto(a.base + "/pending")
@@ -137,6 +157,9 @@ def main() -> int:
             pg.wait_for_url("**/bank", timeout=30000)
             pg.wait_for_selector("text=Inbox")
             ok("approved applicant re-login → bank desk", "/bank" in pg.url)
+            ok("bank desk header names the demo bank + demo banner",
+               "RecoverAI Demo Bank (fictional)" in pg.inner_text("[data-testid=desk-title]") and pg.locator("[data-testid=demo-ribbon]").count() == 1,
+               pg.inner_text("[data-testid=desk-title]"))
             try:  # the desk's live Firestore listener must pass the rules (role=bank + APPROVED request)
                 pg.wait_for_function("() => /Sandbox \\(([1-9][0-9]*)\\)/.test(document.body.innerText)", timeout=15000)
                 ok("approved applicant: bank desk loads the queue (Firestore rules allow)", True,
@@ -174,6 +197,19 @@ def main() -> int:
             an.wait_for_url("**/bank", timeout=30000)
             an.wait_for_selector("text=Inbox")
             ok("existing analyst: single login → bank desk", True)
+            an.wait_for_selector("[data-testid=desk-title]")
+            an.screenshot(path=str(shots / "08-bank-desk-header.png"))
+            an.click(".sandbox-tab")
+            try:
+                an.wait_for_selector("table a[href*='/bank/case/']", timeout=15000)
+                an.click("table a[href*='/bank/case/']")
+                an.wait_for_selector("[data-testid=received-by]", timeout=30000)
+                rb = an.inner_text("[data-testid=received-by]")
+                ok("bank case detail: received by the demo bank", "RecoverAI Demo Bank (fictional)" in rb, rb)
+                an.wait_for_timeout(800)
+                an.screenshot(path=str(shots / "09-bank-case-detail.png"), full_page=True)
+            except Exception as e:  # noqa: BLE001
+                ok("bank case detail: received by the demo bank", False, f"no sandbox case to open ({type(e).__name__})")
             anc2 = b.new_context(**vp)
             an2 = anc2.new_page()
             an2.goto(a.base + "/bank")

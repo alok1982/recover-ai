@@ -73,10 +73,11 @@ export function CaseDetail({ analyst }: { analyst: string }) {
         <section className="card">
           <h3>Case facts</h3>
           <dl className="kv">
+            {c.receivingBankName && <><dt>Received by</dt><dd data-testid="received-by">{c.receivingBankName} — demo desk, synthetic data</dd></>}
             <dt>Reference</dt><dd>{c.reference_id}</dd>
             <dt>Occurred</dt><dd>{c.occurredAtDisplay || (c.occurredAt ? new Date(c.occurredAt).toLocaleString() : "—")}</dd>
             <dt>Method</dt><dd>{c.payment_method}</dd>
-            <dt>Payer bank</dt><dd>{c.payer_bank}</dd>
+            <dt>Payer bank (from the victim's evidence)</dt><dd>{c.payer_bank}</dd>
             <dt>Beneficiary</dt><dd>{b.name} · {b.account_or_vpa} · {b.bank}</dd>
             <dt>Scammer contacts</dt><dd>{(c.scammer_contacts || []).join(", ")}</dd>
           </dl>

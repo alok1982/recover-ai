@@ -267,3 +267,4 @@ ul.cases a { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; pad
 .admin-table input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .flash { background: #e6f6ea; border: 1px solid #9bd3a8; padding: 8px 12px; border-radius: 10px; }
 .btn.danger, .link.danger { color: #b42318; }
+.demo-note { background: #fff7e0; border: 1px solid #f2d27a; padding: 6px 10px; border-radius: 8px; }

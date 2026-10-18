@@ -149,6 +149,8 @@ To run local mode against **real** Gemini, set `MOCK_MODE=false` and `AUTH_MODE=
 See [docs/CR-04-roles.md](docs/CR-04-roles.md).
 - Home and signup have a role picker: victims (default) sign up with phone + password; bank staff apply with a work email and land on **Pending admin approval** with no bank access.
 - One login redirects by role: `role: bank` → `/bank`, `role: admin` → `/admin`, applicant → `/pending`, victim → `/cases`. The `/bank` analyst login is unchanged.
+- Admin login: `https://<project>.web.app/admin/login` (email + password, admins only; `/admin` redirects there when signed out).
+- Demo mode: the bank side is the fictional **RecoverAI Demo Bank (fictional)** (`demo-recoverai-bank`); migrate older data with `scripts/migrate_demo_bank.py` (idempotent).
 - Admin console: `https://<project>.web.app/admin`. Seeded admin `admin@recoverai-demo.example`, password in git-ignored `deploy/.state/admin_password`. Create or refresh it from the box with ADC: `./deploy/deploy.sh admin`.
 - Approve / reject / revoke run on the backend. Cloud Run's service account has the custom role `recoveraiAuthClaims` (only `firebaseauth.users.update`), created by `./deploy/deploy.sh iam`.
 - Demo pending applicant: `pending.applicant@demo-bank.example` (password `Demo@2026`), seeded with `python scripts/seed_users.py --applicant-only`.

@@ -201,7 +201,53 @@ T: dict[str, dict[str, str]] = {
 }
 
 
+# DEMO_MODE: the bank that receives a shared case is the fictional demo bank, never "your bank" (a real bank).
+DEMO_T: dict[str, dict[str, str]] = {
+    "consent_ask": {
+        "en": "Shall I share this case with the fraud desk of RecoverAI Demo Bank (fictional)? In this demo it stands in for your bank and can request a temporary hold on the receiving account.",
+        "hi": "क्या मैं यह केस RecoverAI Demo Bank (काल्पनिक) की फ्रॉड डेस्क को भेज दूँ? इस डेमो में यह आपके बैंक की जगह है और पैसा पाने वाले खाते पर अस्थायी रोक का अनुरोध कर सकती है।",
+        "ms": "Boleh saya kongsi kes ini dengan meja penipuan RecoverAI Demo Bank (rekaan)? Dalam demo ini ia menggantikan bank anda dan boleh meminta sekatan sementara pada akaun penerima.",
+    },
+    "sent_to_bank": {
+        "en": "Sent to RecoverAI Demo Bank (fictional). I'll tell you as soon as they respond.",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) को भेज दिया गया। जवाब आते ही मैं आपको बताऊँगा।",
+        "ms": "Telah dihantar kepada RecoverAI Demo Bank (rekaan). Saya akan maklumkan sebaik sahaja mereka menjawab.",
+    },
+    "sent_to_bank_ref": {
+        "en": "Sent to RecoverAI Demo Bank (fictional). Reference {ref}. I'll tell you as soon as they respond.",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) को भेज दिया गया। रेफ़रेंस {ref}। जवाब आते ही मैं आपको बताऊँगा।",
+        "ms": "Telah dihantar kepada RecoverAI Demo Bank (rekaan). Rujukan {ref}. Saya akan maklumkan sebaik sahaja mereka menjawab.",
+    },
+    "sent_to_sandbox": {
+        "en": "Sent to the sandbox desk of RecoverAI Demo Bank (fictional) — nothing was sent to a real bank. Reference {ref}.",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) की सैंडबॉक्स डेस्क को भेजा गया — किसी असली बैंक को कुछ नहीं भेजा गया। रेफ़रेंस {ref}।",
+        "ms": "Dihantar ke meja sandbox RecoverAI Demo Bank (rekaan) — tiada apa yang dihantar kepada bank sebenar. Rujukan {ref}.",
+    },
+    "withdrawn": {
+        "en": "RecoverAI Demo Bank (fictional) has been told you withdrew consent (reference {ref}).",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) को बता दिया गया है कि आपने सहमति वापस ले ली है (रेफ़रेंस {ref})।",
+        "ms": "RecoverAI Demo Bank (rekaan) telah dimaklumkan bahawa anda menarik balik persetujuan (rujukan {ref}).",
+    },
+    "bank_hold": {
+        "en": "RecoverAI Demo Bank (fictional) has placed a temporary hold request on the receiving account (demo — no real bank acted).",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) ने पैसा पाने वाले खाते पर अस्थायी रोक (होल्ड) का अनुरोध लगाया है (डेमो — किसी असली बैंक ने कार्रवाई नहीं की)।",
+        "ms": "RecoverAI Demo Bank (rekaan) telah membuat permintaan sekatan sementara ke atas akaun penerima (demo — tiada bank sebenar bertindak).",
+    },
+    "bank_info": {
+        "en": "RecoverAI Demo Bank (fictional) needs a little more information: “{question}”. Please upload or type it here.",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) को थोड़ी और जानकारी चाहिए: “{question}”। कृपया यहाँ अपलोड करें या लिखें।",
+        "ms": "RecoverAI Demo Bank (rekaan) memerlukan sedikit maklumat lagi: “{question}”. Sila muat naik atau taip di sini.",
+    },
+    "bank_reject": {
+        "en": "RecoverAI Demo Bank (fictional) reviewed your case and did not place a hold. You can still follow the other steps.",
+        "hi": "RecoverAI Demo Bank (काल्पनिक) ने आपका केस देखा और रोक नहीं लगाई। आप बाकी कदम अब भी उठा सकते हैं।",
+        "ms": "RecoverAI Demo Bank (rekaan) telah menyemak kes anda dan tidak membuat sekatan. Anda masih boleh ikut langkah lain.",
+    },
+}
+
+
 def t(key: str, lang: str, **kw: str) -> str:
-    table = T.get(key, {})
+    from .demobank import active
+    table = (DEMO_T.get(key) if active() else None) or T.get(key, {})
     s = table.get(lang) or table.get("en") or key
     return s.format(**kw) if kw else s

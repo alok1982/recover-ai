@@ -15,6 +15,7 @@ from typing import AsyncIterator
 from fastapi import HTTPException
 
 from .agents import bank_receiver, filing, guard, intake, playbook
+from . import demobank
 from .agents import post_check
 from .analytics import bq
 from .analytics.synthetic import beneficiary_hash
@@ -114,8 +115,16 @@ def consent_card_data(case: dict) -> dict:
             "amount": format_amount(ex.get("amount"), ex.get("currency")), "given": bool(case.get("consentGivenAt")),
             # CR-01 / F8.2: the destination and who receives it; the button only opens the confirmation sheet
             "destination": handoff.destination(case), "liveAllowed": handoff.live_allowed(),
-            "bankName": ex.get("payer_bank") or _profile_bank(case), "beneficiaryMasked": handoff._mask(b.get("account_or_vpa")),
-            "customerName": _profile_name(case)}
+            "bankName": _receiving_bank_name(case), "receivingBank": demobank.receiving_bank(case.get("country")),
+            "beneficiaryMasked": handoff._mask(b.get("account_or_vpa")), "customerName": _profile_name(case)}
+
+
+def _receiving_bank_name(case: dict) -> str | None:
+    """Who receives the shared case. DEMO_MODE: always the fictional demo bank, never the victim's real bank."""
+    if demobank.active():
+        return demobank.name(case.get("country"))
+    ex = case.get("extraction") or {}
+    return ex.get("payer_bank") or _profile_bank(case)
 
 
 def _profile_name(case: dict) -> str | None:
@@ -446,6 +455,19 @@ async def send_to_bank(case_id: str, consent: bool, version: str, token: str | N
 DECISION_STATUS = {"APPROVE_HOLD": "HOLD_APPROVED", "REQUEST_INFO": "INFO_REQUESTED", "REJECT": "REJECTED"}
 
 
+def desk_agent(country: str) -> str:
+    """A2A name of the receiving bank desk (DEMO_MODE: the fictional demo bank's desk)."""
+    rb = demobank.receiving_bank(country)
+    return f"bank.{rb['bankId']}.fraud_case_receiver.{country.lower()}" if rb else f"bank.fraud_case_receiver.{country.lower()}"
+
+
+def _desk_fields(bc: dict) -> dict:
+    rb = demobank.receiving_bank(bc.get("country"))
+    if not rb:
+        return {}
+    return {"receivingBankId": rb["bankId"], "receivingBankName": rb["name"]}
+
+
 async def bank_decision(bank_case_id: str, decision: str, note: str | None, analyst: str) -> dict:
     """Bank side: record the decision + audit, publish `bank-decision` (F9/F15), log an anonymised case_event (F14)."""
     store = get_store()
@@ -461,10 +483,11 @@ async def bank_decision(bank_case_id: str, decision: str, note: str | None, anal
 
     connector_for(bc).record(bank_case_id, decision, {"holdLimitAmount": bc.get("holdLimitAmount"), "note": note})
     store.add_audit({"actor": analyst, "action": decision, "bankCaseId": bank_case_id, "caseId": bc["caseId"],
+                     **_desk_fields(bc),
                      "details": {"note": note, "holdLimitAmount": bc.get("holdLimitAmount") if decision == "APPROVE_HOLD" else None}})
     event_id = pubsub.stable_key("bank-decision", bank_case_id, decision, to_iso(decided_at))
     event = {"eventId": event_id, "bankCaseId": bank_case_id, "caseId": bc["caseId"], "decision": decision, "status": status,
-             "note": note, "decidedAt": to_iso(decided_at), "from_agent": f"bank.fraud_case_receiver.{bc['country'].lower()}",
+             "note": note, "decidedAt": to_iso(decided_at), "from_agent": desk_agent(bc["country"]), **_desk_fields(bc),
              "to_agent": "recoverai.victim_copilot", "intent": "fraud_case.decision"}
     settings = get_settings()
     try:
