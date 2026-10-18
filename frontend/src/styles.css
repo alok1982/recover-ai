@@ -56,6 +56,7 @@ select { width: auto; }
 .bubble.streaming::after { content: "▍"; animation: blink 1s infinite; } @keyframes blink { 50% { opacity: 0; } }
 .tool-status { color: var(--muted); font-size: .9rem; padding-left: 4px; }
 .inputbar { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); background: #fff; align-items: flex-end; }
+.input-hint { padding: 8px 12px; font-size: 14px; color: #7a4b00; background: #fff6e0; border-top: 1px solid #f0d79a; }
 .inputbar textarea { resize: none; }
 .icon-btn { min-width: 48px; min-height: 48px; border-radius: 50%; border: 1.5px solid var(--line); background: #fff; font-size: 1.2rem; cursor: pointer; }
 .icon-btn.mic { border-color: var(--accent); } .icon-btn.rec { background: var(--red); color: #fff; animation: blink 1s infinite; }

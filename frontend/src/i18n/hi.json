@@ -125,5 +125,15 @@
  "withdrawConfirm": "हाँ, सहमति वापस लें",
  "withdrawDone": "सहमति वापस ली गई",
  "bank.WITHDRAWN": "सहमति वापस ली गई",
- "beneficiaryMasked": "पाने वाला"
+ "beneficiaryMasked": "पाने वाला",
+ "voiceUnclear": "मैं साफ़ नहीं सुन पाया — कृपया फिर से बोलें या अपना संदेश टाइप करें",
+ "micBlocked": "माइक्रोफ़ोन ब्लॉक है। ब्राउज़र की साइट सेटिंग में अनुमति दें, या टाइप करें",
+ "micNotFound": "कोई माइक्रोफ़ोन नहीं मिला",
+ "micInsecure": "वॉइस के लिए सुरक्षित (https) ऐप लिंक चाहिए",
+ "micUnsupported": "इस ब्राउज़र में वॉइस नोट नहीं चलते — कृपया टाइप करें",
+ "voiceTooShort": "रिकॉर्डिंग बहुत छोटी थी — थोड़ा लंबा बोलें, या टाइप करें",
+ "inAppBrowser": "वॉइस नोट के लिए यह लिंक Chrome या Safari में खोलें (WhatsApp या Gmail के अंदर नहीं)।",
+ "micHelpAndroid": "Android: Chrome → Site settings → Microphone; और Settings → Apps → Chrome → Permissions।",
+ "micHelpIos": "iPhone: Settings → Safari → Microphone।",
+ "transcribing": "आपका वॉइस नोट सुना जा रहा है…"
 }

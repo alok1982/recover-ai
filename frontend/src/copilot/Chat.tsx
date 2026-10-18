@@ -21,6 +21,7 @@ export function useCopilotController({ caseId, caseDoc, messages, addLocal, setC
   const [busy, setBusy] = useState(false);
   const [streaming, setStreaming] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
 
   const run = useCallback(
     async (body: Record<string, unknown>) => {
@@ -36,6 +37,9 @@ export function useCopilotController({ caseId, caseDoc, messages, addLocal, setC
               if (e.message) addLocal([e.message]);
               break;
             case "transcript":
+              break;
+            case "voice_error":
+              setHint(t("voiceUnclear"));
               break;
             case "tool_status":
               setStatus(e.state === "running" ? e.label || `${e.name}…` : null);
@@ -77,14 +81,16 @@ export function useCopilotController({ caseId, caseDoc, messages, addLocal, setC
       busy,
       send: (text: string) => run({ text }),
       trigger: (name: string, extra = {}) => run({ trigger: name, ...extra }),
-      sendVoice: (audioPath: string) => run({ audioPath }),
+      sendVoice: (audioPath: string, transcript?: string) => run(transcript ? { audioPath, text: transcript } : { audioPath }),
+      hint,
+      setHint,
       apply: (resp) => {
         if (resp.case) setCase(resp.case);
         if (resp.messages?.length) addLocal(resp.messages);
       },
       latestCardId: (kind: string) => [...messages].reverse().find((m) => m.card?.kind === kind)?.id,
     }),
-    [caseId, caseDoc, busy, run, setCase, addLocal, messages],
+    [caseId, caseDoc, busy, run, setCase, addLocal, messages, hint],
   );
   return { ctx, streaming, status };
 }

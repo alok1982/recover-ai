@@ -36,7 +36,7 @@ export const api = {
 };
 
 export interface SseEvent {
-  type: "token" | "card" | "message" | "tool_status" | "done" | "error" | "transcript" | "user_message" | "replace";
+  type: "token" | "card" | "message" | "tool_status" | "done" | "error" | "transcript" | "user_message" | "replace" | "voice_error";
   [k: string]: any;
 }
 
@@ -99,4 +99,26 @@ export async function uploadFile(caseId: string, file: Blob, purpose: "evidence"
     fileName,
   });
   return { path: u.path, evidence: reg.evidence, messages: reg.messages };
+}
+
+/** CR-03 D: send a recorded voice note (multipart) → {audioPath, transcript}; status 422 = nothing intelligible. */
+export async function uploadVoice(caseId: string, blob: Blob): Promise<{ audioPath: string; transcript: string }> {
+  const token = await victimToken();
+  const form = new FormData();
+  const mimeType = blob.type || "audio/webm";
+  const ext = mimeType.includes("mp4") ? "m4a" : mimeType.includes("ogg") ? "ogg" : "webm";
+  form.append("file", blob, `voice.${ext}`);
+  form.append("mimeType", mimeType);
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/voice`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form });
+  if (!res.ok) {
+    let code = res.statusText;
+    try {
+      const j = await res.json();
+      code = j.code || j.detail || code;
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(res.status, String(code));
+  }
+  return res.json();
 }

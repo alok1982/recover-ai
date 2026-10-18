@@ -125,5 +125,15 @@
  "withdrawConfirm": "Yes, withdraw consent",
  "withdrawDone": "Consent withdrawn",
  "bank.WITHDRAWN": "Consent withdrawn",
- "beneficiaryMasked": "Receiver"
+ "beneficiaryMasked": "Receiver",
+ "voiceUnclear": "I couldn't hear that clearly — please try again or type your message",
+ "micBlocked": "Microphone is blocked. Allow it in your browser's site settings, or type instead",
+ "micNotFound": "No microphone found",
+ "micInsecure": "Voice needs the secure (https) app link",
+ "micUnsupported": "Voice notes are not supported in this browser — please type instead",
+ "voiceTooShort": "That recording was too short — hold on a little longer, or type your message",
+ "inAppBrowser": "For voice notes, open this link in Chrome or Safari (not inside WhatsApp or Gmail).",
+ "micHelpAndroid": "Android: Chrome → Site settings → Microphone; also Settings → Apps → Chrome → Permissions.",
+ "micHelpIos": "iPhone: Settings → Safari → Microphone.",
+ "transcribing": "Listening to your voice note…"
 }

@@ -95,6 +95,7 @@ class Settings:
     max_text_chars: int = 20_000
     # Co-pilot context: last N messages are replayed (the case state JSON in the instruction is authoritative).
     copilot_history_messages: int = field(default_factory=lambda: int(os.getenv("COPILOT_HISTORY_MESSAGES", "12")))
+    voice_enabled: bool = field(default_factory=lambda: _bool("VOICE_ENABLED", True))  # CR-03 D fallback switch
     gemini_timeout_s: float = 45.0
     gemini_retries: int = 2
 

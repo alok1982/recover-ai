@@ -9,7 +9,11 @@ export interface CopilotCtx {
   send: (text: string) => Promise<void>;
   /** Directed turn after a card action: evidence_added | facts_confirmed | generate_all. */
   trigger: (name: string, extra?: Record<string, unknown>) => Promise<void>;
-  sendVoice: (audioPath: string) => Promise<void>;
+  /** Voice turn: the transcript (from POST /voice) runs through the normal chat turn with its audioPath. */
+  sendVoice: (audioPath: string, transcript?: string) => Promise<void>;
+  /** Inline hint under the input bar (voice problems); never a chat bubble. */
+  hint: string | null;
+  setHint: (h: string | null) => void;
   /** Merge a REST response ({case?, messages?}) into the live view. */
   apply: (resp: { case?: CaseDoc; messages?: Message[] }) => void;
   latestCardId: (kind: string) => string | undefined;

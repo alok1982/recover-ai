@@ -6,7 +6,8 @@ import mimetypes
 from datetime import timedelta
 from typing import AsyncIterator
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 
 from .. import actions
 from ..agents import voice
@@ -121,6 +122,8 @@ def upload_url(case_id: str, req: UploadUrlReq, user: User = Depends(current_use
     case = get_owned_case(user, case_id)
     s = get_settings()
     mime = req.mimeType.split(";")[0].strip().lower()
+    if mime.startswith("audio/") or mime == "video/webm":
+        mime = voice.normalize_mime(mime)
     if mime in IMAGE_TYPES:
         limit = s.max_image_bytes
     elif mime in AUDIO_TYPES:
@@ -131,7 +134,9 @@ def upload_url(case_id: str, req: UploadUrlReq, user: User = Depends(current_use
         raise HTTPException(413, "file too large")
     if req.purpose == "evidence" and (case.get("evidenceCount") or 0) >= s.max_evidence_per_case:
         raise HTTPException(429, "evidence limit reached for this case")
-    ext = mimetypes.guess_extension(mime) or ".bin"
+    # CR-03 D: audio extensions from voice.EXT (mimetypes has no audio/webm on the slim image → ".bin" →
+    # application/octet-stream sent to Gemini → 400 INVALID_ARGUMENT).
+    ext = voice.EXT.get(mime) or mimetypes.guess_extension(mime) or ".bin"
     folder = "voice" if req.purpose == "voice" else "evidence"
     path = f"cases/{case_id}/{folder}/{new_id()}{ext}"
     return get_blobs().upload_url(path, mime, limit)
@@ -304,9 +309,14 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
         if not req.audioPath.startswith(f"cases/{case_id}/voice/"):
             yield {"type": "error", "message": "invalid audio path"}
             return
-        yield {"type": "tool_status", "name": "transcribe", "state": "running"}
-        mime = mimetypes.guess_type(req.audioPath)[0] or "audio/webm"
-        text = await voice.transcribe(req.audioPath, mime, lang, case_id)
+        if not text:  # legacy: path only (the /voice endpoint sends the transcript with the path)
+            yield {"type": "tool_status", "name": "transcribe", "state": "running"}
+            text = await voice.transcribe(req.audioPath, voice.mime_for_path(req.audioPath), lang, case_id)
+            if not text:
+                # never a "[voice message could not be transcribed]" bubble: the app shows an inline hint
+                yield {"type": "voice_error", "code": "VOICE_UNCLEAR", "message": t("voice_unclear", lang)}
+                yield {"type": "done", "messageId": None}
+                return
         yield {"type": "transcript", "text": text}
     if text:
         um = append_message(case_id, role="user", text=text, lang=lang, audio_path=req.audioPath)
@@ -345,6 +355,35 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
                              has_attachment=bool(req.evidenceIds), has_audio=bool(req.audioPath), trigger=req.trigger)
     async for ev in turn_router.run(case_id, text, flagged, decision):
         yield ev
+
+
+@router.post("/{case_id}/voice")
+async def voice_note(case_id: str, file: UploadFile = File(...), mimeType: str | None = Form(default=None),
+                     user: User = Depends(current_user)):
+    """CR-03 D: multipart voice note → stored + transcribed. The app then sends the transcript as a normal chat turn
+    (guard → router → co-pilot) with this audioPath. 422 VOICE_UNCLEAR when nothing could be transcribed."""
+    case = get_owned_case(user, case_id)
+    s = get_settings()
+    if not s.voice_enabled:
+        raise HTTPException(404, "voice is disabled")
+    _rate_limit(case)
+    raw_mime = mimeType or file.content_type or ""
+    mime = voice.normalize_mime(raw_mime)
+    if mime not in AUDIO_TYPES and mime not in voice.EXT:
+        log.warning("voice_bad_type", extra={"caseId": case_id, "mime": raw_mime})
+        raise HTTPException(415, "unsupported audio type")
+    data = await file.read(s.max_audio_bytes + 1)
+    if len(data) > s.max_audio_bytes:
+        raise HTTPException(413, "recording too long")
+    if len(data) < 200:
+        return JSONResponse(status_code=422, content={"code": "VOICE_UNCLEAR", "message": t("voice_unclear", case.get("language", "en"))})
+    path = f"cases/{case_id}/voice/{new_id()}{voice.EXT.get(mime, '.webm')}"
+    get_blobs().write_bytes(path, data, mime)
+    log.info("voice_received", extra={"caseId": case_id, "mime": raw_mime, "bytes": len(data)})
+    text = await voice.transcribe(path, mime, case.get("language", "en"), case_id)
+    if not text:
+        return JSONResponse(status_code=422, content={"code": "VOICE_UNCLEAR", "message": t("voice_unclear", case.get("language", "en"))})
+    return {"audioPath": path, "transcript": text}
 
 
 @router.post("/{case_id}/chat")

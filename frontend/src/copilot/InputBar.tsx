@@ -1,21 +1,26 @@
 import { useRef, useState } from "react";
-import { uploadFile } from "../lib/api";
+import { uploadFile, uploadVoice } from "../lib/api";
+import { useHealth } from "../lib/health";
+import { inAppBrowser, isIos, micErrorKey, startRecording, type Recording } from "./recorder";
 import { useT } from "../i18n";
 import { useCopilot } from "./context";
 
 export function InputBar() {
-  const { send, busy, caseId, sendVoice, trigger, apply } = useCopilot();
+  const { send, busy, caseId, sendVoice, trigger, apply, hint, setHint } = useCopilot();
+  const health = useHealth();
+  const voiceOn = health?.voiceEnabled !== false;
+  const [transcribing, setTranscribing] = useState(false);
   const t = useT();
   const [text, setText] = useState("");
   const [recording, setRecording] = useState(false);
-  const rec = useRef<MediaRecorder | null>(null);
-  const chunks = useRef<Blob[]>([]);
+  const rec = useRef<Recording | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const submit = async () => {
     const v = text.trim();
     if (!v || busy) return;
     setText("");
+    setHint(null);
     await send(v);
   };
 
@@ -24,24 +29,33 @@ export function InputBar() {
       rec.current?.stop();
       return;
     }
+    setHint(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      chunks.current = [];
-      mr.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
-      mr.onstop = async () => {
-        stream.getTracks().forEach((tr) => tr.stop());
+      rec.current = await startRecording(async (blob) => {
+        rec.current = null;
         setRecording(false);
-        const blob = new Blob(chunks.current, { type: mr.mimeType || "audio/webm" });
-        const { path } = await uploadFile(caseId, blob, "voice");
-        await sendVoice(path);
-      };
-      mr.start();
-      rec.current = mr;
+        if (!blob) {
+          setHint(t("voiceTooShort"));
+          return;
+        }
+        setTranscribing(true);
+        try {
+          const r = await uploadVoice(caseId, blob);
+          setTranscribing(false);
+          await sendVoice(r.audioPath, r.transcript);
+        } catch (err) {
+          console.warn("[voice] upload/transcribe failed", err);
+          setHint(t("voiceUnclear"));
+        } finally {
+          setTranscribing(false);
+        }
+      });
       setRecording(true);
-      window.setTimeout(() => mr.state === "recording" && mr.stop(), 120000); // 2-minute cap
-    } catch {
-      alert("Microphone not available");
+    } catch (err) {
+      console.warn("[voice] microphone error", (err as any)?.name, err);
+      const key = micErrorKey(err);
+      const help = key !== "micBlocked" ? "" : isIos() ? t("micHelpIos") : /Android/i.test(navigator.userAgent) ? t("micHelpAndroid") : "";
+      setHint(t(key) + (help ? " — " + help : ""));
     }
   };
 
@@ -57,6 +71,12 @@ export function InputBar() {
   };
 
   return (
+    <>
+    {(hint || transcribing || (voiceOn && inAppBrowser())) && (
+      <div className="input-hint" role="status" data-testid="voice-hint">
+        {transcribing ? t("transcribing") : hint || t("inAppBrowser")}
+      </div>
+    )}
     <div className="inputbar">
       <button className="icon-btn" aria-label={t("attach")} onClick={() => fileRef.current?.click()} disabled={busy}>📎</button>
       <input ref={fileRef} type="file" hidden multiple accept="image/png,image/jpeg,image/webp,audio/*" onChange={(e) => attach(e.target.files)} />
@@ -72,10 +92,14 @@ export function InputBar() {
           }
         }}
       />
-      <button className={`icon-btn mic ${recording ? "rec" : ""}`} aria-label={recording ? t("stop") : t("record")} onClick={toggleRecord} disabled={busy && !recording}>
-        {recording ? "■" : "🎤"}
-      </button>
+      {voiceOn && (
+        <button className={`icon-btn mic ${recording ? "rec" : ""}`} aria-label={recording ? t("stop") : t("record")} onClick={toggleRecord}
+          disabled={(busy || transcribing) && !recording}>
+          {recording ? "■" : "🎤"}
+        </button>
+      )}
       <button className="btn primary send" onClick={submit} disabled={busy || !text.trim()}>{t("send")}</button>
     </div>
+    </>
   );
 }

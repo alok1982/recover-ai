@@ -6,6 +6,7 @@ export interface Health {
   allowLiveSubmission?: boolean;
   sandboxDefault?: boolean;
   chatLight?: string | null;
+  voiceEnabled?: boolean;
 }
 
 let cached: Promise<Health> | null = null;

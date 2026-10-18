@@ -158,6 +158,11 @@ T: dict[str, dict[str, str]] = {
         "hi": "आपके बैंक को बता दिया गया है कि आपने सहमति वापस ले ली है (रेफ़रेंस {ref})।",
         "ms": "Bank anda telah dimaklumkan bahawa anda menarik balik persetujuan (rujukan {ref}).",
     },
+    "voice_unclear": {
+        "en": "I couldn't hear that clearly — please try again or type your message.",
+        "hi": "मैं साफ़ नहीं सुन पाया — कृपया फिर से बोलें या अपना संदेश टाइप करें।",
+        "ms": "Saya tidak dapat mendengar dengan jelas — sila cuba lagi atau taip mesej anda.",
+    },
     "reply_fallback": {
         "en": "I have updated your case above. Please look at the card shown.",
         "hi": "मैंने ऊपर आपका केस अपडेट कर दिया है। कृपया दिखाया गया कार्ड देखें।",

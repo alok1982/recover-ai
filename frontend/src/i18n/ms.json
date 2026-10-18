@@ -125,5 +125,15 @@
  "withdrawConfirm": "Ya, tarik balik persetujuan",
  "withdrawDone": "Persetujuan ditarik balik",
  "bank.WITHDRAWN": "Persetujuan ditarik balik",
- "beneficiaryMasked": "Penerima"
+ "beneficiaryMasked": "Penerima",
+ "voiceUnclear": "Saya tidak dapat mendengar dengan jelas — sila cuba lagi atau taip mesej anda",
+ "micBlocked": "Mikrofon disekat. Benarkan dalam tetapan laman pelayar, atau taip sahaja",
+ "micNotFound": "Tiada mikrofon dijumpai",
+ "micInsecure": "Suara memerlukan pautan aplikasi selamat (https)",
+ "micUnsupported": "Nota suara tidak disokong dalam pelayar ini — sila taip",
+ "voiceTooShort": "Rakaman terlalu pendek — tahan lebih lama sedikit, atau taip mesej anda",
+ "inAppBrowser": "Untuk nota suara, buka pautan ini dalam Chrome atau Safari (bukan dalam WhatsApp atau Gmail).",
+ "micHelpAndroid": "Android: Chrome → Tetapan laman → Mikrofon; juga Tetapan → Apl → Chrome → Kebenaran.",
+ "micHelpIos": "iPhone: Tetapan → Safari → Mikrofon.",
+ "transcribing": "Mendengar nota suara anda…"
 }

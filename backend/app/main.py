@@ -81,7 +81,8 @@ def create_app() -> FastAPI:
         cfg = get_settings()  # read live so tests can toggle F17 settings
         return {"ok": True, "mock": s.mock_mode, "demo": s.demo_mode, "runtime": s.copilot_runtime,
                 "chatLight": cfg.chat_light_model or None, "forceLightFail": cfg.force_light_fail,
-                "allowLiveSubmission": cfg.allow_live_submission, "sandboxDefault": cfg.sandbox_default}
+                "allowLiveSubmission": cfg.allow_live_submission, "sandboxDefault": cfg.sandbox_default,
+                "voiceEnabled": cfg.voice_enabled}
 
     return app
 
