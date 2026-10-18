@@ -1,20 +1,34 @@
-import { parsePhoneNumberFromString } from "libphonenumber-js";
-
 /** CR-03 B: phone + password accounts use Firebase Email/Password with a synthetic email that is never shown. */
 export const PHONE_DOMAIN = "phone.recoverai.app";
 export const DIAL: Record<"IN" | "MY", string> = { IN: "+91", MY: "+60" };
 
-/** The CR's fictional seed numbers (+91 90000 0000x, +60 10000 000x) are not "valid" mobiles to libphonenumber. */
-const DEMO = /^\+91900000000\d$|^\+60100000\d{3}$/;
+/** QA BUG-06: per-country mobile rules (the same rules as backend/app/profile.py `normalize_phone`).
+ *  India: 10 digits starting 6–9. Malaysia: 9–10 digits after 60, starting 1. The seed numbers
+ *  (+91 90000 0000x, +60 10000 000x) satisfy these rules. */
+const RULE: Record<"IN" | "MY", RegExp> = { IN: /^[6-9]\d{9}$/, MY: /^1\d{8,9}$/ };
 
+/** '+91 90000 00001', '090000-00001', '9000000001', '91 9000000001' (IN) → '+919000000001'; null when the number is
+ *  not a valid mobile for that country. An explicit +91 / +60 picks that country's rules; any other country code is
+ *  rejected. */
 export function toE164(country: "IN" | "MY", raw: string): string | null {
-  const s = raw.trim();
-  const p = parsePhoneNumberFromString(s.startsWith("+") ? s : `${DIAL[country]}${s.replace(/^0+/, "")}`, country);
-  if (!p) return null;
-  const e = p.number as string;
-  if (DEMO.test(e)) return e;
-  if (!p.isValid() || !["IN", "MY"].includes(p.country || "")) return null;
-  return e;
+  let s = (raw || "").trim().replace(/[\s\-.()\u00a0]/g, "");
+  if (s.startsWith("00")) s = "+" + s.slice(2);
+  let cc: "IN" | "MY" = country;
+  if (s.startsWith("+")) {
+    if (s.startsWith("+91")) cc = "IN";
+    else if (s.startsWith("+60")) cc = "MY";
+    else return null;
+    s = s.slice(3);
+  } else if (!/^\d+$/.test(s)) {
+    return null;
+  } else if (country === "IN" && s.length === 12 && s.startsWith("91")) {
+    s = s.slice(2);
+  } else if (country === "MY" && s.startsWith("60") && (s.length === 11 || s.length === 12)) {
+    s = s.slice(2);
+  }
+  if (!/^\d+$/.test(s)) return null;
+  s = s.replace(/^0/, "");
+  return RULE[cc].test(s) ? `${DIAL[cc]}${s}` : null;
 }
 
 export function phoneEmail(e164: string): string {

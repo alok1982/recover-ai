@@ -70,7 +70,14 @@ class NoStoreMiddleware:
             if message["type"] == "http.response.start":
                 names = {k for k, _ in NO_STORE_HEADERS}
                 headers = [(k, v) for k, v in message.get("headers", []) if k.lower() not in names]
-                message["headers"] = headers + list(NO_STORE_HEADERS)
+                extra = list(NO_STORE_HEADERS)
+                ctype = next((v for k, v in headers if k.lower() == b"content-type"), b"").lower()
+                if (ctype.startswith(b"application/json") or ctype.startswith(b"text/event-stream")) and not any(
+                        k.lower() == b"content-security-policy" for k, _ in headers):
+                    # BUG-09: API data is never rendered as a page. Only JSON/SSE gets this CSP, so evidence images, PDFs
+                    # and audio served by the API (local mode) are untouched.
+                    extra.append((b"content-security-policy", b"default-src 'none'; frame-ancestors 'none'"))
+                message["headers"] = headers + extra
             await send(message)
 
         await self.app(scope, receive, send_wrapper)

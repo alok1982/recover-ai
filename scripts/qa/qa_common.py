@@ -179,5 +179,31 @@ class Throwaway:
             print(f"cleanup: {self.e164[:-4]}xxxx DELETE /api/me → {r.status_code}; login gone={gone}")
             return gone
         except Exception as e:  # noqa: BLE001
-            print("cleanup failed", self.e164, e, file=sys.stderr)
-            return False
+            print("cleanup via the app failed", self.e164, e, "— falling back to the admin cleanup", file=sys.stderr)
+            return admin_cleanup(self.uid, self.e164)
+
+
+def admin_cleanup(uid: str, e164: str) -> bool:
+    """Throw-away accounts only (e.g. A12, whose sign-in is throttled so it cannot delete itself): delete its cases,
+    user doc and Firebase login with the operator's gcloud ADC."""
+    import subprocess
+    assert e164.startswith("+9190000011") and uid not in PROTECTED_UIDS
+    from google.cloud import firestore
+    db = firestore.Client(project="recoverai-511917")
+    for c in db.collection("cases").where(filter=firestore.FieldFilter("ownerUid", "==", uid)).stream():
+        assert c.id not in PROTECTED_CASES
+        for sub in c.reference.collections():
+            for d in sub.stream():
+                d.reference.delete()
+        c.reference.delete()
+    u = db.collection("users").document(uid)
+    for sub in u.collections():
+        for d in sub.stream():
+            d.reference.delete()
+    u.delete()
+    tok = subprocess.run(["/home/box/tools/google-cloud-sdk/bin/gcloud", "auth", "application-default", "print-access-token"],
+                         capture_output=True, text=True, check=True).stdout.strip()
+    r = httpx.post("https://identitytoolkit.googleapis.com/v1/projects/recoverai-511917/accounts:delete", json={"localId": uid},
+                   headers={"Authorization": f"Bearer {tok}", "x-goog-user-project": "recoverai-511917"}, timeout=30)
+    print(f"cleanup (admin): {e164[:-4]}xxxx cases + user doc deleted; login delete → {r.status_code}")
+    return r.status_code == 200

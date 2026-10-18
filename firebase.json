@@ -41,6 +41,10 @@
           {
             "key": "X-Content-Type-Options",
             "value": "nosniff"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' https://apis.google.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://recoverai-api-xgw63iesqa-el.a.run.app https://recoverai-api-77639740514.asia-south1.run.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com wss://firestore.googleapis.com https://storage.googleapis.com; img-src 'self' data: blob: https://storage.googleapis.com; media-src 'self' blob: https://storage.googleapis.com; font-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-src 'self' https://recoverai-511917.firebaseapp.com https://www.google.com/recaptcha/; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
           }
         ]
       },

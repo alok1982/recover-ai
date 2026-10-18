@@ -6,13 +6,15 @@ import { useEffect, useState } from "react";
 import { MOCK } from "./config";
 import { analystApp, signedInVictim, victimAuth } from "./firebase";
 import { phoneEmail } from "./phone";
+import { savedLang } from "./prefs";
+import { translate } from "../i18n";
 
 const BANK_KEY = "recoverai.bankUser";
 const MOCK_ACCOUNTS = "recoverai.mockAccounts";
 const MOCK_SESSION = "recoverai.mockSession";
 
 export class AuthError extends Error {
-  constructor(public code: "bad_credentials" | "exists" | "weak" | "network" | "other", message: string = code) {
+  constructor(public code: "bad_credentials" | "exists" | "weak" | "network" | "throttled" | "other", message: string = code) {
     super(message);
   }
 }
@@ -29,9 +31,12 @@ function mockAccounts(): Record<string, string> {
   return JSON.parse(localStorage.getItem(MOCK_ACCOUNTS) || "{}");
 }
 
-function mapFirebase(e: any): AuthError {
+/** Firebase error → AuthError. QA BUG-10: auth/too-many-requests is its own "throttled" code so the user is told to
+ *  wait. Wrong password and unknown number still map to the same generic "bad_credentials" (A11). */
+export function mapFirebase(e: any): AuthError {
   const c = String(e?.code || "");
-  if (/invalid-credential|wrong-password|user-not-found|invalid-email|too-many-requests|user-disabled/.test(c)) return new AuthError("bad_credentials");
+  if (/too-many-requests/.test(c)) return new AuthError("throttled");
+  if (/invalid-credential|wrong-password|user-not-found|invalid-email|user-disabled/.test(c)) return new AuthError("bad_credentials");
   if (/email-already-in-use/.test(c)) return new AuthError("exists");
   if (/weak-password/.test(c)) return new AuthError("weak");
   if (/network/.test(c)) return new AuthError("network");
@@ -160,7 +165,16 @@ export function currentBankUser(): BankUser | null {
 export async function bankLogin(email: string, password: string): Promise<BankUser> {
   let name = "";
   if (!MOCK) {
-    const cred = await signInWithEmailAndPassword(getAuth(analystApp()), email, password);
+    let cred;
+    try {
+      cred = await signInWithEmailAndPassword(getAuth(analystApp()), email, password);
+    } catch (e) {
+      const a = mapFirebase(e);
+      // QA BUG-10: a plain message for the bank desk (throttling → "Too many attempts…" in the saved app language)
+      throw new AuthError(a.code, a.code === "throttled" ? translate(savedLang(), "errTooMany")
+        : a.code === "bad_credentials" ? "Email or password is incorrect." : a.code === "network"
+        ? translate(savedLang(), "errNetwork") : a.message);
+    }
     const res = await cred.user.getIdTokenResult();
     if (res.claims.role !== "bank") {
       await signOut(getAuth(analystApp()));

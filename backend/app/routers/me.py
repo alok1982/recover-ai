@@ -36,6 +36,11 @@ def ensure_user(user: User) -> dict:
     if doc:
         return doc
     phone = P.phone_from_email(user.email)
+    if phone and not P.valid_mobile_e164(phone):
+        # QA BUG-06: the sign-up form already blocks these; this stops an account made by calling Firebase directly
+        # with a wrong-length / wrong-country number. Existing users are never re-checked (they return above).
+        raise HTTPException(400, {"code": "INVALID_PHONE", "message": "This is not a valid India (+91, 10 digits starting "
+                                  "6-9) or Malaysia (+60, 9-10 digits starting 1) mobile number."})
     prof = {"country": P.country_of_phone(phone)} if P.country_of_phone(phone) else {}
     doc = {"phoneE164": phone, "phoneVerified": False, "createdAt": utcnow(), "termsAcceptedAt": None, "termsVersion": None,
            "profile": prof, "profileStatus": P.compute_status(prof), "profileUpdatedAt": None}

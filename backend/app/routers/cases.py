@@ -334,6 +334,30 @@ def _rate_limit(case: dict) -> None:
 
 
 async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
+    """One chat turn as events. QA BUG-11: a turn never shows the same card twice. append_message drops a repeat card
+    (same kind + key) inside this turn's scope, and this wrapper drops any event that repeats a message id or card key."""
+    from ..services import card_key, close_turn_scope, open_turn_scope
+
+    tok = open_turn_scope()
+    seen_ids: set[str] = set()
+    seen_cards: set[tuple[str, str]] = set()
+    try:
+        async for ev in _chat_events(case_id, req):
+            if ev.get("type") == "card":
+                mid = (ev.get("message") or {}).get("id")
+                key = card_key(ev.get("card"))
+                if (mid and mid in seen_ids) or (key and key in seen_cards):
+                    continue
+                if mid:
+                    seen_ids.add(mid)
+                if key:
+                    seen_cards.add(key)
+            yield ev
+    finally:
+        close_turn_scope(tok)
+
+
+async def _chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
     store = get_store()
     case = actions.load(case_id)
     lang = case.get("language", "en")

@@ -341,6 +341,8 @@ deploy_frontend() {
   need firebase; need npm
   RUN_URL="${RUN_URL:-$(run_url)}"
   [[ -f "$STATE_DIR/sdkconfig.json" ]] || { echo "Run '$0 platform' once first (Firebase web config missing)"; exit 1; }
+  # BUG-09: chat SSE goes straight to Cloud Run, so the CSP connect-src in firebase.json must list that origin
+  grep -q "${RUN_URL%/}" "$ROOT/firebase.json" || { echo "firebase.json Content-Security-Policy connect-src lacks $RUN_URL — add it first"; exit 1; }
   log "Frontend build (Vite) with Firebase web config"
   jq -r --arg chat "$RUN_URL" --arg demo "$DEMO_MODE" '
     "VITE_FIREBASE_API_KEY=\(.apiKey)\nVITE_FIREBASE_AUTH_DOMAIN=\(.authDomain)\nVITE_FIREBASE_PROJECT_ID=\(.projectId)\nVITE_FIREBASE_APP_ID=\(.appId)\nVITE_CHAT_BASE=\($chat)\nVITE_DEMO_MODE=\($demo)\nVITE_MOCK=false"' \

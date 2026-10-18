@@ -138,7 +138,8 @@ def main() -> int:
             rec("A7", "mismatched confirm blocked", "do not match" in m, m, "P1")
             m = try_signup("90000 01107", "QA Ui", PW, PW, False)
             rec("A8", "terms unticked → blocked", "accept the Terms" in m and "/signup" in pg.url, m, "P1")
-            for ph, lbl in (("90000", "5 digits"), ("abcdefghij", "letters")):
+            for ph, lbl in (("90000", "5 digits"), ("abcdefghij", "letters"), ("5123456789", "IN starting 5"),
+                            ("+91 100000001", "+91 with 9 digits"), ("90000011077", "11 digits"), ("+44 7700 900000", "UK number")):
                 m = try_signup(ph, "QA Ui", PW, PW, True)
                 rec("A10", f"invalid phone ({lbl}) → validation error", "valid mobile" in m, m, "P2")
             pg.select_option("[data-testid=cc]", "IN")
@@ -523,8 +524,9 @@ def main() -> int:
                     msgs.append("(none)")
             raw = phone_login(THROTTLE, "Wrong-x-pass").json().get("error", {}).get("message", "")
             rec("A12", "10+ wrong passwords → clean message, no crash", all(m and m != "(none)" for m in msgs), f"UI: {set(msgs)}; Firebase now: {raw}", "P2")
-            rec("A12", "throttling surfaced as a 'too many attempts' message", None if "TOO_MANY" in raw else None,
-                f"app maps too-many-requests to the generic 'incorrect' message (lib/auth.ts); Firebase returned {raw!r}", "P2")
+            rec("A12", "throttling surfaced as 'Too many attempts. Please wait a few minutes and try again.'",
+                any("Too many attempts" in m for m in msgs) if "TOO_MANY" in raw else None,
+                f"UI messages {sorted(set(msgs))}; Firebase returned {raw!r}", "P2")
             shot(tp, "A12-after-12-wrong")
             tctx.close()
             T.delete()

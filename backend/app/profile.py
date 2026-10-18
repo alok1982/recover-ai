@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import re
 
-import phonenumbers
 
 PHONE_DOMAIN = "phone.recoverai.app"
 TERMS_VERSION = "2026-10-cr03"
@@ -28,23 +27,43 @@ BANKS = {
 OTHER_BANK = "Other"
 
 
+MOBILE_RULE = {"IN": re.compile(r"[6-9]\d{9}"), "MY": re.compile(r"1\d{8,9}")}
+DIAL = {"IN": "+91", "MY": "+60"}
+
+
 def normalize_phone(raw: str, country: str | None = None) -> str | None:
-    """'+91 90000 00001' / '9000000001' (IN) → '+919000000001'; None when not a valid IN/MY mobile."""
-    try:
-        n = phonenumbers.parse((raw or "").strip(), (country or "IN").upper())
-    except phonenumbers.NumberParseException:
+    """'+91 90000 00001' / '090000-00001' / '9000000001' (IN) → '+919000000001'; None when not a valid IN/MY mobile.
+
+    QA BUG-06: explicit per-country rules (the same as frontend/src/lib/phone.ts). India: 10 digits starting 6–9.
+    Malaysia: 9–10 digits after 60, starting 1. An explicit +91 / +60 picks that country; any other code is rejected.
+    The seed numbers (+91 90000 0000x, +60 10000 000x) satisfy these rules."""
+    cc = (country or "IN").upper()
+    if cc not in COUNTRIES:
         return None
-    if phonenumbers.region_code_for_number(n) not in COUNTRIES and not _is_demo_number(n):
+    s = re.sub(r"[\s\-.()\u00a0]", "", raw or "")
+    if s.startswith("00"):
+        s = "+" + s[2:]
+    if s.startswith("+"):
+        cc = {"+91": "IN", "+60": "MY"}.get(s[:3])
+        if not cc:
+            return None
+        s = s[3:]
+    elif not s.isdigit():
         return None
-    if not phonenumbers.is_valid_number(n) and not _is_demo_number(n):
+    elif cc == "IN" and len(s) == 12 and s.startswith("91"):
+        s = s[2:]
+    elif cc == "MY" and s.startswith("60") and len(s) in (11, 12):
+        s = s[2:]
+    if not s.isdigit():
         return None
-    return phonenumbers.format_number(n, phonenumbers.PhoneNumberFormat.E164)
+    if s.startswith("0"):
+        s = s[1:]
+    return DIAL[cc] + s if MOBILE_RULE[cc].fullmatch(s) else None
 
 
-def _is_demo_number(n) -> bool:
-    """The CR's seed numbers (+91 90000 0000x, +60 10000 000x) are fictional demo numbers."""
-    e = phonenumbers.format_number(n, phonenumbers.PhoneNumberFormat.E164)
-    return bool(re.fullmatch(r"\+91900000000\d|\+60100000\d{3}", e))
+def valid_mobile_e164(e164: str | None) -> bool:
+    """True for an E.164 number that satisfies the IN / MY mobile rules."""
+    return bool(e164) and normalize_phone(e164) == e164
 
 
 def phone_email(e164: str) -> str:

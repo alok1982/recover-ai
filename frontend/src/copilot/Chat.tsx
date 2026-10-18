@@ -39,11 +39,20 @@ export function useCopilotController({ caseId, caseDoc, messages, addLocal, setC
       setBusy(true);
       setStreaming("");
       let acc = "";
+      const seenCards = new Set<string>(); // QA BUG-11 (defensive): one card per kind+key per turn
       try {
         await streamChat(caseId, body, (e: SseEvent) => {
           switch (e.type) {
+            case "card": {
+              const c = e.message?.card as { kind?: string; data?: Record<string, unknown> } | null | undefined;
+              const d = c?.data || {};
+              const key = `${c?.kind || ""}:${String(d.clockId || d.key || d.id || "")}`;
+              if (c && seenCards.has(key)) break;
+              if (c) seenCards.add(key);
+              if (e.message) addLocal([e.message]);
+              break;
+            }
             case "user_message":
-            case "card":
             case "message":
               if (e.message) addLocal([e.message]);
               break;

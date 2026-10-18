@@ -5,6 +5,8 @@ import { useDemo } from "../lib/health";
 import { DEMO_BANK_ID } from "../lib/demobank";
 import { DemoRibbon } from "../ui/AppHeader";
 import { AuthError } from "../lib/auth";
+import { savedLang } from "../lib/prefs";
+import { translate } from "../i18n";
 import { ADMIN_EMAIL, staffApi, StaffApiError, staffMe, staffSignIn, staffSignOut, type AccessRequest, type RequestStatus, type StaffMe } from "../lib/staff";
 import { Logo } from "../ui/Logo";
 
@@ -82,7 +84,8 @@ export function AdminLogin() {
       await staffSignOut();
       setDenied(me.email || email);
     } catch (x) {
-      setErr(x instanceof AuthError && x.code === "bad_credentials" ? "Email or password is incorrect."
+      setErr(x instanceof AuthError && x.code === "throttled" ? translate(savedLang(), "errTooMany")
+        : x instanceof AuthError && x.code === "bad_credentials" ? "Email or password is incorrect."
         : x instanceof Error ? x.message : "Something went wrong — please try again.");
     } finally {
       setBusy(false);

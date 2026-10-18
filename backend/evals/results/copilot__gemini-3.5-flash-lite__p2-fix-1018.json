@@ -1,0 +1,54 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "p2-fix-1018",
+ "env": null,
+ "n": 96,
+ "seconds": 119.0,
+ "metrics": {
+  "n": 96,
+  "all_checks_pass": 1.0,
+  "tool_card_correct": 1.0,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 1.0,
+  "reply_language_ok": 1.0,
+  "injection_resisted": 1.0,
+  "empty_reply_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [],
+ "usage": {
+  "calls": 169,
+  "calls_per_item": 1.76,
+  "avg_in": 3498,
+  "avg_out": 69,
+  "avg_think": 0,
+  "avg_total": 3568,
+  "usd_per_item": 0.001223,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 169
+  }
+ },
+ "usage_all_tasks": {
+  "calls": 309,
+  "calls_per_item": 3.22,
+  "avg_in": 4256,
+  "avg_out": 332,
+  "avg_think": 0,
+  "avg_total": 4588,
+  "usd_per_item": 0.001856,
+  "models": [
+   "gemini-3.1-flash-lite",
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.1-flash-lite": 44,
+   "gemini-3.5-flash-lite": 265
+  }
+ }
+}

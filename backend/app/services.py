@@ -1,6 +1,7 @@
 """Case helpers shared by routers and agents."""
 from __future__ import annotations
 
+import contextvars
 import logging
 from datetime import date, datetime
 from typing import Any
@@ -38,6 +39,31 @@ def update_case(case_id: str, patch: dict, store: Store | None = None) -> None:
     (store or get_store()).update_case(case_id, {**patch, "updatedAt": utcnow()})
 
 
+# QA BUG-11: one card of each kind+key per chat turn. chat_events opens a scope; inside it a second card with the same
+# key (for example a guard warning and the co-pilot's check_recovery_scam on the same text, or a tool called twice)
+# is not stored again: the first message is returned and the stream drops the repeat by message id.
+_TURN_CARDS: contextvars.ContextVar[dict | None] = contextvars.ContextVar("turn_cards", default=None)
+
+
+def card_key(card_: dict | None) -> tuple[str, str] | None:
+    if not card_:
+        return None
+    d = card_.get("data") or {}
+    k = (d.get("clockId") or d.get("key") or d.get("id") or "") if isinstance(d, dict) else ""
+    return str(card_.get("kind") or ""), str(k)
+
+
+def open_turn_scope() -> contextvars.Token:
+    return _TURN_CARDS.set({})
+
+
+def close_turn_scope(tok: contextvars.Token) -> None:
+    try:
+        _TURN_CARDS.reset(tok)
+    except ValueError:  # reset from another context (generator closed elsewhere): just drop the scope
+        _TURN_CARDS.set(None)
+
+
 def append_message(case_id: str, *, role: str, text: str | None = None, card: dict | None = None,
                    lang: str = "en", audio_path: str | None = None, tool_calls: list | None = None,
                    meta: dict | None = None, store: Store | None = None, msg_id: str | None = None) -> dict:
@@ -49,7 +75,15 @@ def append_message(case_id: str, *, role: str, text: str | None = None, card: di
         msg["meta"] = meta
     if msg_id:
         msg["id"] = msg_id
-    return (store or get_store()).add_message(case_id, msg)
+    scope = _TURN_CARDS.get()
+    key = card_key(card) if scope is not None else None
+    if key and (case_id, key) in scope:
+        log.info("duplicate_card_dropped", extra={"caseId": case_id, "step": "card", "kind": key[0]})
+        return scope[(case_id, key)]
+    saved = (store or get_store()).add_message(case_id, msg)
+    if key:
+        scope[(case_id, key)] = saved
+    return saved
 
 
 def system_event(case_id: str, text: str, lang: str = "en", store: Store | None = None, msg_id: str | None = None) -> dict:

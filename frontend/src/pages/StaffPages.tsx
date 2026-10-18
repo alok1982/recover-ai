@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthError } from "../lib/auth";
+import { savedLang } from "../lib/prefs";
+import { translate } from "../i18n";
 import { passwordOk } from "../lib/phone";
 import { useDemo } from "../lib/health";
 import { DEMO_BANK_NAME } from "../lib/demobank";
@@ -23,6 +25,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function staffMsg(e: unknown): string {
   if (e instanceof AuthError) {
+    if (e.code === "throttled") return translate(savedLang(), "errTooMany");
     return e.code === "bad_credentials" ? "Email or password is incorrect." : e.code === "exists"
       ? "An account with this email already exists. Sign in instead." : e.code === "weak"
       ? "Use at least 8 characters with a letter and a number." : "Network problem — please try again.";

@@ -5,7 +5,7 @@ import {
   createUserWithEmailAndPassword, deleteUser, getAuth, signInWithEmailAndPassword, signOut,
 } from "firebase/auth";
 import { API_BASE, MOCK } from "./config";
-import { AuthError, setBankSession } from "./auth";
+import { AuthError, mapFirebase, setBankSession } from "./auth";
 import { analystApp } from "./firebase";
 
 const MOCK_STAFF = "recoverai.mockStaff";
@@ -32,14 +32,6 @@ async function sha(s: string): Promise<string> {
 }
 const mockAccounts = (): Record<string, string> => JSON.parse(localStorage.getItem(MOCK_ACCOUNTS) || "{}");
 
-function mapFirebase(e: any): AuthError {
-  const c = String(e?.code || "");
-  if (/invalid-credential|wrong-password|user-not-found|invalid-email|too-many-requests|user-disabled/.test(c)) return new AuthError("bad_credentials");
-  if (/email-already-in-use/.test(c)) return new AuthError("exists");
-  if (/weak-password/.test(c)) return new AuthError("weak");
-  if (/network/.test(c)) return new AuthError("network");
-  return new AuthError("other", e?.message);
-}
 
 export const staffAuth = () => getAuth(analystApp());
 

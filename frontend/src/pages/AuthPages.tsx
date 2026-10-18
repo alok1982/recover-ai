@@ -52,7 +52,12 @@ function useLang(): [Lang, (l: Lang) => void, (k: string) => string] {
 
 function authMsg(e: unknown): string {
   const c = e instanceof AuthError ? e.code : "other";
-  return c === "bad_credentials" ? "errBadLogin" : c === "exists" ? "errExists" : c === "weak" ? "errPassword" : c === "network" ? "errNetwork" : "errNetwork";
+  return c === "throttled" ? "errTooMany" : c === "bad_credentials" ? "errBadLogin" : c === "exists" ? "errExists" : c === "weak" ? "errPassword" : c === "network" ? "errNetwork" : "errNetwork";
+}
+
+/** QA BUG-06: the country-specific format rule (India 10 digits 6–9; Malaysia 9–10 digits starting 1). */
+function phoneErr(country: Country): string {
+  return country === "MY" ? "errPhoneMY" : "errPhoneIN";
 }
 
 export function Signup() {
@@ -75,7 +80,7 @@ export function Signup() {
     e.preventDefault();
     const e164 = toE164(country, phone);
     const n = name.trim();
-    const problem = !e164 ? "errPhone" : n.length < 2 || n.length > 80 ? "errName" : !passwordOk(pw) ? "errPassword"
+    const problem = !e164 ? phoneErr(country) : n.length < 2 || n.length > 80 ? "errName" : !passwordOk(pw) ? "errPassword"
       : pw !== pw2 ? "errMatch" : !terms ? "errTerms" : null;
     if (problem) return setErr(problem);
     setBusy(true);
@@ -141,7 +146,8 @@ export function Login() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const e164 = toE164(country, phone);
-    if (!e164 || !pw) return setErr("errBadLogin");
+    if (!e164) return setErr(phoneErr(country));  // a malformed number is a format error, not a credential check
+    if (!pw) return setErr("errBadLogin");
     setBusy(true);
     setErr(null);
     try {
