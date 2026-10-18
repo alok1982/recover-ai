@@ -174,6 +174,8 @@ class Toolbox:
             case = self._case()
             if any(c["name"] == "show_hotline" and c["ok"] for c in self.calls) or gate.hotline_shown(self.case_id):
                 return {"shown": "hotline", "already": True}
+            if gate.status(case)["complete"]:  # CR-03: the hotline card is part of the incomplete-profile order only
+                return {"shown": None, "skipped": "profile complete; the hotline is on every page. Go straight to evidence."}
             d = gate.hotline_card_data(case)
             self._add_card("hotline", d)
             return {"shown": "hotline", "number": d["number"]}

@@ -95,3 +95,14 @@ def test_profile_not_in_analytics(client):
     sse(client, cid, {"text": HINDI}, uid=U1)
     blob = str(bq.get_analytics().data.get("case_events"))
     assert "Asha" not in blob and "226001" not in blob
+
+
+def test_show_hotline_skipped_when_profile_complete(client):
+    """The model may call show_hotline() on its own; with a complete profile it is a no-op (straight to evidence)."""
+    import asyncio
+    from app.agents.copilot import Toolbox
+    cid = _user(client, P1, FULL)
+    tb = Toolbox(cid, HINDI)
+    out = asyncio.run(tb.show_hotline())
+    assert out["shown"] is None
+    assert not [c for c in getattr(tb, "cards", []) if c.get("kind") == "hotline"]
