@@ -301,7 +301,7 @@ async def plan_stream(case_id: str) -> AsyncIterator[dict]:
 def allowed_values(case: dict, *extra) -> post_check.Allowed:
     pb = pb_for(case)
     state = {k: case.get(k) for k in ("extraction", "plan", "clocks", "incidentAt", "createdAt", "bankStatus", "drafts",
-                                       "escalation", "consentGivenAt", "bankCaseId")}
+                                       "escalation", "consentGivenAt", "bankCaseId", "publicRef")}
     return post_check.build_allowed(state, pb, *extra, tz_names=[pb["timezone"]])
 
 

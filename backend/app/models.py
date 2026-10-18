@@ -106,6 +106,12 @@ class GuardResult(BaseModel):
     route: Literal["light", "full"] = "full"  # F17: can this turn be answered from the case summary alone?
 
 
+class GuardVerdict(BaseModel):
+    """Guard schema without the F17 route label (used while the Gemma light path is off)."""
+    is_recovery_scam: bool
+    reason: str
+
+
 # ---------------------------------------------------------------- API requests
 class CreateCaseReq(BaseModel):
     country: Country = "IN"

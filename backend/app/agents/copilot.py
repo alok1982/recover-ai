@@ -17,7 +17,7 @@ from .. import actions
 from ..config import get_settings
 from ..i18n import LANG_NAMES, t
 from ..knowledge.search import search_sources
-from ..llm import INJECTION_GUARD, get_llm
+from ..llm import INJECTION_GUARD, get_llm, task_config
 from ..rules.formatting import format_amount
 from ..services import card as make_card
 from ..services import jsonable
@@ -357,6 +357,9 @@ async def stage_copilot(tb: Toolbox, text: str | None, flagged: bool) -> AsyncIt
 
 
 # ------------------------------------------------------------------ ADK runtime
+HISTORY_REPLY_CHARS = 400
+
+
 def _history_events(history: list[dict], author: str):
     from google.adk.events import Event
     from google.genai import types
@@ -371,6 +374,8 @@ def _history_events(history: list[dict], author: str):
                                 content=types.Content(role="user", parts=[types.Part(text=f"[system event] {m['text']}")])))
         elif m["role"] == "assistant":
             txt = m.get("text") or ""
+            if len(txt) > HISTORY_REPLY_CHARS:  # token cut: the case state in the instruction is authoritative
+                txt = txt[:HISTORY_REPLY_CHARS].rstrip() + " …"
             if m.get("card"):
                 txt = (txt + f" [showed {m['card']['kind']} card]").strip()
             if txt:
@@ -436,12 +441,19 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
         r = await tb.request_bank_consent()
         instruction += ("\nThe Consent card is now shown (" + json.dumps(r, ensure_ascii=False) + "). Say they review and "
                         "confirm it on the card; nothing has been sent.")
+    gen_cfg = task_config(settings, "copilot")
+    planner = {}
+    if "thinking_config" in gen_cfg:  # ADK takes thinking via a planner, not generate_content_config
+        from google.adk.planners import BuiltInPlanner
+
+        planner = {"planner": BuiltInPlanner(thinking_config=gen_cfg.pop("thinking_config"))}
     agent = LlmAgent(
-        name="RecoverAICopilot", model=ADK_MODEL_OVERRIDE or settings.gemini_model,
+        name="RecoverAICopilot", model=ADK_MODEL_OVERRIDE or settings.task_model("copilot"),
         instruction=lambda _ctx: instruction,  # provider: bypasses {state} templating of braces in JSON
         tools=tb.adk_tools(),
-        generate_content_config=types.GenerateContentConfig(temperature=0.4),
+        generate_content_config=types.GenerateContentConfig(temperature=0.4, **gen_cfg),
         after_model_callback=_drop_empty_model_chunk,
+        **planner,
     )
     ss = InMemorySessionService()
     session = await ss.create_session(app_name="recoverai", user_id=case["ownerUid"], session_id=tb.case_id, state={})
@@ -482,10 +494,11 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
     case = actions.load(case_id)
     lang = case.get("language", "en")
     tb = Toolbox(case_id)
-    history = store.list_messages(case_id, limit=30)[:-1] if text else store.list_messages(case_id, limit=30)
+    n_hist = get_settings().copilot_history_messages
+    history = store.list_messages(case_id, limit=n_hist + 1)[:-1] if text else store.list_messages(case_id, limit=n_hist)
     llm = get_llm()
     use_adk = (not llm.is_mock) or ADK_MODEL_OVERRIDE is not None
-    model = model_tag or (get_settings().gemini_model if use_adk else "mock-copilot")
+    model = model_tag or (get_settings().task_model("copilot") if use_adk else "mock-copilot")
     t0 = time.perf_counter()
     first_token_ms = None
     raw = ""
@@ -583,7 +596,7 @@ async def _text_fallback(case_id: str, tb: Toolbox, text: str | None, lang: str,
                       + f"\nWrite the reply to the user's last message in {LANG_NAMES.get(lang, 'English')}: 1-3 short "
                         "sentences, refer to the card(s) if any, no new numbers. Return only the reply text.")
             txt = await get_llm().generate_text(system=system, parts=[f"<user_message>{text or '(continue)'}</user_message>"],
-                                                temperature=0.3, step="reply_fallback", case_id=case_id)
+                                                temperature=0.3, task="reply_fallback", step="reply_fallback", case_id=case_id)
             clean, bad = post_check.sanitize(txt or "", actions.allowed_values(case, tb.results))
             if clean.strip():  # sentences with unverified values are dropped
                 return clean.strip(), "gemini_text"
@@ -601,7 +614,7 @@ async def _regenerate(case_id: str, raw: str, gate: post_check.StreamGate, tb: T
             system=("Rewrite the assistant reply below so it keeps the same meaning and language but removes or replaces "
                     f"these unverified values: {[f.raw for f in gate.dropped]}. Do not add any new numbers or dates. "
                     "Return only the rewritten reply."),
-            parts=[raw], temperature=0.2, step="post_check_regen", case_id=case_id)
+            parts=[raw], temperature=0.2, task="post_check_regen", step="post_check_regen", case_id=case_id)
     except Exception:  # noqa: BLE001
         return None
     clean, bad = post_check.sanitize(txt, allowed)

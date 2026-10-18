@@ -166,15 +166,43 @@ async def extract(case: dict, evidence: list[dict], victim_texts: list[str]) -> 
             parts.append(Blob(mime_type=e["mimeType"], uri=uri) if uri else Blob(mime_type=e["mimeType"], data=blobs.read_bytes(e["gcsPath"])))
     for i, t in enumerate(victim_texts[-6:]):
         parts.append(evidence_block(f"victim_msg_{i}", "victim_statement", t))
-    try:
-        res = await llm.generate_json(
-            system=SYSTEM.format(country=case["country"], language=lang), parts=parts, schema=ExtractionLLM,
-            temperature=0.2, step="intake", case_id=case.get("id"),
-        )
-        return finalize(res.to_canonical().model_dump(), case.get("language", "en")), "gemini"
-    except LLMError:
-        log.exception("intake failed; using heuristic fallback", extra={"caseId": case.get("id")})
-        return mock_extract(case, evidence, victim_texts), "fallback"
+    system = SYSTEM.format(country=case["country"], language=lang)
+    # Cascade (evals/results/summary.md): the Flash-Lite tier first; the stronger "intake_escalate" tier only when the
+    # first answer fails the schema / call, or a key field is missing or low-confidence while a receipt or text was given.
+    tiers = ["intake"]
+    s = llm.settings
+    if s.task_model("intake_escalate") != s.task_model("intake"):
+        tiers.append("intake_escalate")
+    for i, task in enumerate(tiers):
+        try:
+            res = await llm.generate_json(system=system, parts=parts, schema=ExtractionLLM, temperature=0.2, task=task,
+                                          step="intake" if i == 0 else "intake_escalate", case_id=case.get("id"))
+            ex = finalize(res.to_canonical().model_dump(), case.get("language", "en"))
+        except LLMError:
+            log.warning("intake tier failed", extra={"caseId": case.get("id"), "step": task})
+            continue
+        why = needs_escalation(ex, evidence)
+        if i == len(tiers) - 1 or not why:
+            return ex, "gemini"
+        log.info("intake_escalate", extra={"caseId": case.get("id"), "step": "intake", "reason": why})
+    log.error("intake failed; using heuristic fallback", extra={"caseId": case.get("id")})
+    return mock_extract(case, evidence, victim_texts), "fallback"
+
+
+ESCALATE_KEYS = ("reference_id", "amount", "beneficiary.account_or_vpa")
+
+
+def needs_escalation(ex: Extraction, evidence: list[dict]) -> str | None:
+    """Why a first-tier extraction should be redone by the stronger tier (None = accept it)."""
+    if not any(e.get("type") in ("image", "text") for e in evidence):
+        return None  # voice-only: references / accounts are rarely spoken; nothing for a stronger model to find
+    d = ex.model_dump()
+    for k in ESCALATE_KEYS:
+        if get_field(d, k) in (None, "", []):
+            return f"missing:{k}"
+        if ex.confidence.get(k, 0) < LOW_CONFIDENCE:
+            return f"low_confidence:{k}"
+    return None
 
 
 def confidence_level(conf: float | None) -> str:
