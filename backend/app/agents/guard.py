@@ -17,9 +17,14 @@ SYSTEM = """Classify whether this message is a likely "recovery scam" (asks the 
 recover lost funds, or claims to be a recovery agent / lawyer / official offering guaranteed recovery).
 Return JSON {"is_recovery_scam": bool, "reason": string, "route": "light" | "full"}.
 A victim asking whether they will get their money back is NOT a recovery scam.
-Also decide "route": "light" only if the message can be answered from the case summary alone — a question about status,
+A victim describing their own loss (e.g. "I sent 1,95,000 to the CBI caller") is NOT a recovery scam.
+Also decide "route": "light" if the message can be answered from the case summary alone — a question about status,
 the next step, a deadline, the meaning of a term, or simple reassurance — with no new facts, files, drafts or decisions.
-Otherwise "full". When unsure, "full".
+Light examples: "What should I do now?", "अब मुझे क्या करना है?", "अगला कदम क्या है?", "When is my deadline?",
+"मेरी डेडलाइन कब है?", "What is the Ombudsman?", "Ombudsman क्या है?", "Has my case been sent?", "Apa langkah seterusnya?",
+"thank you", "I am scared".
+Full examples: a new amount, date, UTR or account; "draft my complaint"; "send it to my bank"; "withdraw my consent";
+"will I get my money back?"; anything about a file or screenshot. If it is none of these and you are unsure, "full".
 """ + INJECTION_GUARD
 
 _FEE = r"(fee|fees|processing|charge|charges|deposit|tax|commission|advance|शुल्क|फीस|फ़ीस|चार्ज|yuran|caj|bayaran pemprosesan|cukai)"
