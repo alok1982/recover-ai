@@ -22,9 +22,25 @@ export function Home() {
         <section className="hero">
           <h1>{t("heroTitle")}</h1>
           <p className="promise">{t("heroSub")}</p>
-          <div className="row cta-row">
-            <button className="btn primary cta" data-testid="get-help" onClick={() => nav(me ? "/cases" : "/signup?next=/cases")}>{t("getHelp")}</button>
-            {!me && <Link className="btn cta-secondary" to="/login?next=/cases">{t("signIn")}</Link>}
+          <div className="role-choice" data-testid="home-role-picker">
+            <p className="role-q">{t("roleTitle")}</p>
+            <div className="role-cards">
+              <div className="role-card victim">
+                <b>🆘 {t("roleVictim")}</b>
+                <div className="row cta-row">
+                  <button className="btn primary cta" data-testid="get-help" onClick={() => nav(me ? "/cases" : "/signup?next=/cases")}>{t("getHelp")}</button>
+                  {!me && <Link className="btn cta-secondary" to="/login?next=/cases">{t("signIn")}</Link>}
+                </div>
+              </div>
+              <div className="role-card bank">
+                <b>🏦 {t("roleBank")}</b>
+                <span className="small muted">{t("roleBankHint")}</span>
+                <div className="row">
+                  <Link className="btn" data-testid="home-role-bank" to="/signup?role=bank">{t("roleBankApply")}</Link>
+                  <Link className="link small" to="/login?role=bank">{t("signIn")}</Link>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         <EmergencyStrip />

@@ -144,6 +144,16 @@ To run local mode against **real** Gemini, set `MOCK_MODE=false` and `AUTH_MODE=
 * **Seed users** (`python scripts/seed_users.py`, or `--api http://localhost:8080` for the mock backend; password `Demo@2026`): `+91 90000 00001` complete (India, Hindi), `+91 90000 00002` missing PIN code and bank (shows the gate), `+60 10000 0001` complete (Malaysia, English). Re-running resets the three profiles. Each account can hold at most `MAX_OPEN_CASES` (3) open cases, so scripts delete the cases they create.
 * **Voice notes:** the recorder picks `audio/webm;codecs=opus` → `audio/mp4` → `audio/ogg;codecs=opus`, records in 250 ms chunks (0.5 s minimum, 2 min cap) and posts to `POST /api/cases/{id}/voice`; the backend transcodes with ffmpeg to 16 kHz mono FLAC and Gemini transcribes it. A failed transcription shows an inline hint, never a chat bubble. `VOICE_ENABLED=false` hides the mic. Hosting sends `Permissions-Policy: microphone=(self)`.
 
+## Bank staff roles and admin approval (CR-04)
+
+See [docs/CR-04-roles.md](docs/CR-04-roles.md).
+- Home and signup have a role picker: victims (default) sign up with phone + password; bank staff apply with a work email and land on **Pending admin approval** with no bank access.
+- One login redirects by role: `role: bank` → `/bank`, `role: admin` → `/admin`, applicant → `/pending`, victim → `/cases`. The `/bank` analyst login is unchanged.
+- Admin console: `https://<project>.web.app/admin`. Seeded admin `admin@recoverai-demo.example`, password in git-ignored `deploy/.state/admin_password`. Create or refresh it from the box with ADC: `./deploy/deploy.sh admin`.
+- Approve / reject / revoke run on the backend. Cloud Run's service account has the custom role `recoveraiAuthClaims` (only `firebaseauth.users.update`), created by `./deploy/deploy.sh iam`.
+- Demo pending applicant: `pending.applicant@demo-bank.example` (password `Demo@2026`), seeded with `python scripts/seed_users.py --applicant-only`.
+- Checks: `python scripts/cr04_roles_check.py --base <site> [--mock]`; the e2e script has a Roles section.
+
 ## Tests
 
 ```bash

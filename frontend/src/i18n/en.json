@@ -215,5 +215,10 @@
  "fields.postalCode": "PIN code / postcode",
  "fields.primaryBank": "Bank",
  "deleteReauth": "Enter your password to finish deleting your login.",
- "deleteReauthFailed": "Your cases and profile were deleted, but the login could not be removed. Log in again and repeat Delete account."
+ "deleteReauthFailed": "Your cases and profile were deleted, but the login could not be removed. Log in again and repeat Delete account.",
+ "roleTitle": "Who are you?",
+ "roleVictim": "I've been scammed",
+ "roleBank": "I work at a bank (fraud team)",
+ "roleBankHint": "Bank staff accounts need admin approval before they see any data.",
+ "roleBankApply": "Request bank access"
 }

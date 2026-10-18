@@ -8,6 +8,21 @@ import { DIAL, passwordOk, toE164 } from "../lib/phone";
 import { acceptTerms, saveProfile, TERMS_VERSION } from "../lib/me";
 import { AppHeader } from "../ui/AppHeader";
 import { EmergencyStrip } from "../ui/EmergencyStrip";
+import { RolePicker, type Role } from "../ui/RolePicker";
+import { BankSignupForm, StaffLoginForm } from "./StaffPages";
+
+function qs(role: Role, next: string | null): string {
+  const q = new URLSearchParams();
+  if (role === "bank") q.set("role", "bank");
+  if (next) q.set("next", next);
+  const str = q.toString();
+  return str ? `?${str}` : "";
+}
+
+function initialRole(params: URLSearchParams): Role {
+  const n = params.get("next") || "";
+  return params.get("role") === "bank" || /^\/(bank|admin|pending)/.test(n) ? "bank" : "victim";
+}
 
 function safeNext(n: string | null): string {
   return n && n.startsWith("/") && !n.startsWith("//") ? n : "/cases";
@@ -54,6 +69,7 @@ export function Signup() {
   const [terms, setTerms] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [role, setRole] = useState<Role>(initialRole(params));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +99,8 @@ export function Signup() {
       <AppHeader lang={lang} setLang={setLang} />
       <main className="landing auth">
         <h2>{t("signUp")}</h2>
+        <RolePicker role={role} setRole={setRole} />
+        {role === "bank" ? <BankSignupForm next={params.get("next")} /> : (
         <form className="form" onSubmit={submit} noValidate>
           <PhoneInput country={country} setCountry={(c) => { setCountry(c); if (!COUNTRY_LANGS[c].includes(plang)) setPlang("en"); }} phone={phone} setPhone={setPhone} t={t} />
           <label>{t("fullName")}<input name="fullName" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} /></label>
@@ -100,8 +118,8 @@ export function Signup() {
           </label>
           {err && <p className="error" role="alert" data-testid="auth-error">{t(err)}</p>}
           <button className="btn primary cta" type="submit" disabled={busy}>{t("signUp")}</button>
-        </form>
-        <Link className="link" to={`/login${params.get("next") ? `?next=${encodeURIComponent(params.get("next")!)}` : ""}`}>{t("haveAccount")}</Link>
+        </form>)}
+        <Link className="link" to={`/login${qs(role, params.get("next"))}`}>{t("haveAccount")}</Link>
         <EmergencyStrip countries={[country]} />
       </main>
     </LangContext.Provider>
@@ -118,6 +136,7 @@ export function Login() {
   const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [role, setRole] = useState<Role>(initialRole(params));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,14 +159,16 @@ export function Login() {
       <AppHeader lang={lang} setLang={setLang} />
       <main className="landing auth">
         <h2>{t("signIn")}</h2>
+        <RolePicker role={role} setRole={setRole} />
+        {role === "bank" ? <StaffLoginForm next={params.get("next")} /> : (
         <form className="form" onSubmit={submit} noValidate>
           <PhoneInput country={country} setCountry={setCountry} phone={phone} setPhone={setPhone} t={t} />
           <label>{t("password")}<input name="password" type={show ? "text" : "password"} autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
           <label className="check"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} /> {t("showPassword")}</label>
           {err && <p className="error" role="alert" data-testid="auth-error">{t(err)}</p>}
           <button className="btn primary cta" type="submit" disabled={busy}>{t("signIn")}</button>
-        </form>
-        <Link className="link" to={`/signup${params.get("next") ? `?next=${encodeURIComponent(params.get("next")!)}` : ""}`}>{t("noAccount")}</Link>
+        </form>)}
+        <Link className="link" to={`/signup${qs(role, params.get("next"))}`}>{t("noAccount")}</Link>
         <EmergencyStrip countries={[country]} />
       </main>
     </LangContext.Provider>

@@ -361,6 +361,70 @@ def malaysia(v: Api) -> None:
     v.c.delete(v.url(f"/api/cases/{cid}"))
 
 
+def email_login(email: str, password: str) -> httpx.Response:
+    return httpx.post(f"{IDT}:signInWithPassword?key={_api_key()}", json={"email": email, "password": password,
+                                                                         "returnSecureToken": True}, timeout=30)
+
+
+def roles(api: str, mock: bool, victim: Api, analyst: Api) -> None:
+    """CR-04: a bank applicant stays PENDING with no bank access; admin approve → bank desk; revoke blocks again."""
+    print("Roles (CR-04)")
+    email = f"cr04.e2e.{uuid.uuid4().hex[:8]}@demo-bank.example"
+    pw = "E2e-" + uuid.uuid4().hex[:10] + "9"
+    form = {"fullName": "E2E Applicant", "country": "IN", "bankName": "Axis Bank", "employeeId": "AX-0001",
+            "designation": "Fraud analyst", "note": "e2e test account (deleted at the end)"}
+    if mock:
+        app_tok = lambda: f"mock:staff:{email}"  # noqa: E731
+        admin_tok = "mock:admin:E2E"
+    else:
+        r = httpx.post(f"{IDT}:signUp?key={_api_key()}", json={"email": email, "password": pw, "returnSecureToken": True}, timeout=30)
+        r.raise_for_status()
+        app_tok = lambda: email_login(email, pw).json()["idToken"]  # noqa: E731 — a fresh sign-in picks up claims
+        ar = email_login("admin@recoverai-demo.example", (STATE / "admin_password").read_text().strip())
+        check(ar.status_code == 200, "seeded admin signs in")
+        admin_tok = ar.json()["idToken"]
+    app, adm = Api(api, app_tok()), Api(api, admin_tok)
+    try:
+        st, _ = victim.post_status("/api/bank-access/request", form)
+        check(st == 409, f"a victim phone account cannot apply for bank access ({st})")
+        req = app.post("/api/bank-access/request", {**form, "role": "bank", "status": "APPROVED"})
+        check(req["status"] == "PENDING" and req["bankId"] is None, "applicant request is PENDING; body role/status ignored")
+        uid = req["uid"]
+        me = app.get("/api/me")
+        check(me["role"] is None and me["requestStatus"] == "PENDING", "GET /api/me: role none, requestStatus PENDING")
+        check(app.c.get(app.url("/api/bank/cases")).status_code == 403, "pending applicant → 403 on bank APIs")
+        check(app.c.get(app.url("/api/admin/bank-requests")).status_code == 403, "applicant → 403 on admin APIs")
+        check(victim.c.get(victim.url("/api/admin/bank-requests")).status_code == 403, "victim → 403 on admin APIs")
+        check(analyst.c.get(analyst.url("/api/admin/bank-requests")).status_code == 403, "analyst → 403 on admin APIs")
+        st, _ = app.post_status("/api/cases", {"country": "IN", "language": "en"})
+        check(st == 403, f"staff account is not a victim ({st})")
+        pend = adm.get("/api/admin/bank-requests?status=PENDING")["requests"]
+        check(any(r["uid"] == uid for r in pend), f"admin sees the request in the pending queue ({len(pend)} pending)")
+        ok = adm.post(f"/api/admin/bank-requests/{uid}/approve", {})
+        check(ok["status"] == "APPROVED" and ok["bankId"] == "in-axis-bank", f"admin approves (bankId {ok['bankId']})")
+        app2 = Api(api, app_tok())
+        check(app2.get("/api/me")["role"] == "bank", "after re-login the token carries role=bank")
+        check(app2.c.get(app2.url("/api/bank/cases")).status_code == 200, "approved applicant → 200 on bank APIs")
+        rv = adm.post(f"/api/admin/users/{uid}/revoke-bank", {"reason": "e2e revoke"})
+        check(rv["status"] == "REVOKED", "admin revokes")
+        check(app2.c.get(app2.url("/api/bank/cases")).status_code == 403, "revoked: the old token is blocked at once (403)")
+        if not mock:
+            r = email_login(email, pw)
+            check(r.status_code == 200, "revoked applicant can still sign in (to see the status)")
+            app3 = Api(api, r.json()["idToken"])
+            check(app3.get("/api/me")["role"] is None and app3.c.get(app3.url("/api/bank/cases")).status_code == 403,
+                  "revoked: fresh token has no bank role (403)")
+        acts = {(a["action"], a["targetUid"]) for a in adm.get("/api/admin/audit?limit=50")["entries"]}
+        check({("approve", uid), ("revoke_bank", uid), ("request_submitted", uid)} <= acts, "audit log: submit, approve, revoke")
+        check(analyst.c.get(analyst.url("/api/bank/cases")).status_code == 200, "existing analyst still has bank access")
+    finally:
+        tok = app_tok() if not mock else f"mock:staff:{email}"
+        httpx.delete(f"{api}/api/me", headers={"Authorization": f"Bearer {tok}"}, timeout=30)
+        if not mock:
+            httpx.post(f"{IDT}:delete?key={_api_key()}", json={"idToken": tok}, timeout=30)
+            check(email_login(email, pw).status_code == 400, "test applicant account deleted")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--api", default=os.environ.get("API_BASE", "http://localhost:8080"))
@@ -371,6 +435,7 @@ def main() -> None:
     check(httpx.get(v.url("/api/health"), timeout=30).json().get("ok") is True, f"healthz {a.api}")
     accounts(v, Api(a.api, at))
     profile_gate(Api(a.api, vts["in_incomplete"]))
+    roles(a.api, a.mock, v, bank)
     india(v, bank)
     malaysia(Api(a.api, vts["my_complete"]))
     check(bool(REPLIES), f"all {len(REPLIES)} co-pilot chat turns had non-empty text")

@@ -215,5 +215,10 @@
  "fields.postalCode": "Poskod",
  "fields.primaryBank": "Bank",
  "deleteReauth": "Masukkan kata laluan anda untuk selesai memadam log masuk.",
- "deleteReauthFailed": "Kes dan profil anda telah dipadam, tetapi log masuk tidak dapat dibuang. Log masuk semula dan ulang Padam akaun."
+ "deleteReauthFailed": "Kes dan profil anda telah dipadam, tetapi log masuk tidak dapat dibuang. Log masuk semula dan ulang Padam akaun.",
+ "roleTitle": "Siapakah anda?",
+ "roleVictim": "Saya telah ditipu",
+ "roleBank": "Saya bekerja di bank (pasukan penipuan)",
+ "roleBankHint": "Akaun kakitangan bank perlu kelulusan admin sebelum boleh melihat sebarang data.",
+ "roleBankApply": "Mohon akses bank"
 }

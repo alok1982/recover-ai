@@ -3,7 +3,7 @@
 #
 #   ./deploy/deploy.sh                 # everything, project recoverai-511917 (default)
 #   PROJECT_ID=other-proj ./deploy/deploy.sh
-#   ./deploy/deploy.sh backend         # one stage: platform | backend | pubsub | seed | search | frontend | check
+#   ./deploy/deploy.sh backend         # one stage: platform | iam | admin | backend | pubsub | seed | search | frontend | check
 #
 # Prereqs (README "Deploy"): gcloud (incl. bq), firebase-tools, node 20+, python 3.11+, jq, openssl, curl.
 #   gcloud auth login alokkumar.iiitm@gmail.com
@@ -140,6 +140,7 @@ setup_platform() {
   gcloud iam service-accounts add-iam-policy-binding "$SA" --member="serviceAccount:${SA}" \
     --role=roles/iam.serviceAccountTokenCreator >/dev/null
 
+  setup_claims_role
   setup_bigquery
   setup_topics
 
@@ -162,6 +163,22 @@ setup_platform() {
     "https://identitytoolkit.googleapis.com/admin/v2/projects/${PROJECT_ID}/config?updateMask=signIn.anonymous.enabled,signIn.email.enabled,signIn.email.passwordRequired" \
     -d '{"signIn":{"anonymous":{"enabled":true},"email":{"enabled":true,"passwordRequired":true}}}' >/dev/null \
     || warn "could not enable Auth providers via API; enable Anonymous + Email/Password in the Firebase console."
+}
+
+# CR-04: the backend approves/revokes bank staff by setting Firebase custom claims. The narrowest grant is a custom
+# role with the single permission firebaseauth.users.update (accounts:update — set claims, revoke refresh tokens).
+# Reading users (get claims) is already covered by roles/firebaseauth.viewer; deleting users is NOT granted.
+CLAIMS_ROLE_ID="recoveraiAuthClaims"
+setup_claims_role() {
+  log "Custom IAM role ${CLAIMS_ROLE_ID} (firebaseauth.users.update only) for ${SA}"
+  if ! gcloud iam roles describe "$CLAIMS_ROLE_ID" --project "$PROJECT_ID" >/dev/null 2>&1; then
+    gcloud iam roles create "$CLAIMS_ROLE_ID" --project "$PROJECT_ID" --stage=GA \
+      --title="RecoverAI: set Firebase custom claims" \
+      --description="CR-04: admin approve/revoke of bank staff (custom claims). Single permission." \
+      --permissions=firebaseauth.users.update >/dev/null
+  fi
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA}" \
+    --role="projects/${PROJECT_ID}/roles/${CLAIMS_ROLE_ID}" --condition=None >/dev/null
 }
 
 setup_bigquery() {
@@ -347,13 +364,15 @@ check() {
 case "$WHAT" in
   all) setup_platform; deploy_backend; setup_pubsub; seed_data; setup_search; deploy_frontend ;;
   platform) setup_platform ;;
+  iam) setup_claims_role ;;
+  admin) py_env; GOOGLE_CLOUD_PROJECT="$PROJECT_ID" "$ROOT/.venv/bin/python" "$ROOT/scripts/create_admin.py" ;;
   backend) deploy_backend ;;
   pubsub) setup_pubsub ;;
   seed) seed_data ;;
   search) setup_search ;;
   frontend) deploy_frontend ;;
   check) check ;;
-  *) echo "usage: $0 [all|platform|backend|pubsub|seed|search|frontend|check]"; exit 2 ;;
+  *) echo "usage: $0 [all|platform|iam|admin|backend|pubsub|seed|search|frontend|check]"; exit 2 ;;
 esac
 
 log "Done"

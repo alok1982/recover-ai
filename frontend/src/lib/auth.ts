@@ -171,6 +171,11 @@ export async function bankLogin(name: string, email: string, password: string): 
   return u;
 }
 
+/** CR-04: an approved staff member who signed in through the single login opens the bank desk directly. */
+export function setBankSession(name: string, email?: string): void {
+  sessionStorage.setItem(BANK_KEY, JSON.stringify({ name, email }));
+}
+
 export async function bankLogout(): Promise<void> {
   sessionStorage.removeItem(BANK_KEY);
   if (!MOCK) await signOut(getAuth(analystApp()));
