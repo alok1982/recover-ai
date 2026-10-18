@@ -104,6 +104,15 @@ def main() -> None:
 
         pg.goto(case_url)
         pg.wait_for_selector("text=अस्थायी रोक", timeout=10000)
+        # F17: light question → Gemma chip (backend started with CHAT_LIGHT_MODEL set); earlier replies → Gemini chip
+        if (pg.request.get(a.base + "/api/health").json() or {}).get("chatLight"):
+            pg.fill(".inputbar textarea", "अब मुझे क्या करना है?")
+            pg.keyboard.press("Enter")
+            pg.wait_for_selector(".messages .model-chip.gemma")
+            assert pg.locator(".messages .model-chip.gemini").count() >= 1, "Gemini chip on full turns"
+            pg.wait_for_timeout(1200)
+            pg.locator(".messages .model-chip.gemma").last.scroll_into_view_if_needed()
+            pg.locator(".chat").screenshot(path=str(SHOTS / "10-model-chips.png"))
         pg.fill(".inputbar textarea", "Pay ₹5,000 fee and we recover your money")
         pg.keyboard.press("Enter")
         pg.wait_for_selector(".warning-card")

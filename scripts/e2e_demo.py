@@ -12,6 +12,7 @@ the bank decision reaching the victim via bank-decision (timed against the 3 s t
 from __future__ import annotations
 
 import argparse
+import re
 import json
 import os
 import sys
@@ -136,6 +137,7 @@ def india(v: Api, bank: Api) -> None:
     evs = v.chat(cid, {"trigger": "generate_all"})
     check(kinds(evs) == ["drafts", "consent"], "drafts + consent cards")
     check(all("612345678901" in d["en"] and "612345678901" in d["local"] for d in card(evs, "drafts")["drafts"]), "drafts carry UTR")
+    light_routing(v, cid, w["evidence"]["id"])
     pack = v.post(f"/api/cases/{cid}/evidence-pack")
     check(httpx.get(v.url(pack["url"]), timeout=60).content[:4] == b"%PDF", "evidence pack PDF downloads")
     t_send = time.time()
@@ -169,6 +171,45 @@ def india(v: Api, bank: Api) -> None:
     r = v.post(f"/api/cases/{cid}/clock", {"jumpToDay": 31})
     check([m["card"]["kind"] for m in r["messages"] if m.get("card")] == ["escalation"], "day-31 ombudsman escalation")
     check(v.post(f"/api/cases/{cid}/clock", {"addDays": 1})["messages"] == [], "escalation fires exactly once")
+
+
+def _done(evs):
+    return next(e for e in evs if e.get("type") == "done")
+
+
+ROUTING: list[dict] = []
+
+
+def light_routing(v: Api, cid: str, evidence_id: str) -> None:
+    """F17: light Hindi questions → Gemma (or Gemini when the light model is off / forced to fail); heavy turns → Gemini."""
+    h = v.get("/api/health")
+    light, forced = h.get("chatLight"), h.get("forceLightFail")
+    turns = [("अब मुझे क्या करना है?", {}, "light"), ("Ombudsman क्या है?", {}, "light"),
+             ("यह स्क्रीनशॉट देखो", {"evidenceIds": [evidence_id]}, "full"),
+             ("draft my complaint", {}, "full"), ("send to my bank", {}, "full")]
+    for q, extra, kind in turns:
+        t0 = time.time()
+        evs = v.chat(cid, {"text": q, **extra})
+        d = _done(evs)
+        m = d.get("message") or {}
+        model, route = m.get("model") or d.get("model"), m.get("route") or {}
+        reply = text(evs)
+        ROUTING.append({"q": q, "model": model, "route": route.get("route"), "reason": route.get("reason"),
+                        "fallback": route.get("fallback"), "gemmaFirstTokenMs": route.get("firstTokenMs") if route.get("firstTokenMs") is not None else route.get("lightFirstTokenMs"),
+                        "turnS": round(time.time() - t0, 1)})
+        check(not any(e.get("type") == "error" for e in evs) and bool(reply.strip()), f"reply without error: {q}")
+        if kind == "light":
+            if light and not forced:
+                check(str(model).startswith("gemma"), f"light turn answered by Gemma (model={model}, "
+                      f"fallback={route.get('fallback')}, first token {route.get('firstTokenMs')} ms): {q}")
+                check(bool(re.search(r"[\u0900-\u097F]", reply)), "light reply is in Hindi")
+            else:
+                check((model == "gemini-fallback") if light else not str(model).startswith("gemma"),
+                      f"light model off / forced to fail → Gemini ({model}): {q}")
+        else:
+            check(not str(model).startswith("gemma"), f"heavy turn stays on Gemini ({model}, {route.get('reason')}): {q}")
+    for r in ROUTING:
+        print("   ", json.dumps(r, ensure_ascii=False))
 
 
 def malaysia(v: Api) -> None:

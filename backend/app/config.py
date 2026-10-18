@@ -27,6 +27,12 @@ class Settings:
     gemini_location: str = field(default_factory=lambda: os.getenv("GEMINI_LOCATION", "") or os.getenv("GOOGLE_CLOUD_LOCATION", "global"))
     gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
     gemini_lite_model: str = field(default_factory=lambda: os.getenv("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"))
+    # F17: light chat turns on Gemma 4 (Vertex AI MaaS). Empty = every turn goes to Gemini.
+    chat_light_model: str = field(default_factory=lambda: os.getenv("CHAT_LIGHT_MODEL", "").strip())
+    chat_light_location: str = field(default_factory=lambda: os.getenv("CHAT_LIGHT_LOCATION", "global"))
+    force_light_fail: bool = field(default_factory=lambda: _bool("FORCE_LIGHT_FAIL", False))
+    light_first_token_s: float = field(default_factory=lambda: float(os.getenv("LIGHT_FIRST_TOKEN_S", "8")))
+    light_total_s: float = field(default_factory=lambda: float(os.getenv("LIGHT_TOTAL_S", "20")))
     evidence_bucket: str = field(default_factory=lambda: os.getenv("EVIDENCE_BUCKET", ""))
     allowed_origins: tuple[str, ...] = field(
         default_factory=lambda: tuple(

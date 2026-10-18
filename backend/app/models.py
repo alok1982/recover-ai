@@ -103,6 +103,7 @@ class DraftPair(BaseModel):
 class GuardResult(BaseModel):
     is_recovery_scam: bool
     reason: str
+    route: Literal["light", "full"] = "full"  # F17: can this turn be answered from the case summary alone?
 
 
 # ---------------------------------------------------------------- API requests

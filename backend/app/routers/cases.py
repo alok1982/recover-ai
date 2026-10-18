@@ -9,7 +9,8 @@ from typing import AsyncIterator
 from fastapi import APIRouter, Depends, HTTPException
 
 from .. import actions
-from ..agents import copilot, voice
+from ..agents import voice
+from ..agents import router as turn_router
 from ..auth import User, current_user
 from ..config import get_settings
 from ..i18n import t
@@ -291,15 +292,19 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
 
     # F10: guard runs on every user message and on newly attached text evidence — before the co-pilot.
     flagged = False
-    texts = [text] if text else []
+    guard_route = None
+    if text:
+        msgs, res = await actions.guard_turn(case_id, text, lang)
+        guard_route = res.get("route")  # F17: the same Flash-Lite call labels the turn light / full
+        for m in msgs:
+            flagged = True
+            yield actions.msg_event(m)
     for eid in req.evidenceIds:
         ev = store.get_evidence(case_id, eid)
         if ev and ev.get("type") == "text":
-            texts.append(ev.get("textContent") or "")
-    for tx in texts:
-        for m in await actions.guard_text(case_id, tx, lang):
-            flagged = True
-            yield actions.msg_event(m)
+            for m in await actions.guard_text(case_id, ev.get("textContent") or "", lang):
+                flagged = True
+                yield actions.msg_event(m)
 
     if req.trigger in DIRECTED and not text:
         last = None
@@ -309,7 +314,9 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
         if not last or last.get("type") != "done":
             yield {"type": "done", "messageId": None}
         return
-    async for ev in copilot.run_turn(case_id, text, flagged):
+    decision = turn_router.decide(actions.load(case_id), text, guard_route=guard_route, flagged=flagged,
+                             has_attachment=bool(req.evidenceIds), has_audio=bool(req.audioPath), trigger=req.trigger)
+    async for ev in turn_router.run(case_id, text, flagged, decision):
         yield ev
 
 

@@ -390,13 +390,18 @@ async def time_travel(case_id: str, add_days: float | None, jump_to_day: int | N
 
 # ------------------------------------------------------------------ guard
 async def guard_text(case_id: str, text: str, lang: str) -> list[dict]:
+    return (await guard_turn(case_id, text, lang))[0]
+
+
+async def guard_turn(case_id: str, text: str, lang: str) -> tuple[list[dict], dict]:
+    """Guard one text; returns (warning messages, raw guard result incl. the F17 "route" label)."""
     res = await guard.check(text, case_id)
     if not res["is_recovery_scam"]:
-        return []
+        return [], res
     update_case(case_id, {"flags": {"recovery_scam_detected": True}})
     log.info("recovery_scam_flagged", extra={"caseId": case_id, "step": "guard", "source": res["source"]})
     return [add_card(case_id, "warning", {"message": t("warning", lang), "followUp": t("warning_followup", lang),
-                                          "reason": res["reason"], "source": res["source"]}, lang)]
+                                          "reason": res["reason"], "source": res["source"]}, lang)], res
 
 
 # ------------------------------------------------------------------ bank handoff

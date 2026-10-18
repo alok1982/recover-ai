@@ -6,6 +6,7 @@ import json
 import logging
 
 import asyncio
+import time
 
 from ..analytics import bq
 from ..analytics.synthetic import beneficiary_hash
@@ -69,12 +70,19 @@ def template_reason(payload: dict, rec: dict) -> str:
             f"The evidence supports {ACTION_LABEL[rec['recommendedAction']].lower()} rather than an immediate hold.")
 
 
-REASON_TIMEOUT_S = 15  # keep the push handler well inside the subscription's 30 s ack deadline
+REASON_TIMEOUT_S = 25.0  # Gemini reason budget (was 15 s; Flash sometimes needs 15-20 s)
+ACK_DEADLINE_S = 30.0  # push subscription ack deadline (deploy.sh --ack-deadline=30)
+ACK_MARGIN_S = 4.0  # left for the final Firestore update + HTTP response
+
+
+def enrich_budget(elapsed_s: float) -> float:
+    """Seconds the Gemini reason / ML score may take: up to 25 s, but never past the ack deadline minus a margin."""
+    return max(1.0, min(REASON_TIMEOUT_S, ACK_DEADLINE_S - ACK_MARGIN_S - elapsed_s))
 TXN_UNAVAILABLE = "Transaction data unavailable — signals computed from the case only."
 TXN_NOT_FOUND = "Beneficiary account not found in transaction data — signals computed from the case only."
 
 
-async def write_reason(payload: dict, rec: dict, account: dict | None) -> str:
+async def write_reason(payload: dict, rec: dict, account: dict | None, timeout_s: float = REASON_TIMEOUT_S) -> str:
     llm = get_llm()
     if llm.is_mock:
         return template_reason(payload, rec)
@@ -88,7 +96,7 @@ async def write_reason(payload: dict, rec: dict, account: dict | None) -> str:
         return await asyncio.wait_for(
             llm.generate_text(system=SYSTEM, parts=[json.dumps(body, ensure_ascii=False, default=str)],
                               temperature=0.2, step="bank_reason", case_id=payload.get("caseId")),
-            timeout=REASON_TIMEOUT_S)
+            timeout=timeout_s)
     except (LLMError, asyncio.TimeoutError):
         return template_reason(payload, rec)
 
@@ -103,6 +111,7 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
     """Create the bank case for an envelope. Idempotent: the id is derived from caseId + sent_at."""
     if envelope.get("intent") != "fraud_case.submit":
         raise ValueError("unsupported intent")
+    t_start = time.monotonic()
     store = get_store()
     bank_case_id = bank_case_id_for(envelope)
     existing = store.get_bank_case(bank_case_id)
@@ -146,7 +155,16 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
                                                         "txnStatus": fx["status"], "messageId": (meta or {}).get("messageId")}})
     log.info("bank_case_received", extra={"caseId": p["caseId"], "bankCaseId": bank_case_id, "step": "a2a",
                                           "riskScore": rec["riskScore"], "txnStatus": fx["status"], "bqMs": fx["queryMs"]})
-    ml, gem = await asyncio.gather(asyncio.to_thread(bq.safe_ml_score, features), write_reason(p, rec, features))
+    budget = enrich_budget(time.monotonic() - t_start)
+
+    async def ml_score():
+        try:
+            return await asyncio.wait_for(asyncio.to_thread(bq.safe_ml_score, features), timeout=budget)
+        except asyncio.TimeoutError:
+            log.warning("ml_score_timeout", extra={"caseId": p["caseId"], "step": "bq_ml", "budgetS": round(budget, 1)})
+            return None
+
+    ml, gem = await asyncio.gather(ml_score(), write_reason(p, rec, features, timeout_s=budget))
     upd = {"mlRiskScore": ml, "reasonPending": False}
     if gem and gem != reason:
         upd.update({"reason_en": gem, "reasonSource": "gemini"})

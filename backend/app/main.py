@@ -77,7 +77,9 @@ def create_app() -> FastAPI:
     @app.get("/api/healthz")
     @app.get("/api/health")  # Cloud Run reserves paths ending in "z" (/healthz never reaches the container)
     def healthz() -> dict:
-        return {"ok": True, "mock": s.mock_mode, "demo": s.demo_mode, "runtime": s.copilot_runtime}
+        cfg = get_settings()  # read live so tests can toggle F17 settings
+        return {"ok": True, "mock": s.mock_mode, "demo": s.demo_mode, "runtime": s.copilot_runtime,
+                "chatLight": cfg.chat_light_model or None, "forceLightFail": cfg.force_light_fail}
 
     return app
 

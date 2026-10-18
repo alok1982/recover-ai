@@ -1,6 +1,7 @@
 """GuardAgent — recovery-scam classifier (Gemini Flash-Lite, PRD §9.5) plus a deterministic keyword net.
 
 Runs on EVERY user message and on pasted/uploaded text before the co-pilot (wired in the chat route).
+F17: the same call also labels the turn "light" / "full" (no extra model call); code overrides live in router.py.
 """
 from __future__ import annotations
 
@@ -14,8 +15,11 @@ log = logging.getLogger("recoverai.guard")
 
 SYSTEM = """Classify whether this message is a likely "recovery scam" (asks the victim to pay money, fees, taxes or deposits to
 recover lost funds, or claims to be a recovery agent / lawyer / official offering guaranteed recovery).
-Return JSON {"is_recovery_scam": bool, "reason": string}.
+Return JSON {"is_recovery_scam": bool, "reason": string, "route": "light" | "full"}.
 A victim asking whether they will get their money back is NOT a recovery scam.
+Also decide "route": "light" only if the message can be answered from the case summary alone — a question about status,
+the next step, a deadline, the meaning of a term, or simple reassurance — with no new facts, files, drafts or decisions.
+Otherwise "full". When unsure, "full".
 """ + INJECTION_GUARD
 
 _FEE = r"(fee|fees|processing|charge|charges|deposit|tax|commission|advance|शुल्क|फीस|फ़ीस|चार्ज|yuran|caj|bayaran pemprosesan|cukai)"
@@ -36,17 +40,19 @@ def heuristic(text: str) -> tuple[bool, str]:
 async def check(text: str, case_id: str | None = None) -> dict:
     text = (text or "").strip()
     if not text:
-        return {"is_recovery_scam": False, "reason": "", "source": "empty"}
+        return {"is_recovery_scam": False, "reason": "", "source": "empty", "route": "full"}
+    from .router import heuristic_route
+
     h_flag, h_reason = heuristic(text)
     llm = get_llm()
     if llm.is_mock:
-        return {"is_recovery_scam": h_flag, "reason": h_reason, "source": "heuristic"}
+        return {"is_recovery_scam": h_flag, "reason": h_reason, "source": "heuristic", "route": heuristic_route(text)}
     try:
         res = await llm.generate_json(system=SYSTEM, parts=[evidence_block("msg", "text", text)], schema=GuardResult,
                                       model=llm.settings.gemini_lite_model, temperature=0.0, step="guard", case_id=case_id)
         flag = res.is_recovery_scam or h_flag
         return {"is_recovery_scam": flag, "reason": res.reason if res.is_recovery_scam else h_reason,
-                "source": "gemini" + ("+heuristic" if h_flag else "")}
+                "source": "gemini" + ("+heuristic" if h_flag else ""), "route": res.route}
     except LLMError:
         log.warning("guard model failed; heuristic only", extra={"caseId": case_id})
-        return {"is_recovery_scam": h_flag, "reason": h_reason, "source": "heuristic"}
+        return {"is_recovery_scam": h_flag, "reason": h_reason, "source": "heuristic", "route": "full"}

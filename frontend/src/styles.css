@@ -164,3 +164,9 @@ table.compact td, table.compact th { padding: 4px 8px; }
 .clock-steps { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
 .clock-steps li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
 .clock-steps li.done { color: var(--muted); } .mark-done input { max-width: 160px; }
+
+/* F17 demo: model chip under each reply */
+.model-chip { align-self: flex-start; display: inline-block; font-size: .7rem; line-height: 1; padding: 3px 7px; margin: 3px 0 0 6px; border-radius: 999px;
+              border: 1px solid var(--line); color: var(--muted); background: #fff; letter-spacing: .02em; }
+.model-chip.gemma { border-color: #7b61ff; color: #5a3fd6; background: #f3f0ff; }
+.model-chip.gemini { border-color: #9ec5ff; color: #1a5fb4; background: #eef5ff; }

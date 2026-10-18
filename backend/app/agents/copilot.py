@@ -407,8 +407,12 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
             streamed_segment = False
 
 
-async def run_turn(case_id: str, text: str | None, flagged: bool) -> AsyncIterator[dict]:
-    """Yields SSE events (token / card / tool_status / done) and persists the assistant reply."""
+async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str | None = None,
+                   route: dict | None = None) -> AsyncIterator[dict]:
+    """Yields SSE events (token / card / tool_status / done) and persists the assistant reply.
+
+    model_tag labels the reply (F17): the Gemini model id, or "gemini-fallback" after a failed Gemma light turn.
+    """
     store = get_store()
     case = actions.load(case_id)
     lang = case.get("language", "en")
@@ -416,6 +420,7 @@ async def run_turn(case_id: str, text: str | None, flagged: bool) -> AsyncIterat
     history = store.list_messages(case_id, limit=30)[:-1] if text else store.list_messages(case_id, limit=30)
     llm = get_llm()
     use_adk = (not llm.is_mock) or ADK_MODEL_OVERRIDE is not None
+    model = model_tag or (get_settings().gemini_model if use_adk else "mock-copilot")
     t0 = time.perf_counter()
     first_token_ms = None
     raw = ""
@@ -466,15 +471,18 @@ async def run_turn(case_id: str, text: str | None, flagged: bool) -> AsyncIterat
             yield tb.events.pop(0)
     msg = None
     if final_text:
-        rec = {"role": "assistant", "text": final_text, "card": None, "audioPath": None, "lang": lang, "toolCalls": tb.calls}
+        rec = {"role": "assistant", "text": final_text, "card": None, "audioPath": None, "lang": lang, "toolCalls": tb.calls,
+               "model": model}
+        if route:
+            rec["route"] = route
         if tb.sources:
             rec["sources"] = tb.sources
         msg = store.add_message(case_id, rec)
     log.info("copilot_turn", extra={"caseId": case_id, "step": "chat", "firstTokenMs": first_token_ms,
                                     "totalMs": int((time.perf_counter() - t0) * 1000), "tools": [c["name"] for c in tb.calls],
-                                    "runtime": "adk" if use_adk else "stage"})
+                                    "runtime": "adk" if use_adk else "stage", "model": model})
     yield {"type": "done", "messageId": msg["id"] if msg else None, "message": jsonable(msg) if msg else None,
-           "firstTokenMs": first_token_ms}
+           "firstTokenMs": first_token_ms, "model": model}
 
 
 async def _regenerate(case_id: str, raw: str, gate: post_check.StreamGate, tb: Toolbox) -> str | None:

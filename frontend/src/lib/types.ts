@@ -18,6 +18,8 @@ export interface Message {
   toolCalls?: { name: string; ok: boolean; latencyMs: number }[];
   pending?: boolean;
   sources?: { title: string; url: string; publisher?: string | null }[];
+  model?: string | null; // F17: "gemma-4…", a Gemini id, or "gemini-fallback"
+  route?: { route: "light" | "full"; reason?: string; fallback?: string | null; firstTokenMs?: number | null } | null;
 }
 
 export interface Step {
