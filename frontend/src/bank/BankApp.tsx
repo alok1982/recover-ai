@@ -17,7 +17,6 @@ import { Logo } from "../ui/Logo";
 
 function Login({ onDone }: { onDone: (u: BankUser) => void }) {
   const desk = useDeskName();
-  const [name, setName] = useState("Rahul");
   const [email, setEmail] = useState("analyst@recoverai-demo.example");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -26,16 +25,11 @@ function Login({ onDone }: { onDone: (u: BankUser) => void }) {
     <DemoRibbon />
     <main className="bank-login">
       <div className="login-brand"><Logo variant="mark" height={44} /><h1 data-testid="desk-title">{desk}</h1></div>
-      <p className="muted">Demo analyst login {MOCK ? "(offline mock: any name)" : "(Firebase email/password, role=bank)"}</p>
-      <label>Name<input value={name} onChange={(e) => setName(e.target.value)} /></label>
-      {!MOCK && (
-        <>
-          <label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-        </>
-      )}
+      <p className="muted">Bank analyst sign-in. Requires an approved bank role.</p>
+      <label>Email<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+      {!MOCK && <label>Password<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>}
       <button className="btn primary big" onClick={async () => {
-        try { onDone(await bankLogin(name, email, password)); } catch (e: any) { setErr(e.message); }
+        try { onDone(await bankLogin(email, password)); } catch (e: any) { setErr(e.message); }
       }}>Sign in</button>
       {err && <p className="error">{err}</p>}
     </main>

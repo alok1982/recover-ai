@@ -157,7 +157,8 @@ export function currentBankUser(): BankUser | null {
   return JSON.parse(raw);
 }
 
-export async function bankLogin(name: string, email: string, password: string): Promise<BankUser> {
+export async function bankLogin(email: string, password: string): Promise<BankUser> {
+  let name = "";
   if (!MOCK) {
     const cred = await signInWithEmailAndPassword(getAuth(analystApp()), email, password);
     const res = await cred.user.getIdTokenResult();
@@ -165,8 +166,10 @@ export async function bankLogin(name: string, email: string, password: string): 
       await signOut(getAuth(analystApp()));
       throw new Error("This account does not have the bank analyst role.");
     }
+    name = cred.user.displayName || "";
   }
-  const u = { name: name || "Analyst", email };
+  // Display name comes from the account (or the email's local part); no separate Name field.
+  const u = { name: name || (email.split("@")[0] || "Analyst"), email };
   sessionStorage.setItem(BANK_KEY, JSON.stringify(u));
   return u;
 }
