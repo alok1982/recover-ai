@@ -94,6 +94,7 @@ class Settings:
     max_audio_bytes: int = 8 * 1024 * 1024  # ~2 min of compressed audio
     max_text_chars: int = 20_000
     # Co-pilot context: last N messages are replayed (the case state JSON in the instruction is authoritative).
+    speculative_copilot: bool = field(default_factory=lambda: os.getenv("SPECULATIVE_COPILOT", "true").lower() == "true")  # QA BUG-07
     copilot_history_messages: int = field(default_factory=lambda: int(os.getenv("COPILOT_HISTORY_MESSAGES", "12")))
     voice_enabled: bool = field(default_factory=lambda: _bool("VOICE_ENABLED", True))  # CR-03 D fallback switch
     gemini_timeout_s: float = 45.0

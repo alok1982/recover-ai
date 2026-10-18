@@ -188,6 +188,9 @@ def summary(case: dict, evidence: list[dict]) -> dict:
     }
 
 
+CLAIMS_COL = "submission_claims"  # backend-only (Firestore rules: catch-all deny)
+
+
 def active_submission(case: dict) -> bool:
     sub = case.get("submission") or {}
     if sub:
@@ -213,8 +216,6 @@ def preview(case_id: str) -> dict:
 
 async def send(case_id: str, token: str | None, confirmed: bool) -> tuple[dict, list[dict]]:
     """Confirmed send → publish fraud_case.submit with attribute env=sandbox|live (F8.3)."""
-    from .agents import bank_receiver
-
     if not confirmed:
         raise HTTPException(400, "Please tick the confirmation box first")
     case = actions.load(case_id)
@@ -227,7 +228,26 @@ async def send(case_id: str, token: str | None, confirmed: bool) -> tuple[dict, 
     if dest == "LIVE" and not live_allowed():
         raise HTTPException(403, "Live submission is disabled")
     evidence = get_store().list_evidence(case_id)
-    check_token(token, case_id, payload_digest(case, evidence, dest), dest)
+    digest = payload_digest(case, evidence, dest)
+    check_token(token, case_id, digest, dest)
+    # QA BUG-02: claim this submission atomically. Concurrent confirms all read the same submissionSeq, so only one
+    # create() of submission_claims/{caseId}-{seq} succeeds; the others get 409. A withdrawal + new send uses seq+1.
+    seq = int(case.get("submissionSeq") or 0) + 1
+    claim_id = f"{case_id}-{seq}"
+    if not get_store().create_doc_if_absent(CLAIMS_COL, claim_id, {"caseId": case_id, "seq": seq, "digest": digest,
+                                                                  "status": "SUBMITTING", "claimedAt": utcnow()}):
+        raise HTTPException(409, "Already sent to the bank. Withdraw consent first to send again.")
+    try:
+        return await _send_claimed(case_id, case, evidence, dest, seq, lang)
+    except BaseException:
+        if not (actions.load(case_id).get("submission") or {}).get("status") == "SENT":
+            get_store().delete_doc(CLAIMS_COL, claim_id)  # nothing went out: release the claim so a retry works
+        raise
+
+
+async def _send_claimed(case_id: str, case: dict, evidence: list[dict], dest: str, seq: int, lang: str) -> tuple[dict, list[dict]]:
+    from .agents import bank_receiver
+
     if not case.get("plan"):
         case = actions.recompute_plan(case_id)
     ref = ensure_public_ref(case)
@@ -237,7 +257,7 @@ async def send(case_id: str, token: str | None, confirmed: bool) -> tuple[dict, 
                           "sandbox": sandbox, "sandboxLocked": True})
     case = actions.load(case_id)
     envelope = bank_receiver.build_envelope(case, evidence, effective_now(case))
-    envelope["payload"].update({"publicRef": ref, "sandbox": sandbox})
+    envelope["payload"].update({"publicRef": ref, "sandbox": sandbox, "submissionSeq": seq})
     bank_case_id = bank_receiver.bank_case_id_for(envelope)
     s = get_settings()
     env = "sandbox" if sandbox else "live"
@@ -249,7 +269,8 @@ async def send(case_id: str, token: str | None, confirmed: bool) -> tuple[dict, 
         raise HTTPException(503, "could not send to the bank right now; please try again") from e
     update_case(case_id, {"bankCaseId": bank_case_id, "bankStatus": "SENT", "status": "sent_to_bank",
                           "bankHandoff": {"topic": s.topic_case_submitted, "messageId": message_id, "sentAt": envelope["sent_at"], "env": env},
-                          "submission": {"status": "SENT", "destination": dest, "confirmedAt": now, "publicRef": ref}})
+                          "submissionSeq": seq,
+                          "submission": {"status": "SENT", "destination": dest, "confirmedAt": now, "publicRef": ref, "seq": seq}})
     case = actions.load(case_id)
     steps = {st["id"]: st for st in (case.get("plan") or {}).get("steps", [])}
     bank_step = "report_bank" if "report_bank" in steps else ("call_bank" if "call_bank" in steps else None)

@@ -52,6 +52,30 @@ async def lifespan(_app: FastAPI):
     yield
 
 
+NO_STORE_HEADERS = ((b"cache-control", b"private, no-store"), (b"x-content-type-options", b"nosniff"))
+
+
+class NoStoreMiddleware:
+    """QA BUG-03: Firebase Hosting's CDN must never cache an API response (a cached 404/403 was served to the case
+    owner). Pure ASGI so SSE streams are untouched; applies to every status code, including errors. BUG-09: nosniff."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                names = {k for k, _ in NO_STORE_HEADERS}
+                headers = [(k, v) for k, v in message.get("headers", []) if k.lower() not in names]
+                message["headers"] = headers + list(NO_STORE_HEADERS)
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
 def create_app() -> FastAPI:
     s = get_settings()
     app = FastAPI(title="RecoverAI API", version="1.0.0", lifespan=lifespan)
@@ -62,6 +86,7 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
     )
+    app.add_middleware(NoStoreMiddleware)  # outermost: also covers CORS preflights and HTTPException responses
     app.include_router(cases.router)
     app.include_router(me.router)
     app.include_router(staff.router)

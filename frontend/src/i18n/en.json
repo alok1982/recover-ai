@@ -89,6 +89,7 @@
  "status.closed": "Closed",
  "escalateRow": "No resolution → escalate",
  "bankRef": "Bank ref",
+ "recoveraiRef": "RecoverAI ref",
  "bankComplaint": "Bank complaint",
  "source": "Source",
  "camera": "Take photo",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 import mimetypes
 from datetime import timedelta
 from typing import AsyncIterator
@@ -15,7 +16,7 @@ from ..agents import router as turn_router
 from ..auth import User, victim_user
 from ..config import get_settings
 from ..i18n import t
-from .. import handoff
+from .. import filetype, handoff
 from ..models import (ChatReq, ClockReq, CreateCaseReq, ExtractionPatch, GuardReq, RegisterEvidenceReq, SandboxReq, SendToBankReq,
                       WithdrawReq,
                       StepPatch, UpdateCaseReq, UploadUrlReq)
@@ -178,8 +179,18 @@ async def register_evidence(case_id: str, req: RegisterEvidenceReq, user: User =
             raise HTTPException(400, "upload not found")
         if size > limit:
             raise HTTPException(413, "file too large")
+        if size == 0:
+            _drop_blob(req.gcsPath)
+            raise HTTPException(400, filetype.EMPTY_MSG)
         data = blobs.read_bytes(req.gcsPath)
-        rec.update(gcsPath=req.gcsPath, mimeType=req.mimeType, sha256=actions.sha256_hex(data), sizeBytes=size)
+        real = filetype.sniff(data)  # QA BUG-04: magic bytes decide, not the declared MIME type
+        ok = (real or "").startswith("image/") if req.type == "image" else (real or "").startswith("audio/")
+        if not ok:
+            _drop_blob(req.gcsPath)
+            log.warning("evidence_bad_magic", extra={"caseId": case_id, "declared": req.mimeType, "type": req.type})
+            raise HTTPException(415, filetype.IMAGE_MSG if req.type == "image" else filetype.AUDIO_MSG)
+        rec.update(gcsPath=req.gcsPath, mimeType=real if req.type == "image" else req.mimeType,
+                   sha256=actions.sha256_hex(data), sizeBytes=size)
     ev = store.add_evidence(case_id, rec)
     update_case(case_id, {"evidenceCount": (case.get("evidenceCount") or 0) + 1})
     system_event(case_id, f"User added {req.type} evidence ({ev['id']})", case.get("language", "en"))
@@ -187,6 +198,13 @@ async def register_evidence(case_id: str, req: RegisterEvidenceReq, user: User =
     if req.type == "text":  # F10: pasted/uploaded text is checked automatically
         warnings += await actions.guard_text(case_id, rec["textContent"], case.get("language", "en"))
     return {"evidence": jsonable(_evidence_view(ev)), "messages": jsonable(warnings)}
+
+
+def _drop_blob(path: str) -> None:
+    try:
+        get_blobs().delete_prefix(path)
+    except Exception:  # noqa: BLE001
+        log.warning("rejected upload cleanup failed")
 
 
 def _evidence_view(e: dict) -> dict:
@@ -342,6 +360,24 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
     for m in await actions.evaluate(case_id):  # lazy clocks on every turn
         yield actions.msg_event(m)
 
+    # QA BUG-07: with the light model off the route never depends on the guard, so the co-pilot starts while the
+    # guard runs. Its output is held until the verdict (F10/G1: the warning card is always first); a flagged turn is
+    # dropped and re-run below exactly as before.
+    if text and get_settings().speculative_copilot and not get_settings().chat_light_model and not req.trigger:
+        spec = _speculative_turn(case_id, text, lang, req)
+        async for ev in spec:
+            if ev.get("type") == "_flagged":
+                break
+            yield ev
+        else:
+            return
+        await spec.aclose()
+        decision = turn_router.decide(actions.load(case_id), text, guard_route=None, flagged=True,
+                                      has_attachment=bool(req.evidenceIds), has_audio=bool(req.audioPath), trigger=req.trigger)
+        async for ev in turn_router.run(case_id, text, True, decision):
+            yield ev
+        return
+
     # F10: guard runs on every user message and on newly attached text evidence — before the co-pilot.
     flagged = False
     guard_route = None
@@ -372,6 +408,68 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
         yield ev
 
 
+async def _speculative_turn(case_id: str, text: str, lang: str, req: ChatReq) -> AsyncIterator[dict]:
+    """Guard ‖ co-pilot. Yields the guard's warning cards (if any) then a {"type": "_flagged"} marker and stops;
+    otherwise yields the held co-pilot events once the guard has cleared the message, then streams the rest."""
+    from ..agents import copilot
+
+    store = get_store()
+    loop = asyncio.get_running_loop()
+    verdict: asyncio.Future[bool] = loop.create_future()
+
+    async def guard_all() -> list[dict]:
+        msgs, _res = await actions.guard_turn(case_id, text, lang)
+        for eid in req.evidenceIds:
+            ev = store.get_evidence(case_id, eid)
+            if ev and ev.get("type") == "text":
+                msgs += await actions.guard_text(case_id, ev.get("textContent") or "", lang)
+        return msgs
+
+    queue: asyncio.Queue = asyncio.Queue()
+    route_info = {"route": "full", "reason": "light_model_disabled", "guardRoute": None, "speculative": True}
+
+    async def produce() -> None:
+        try:
+            async for ev in copilot.run_turn(case_id, text, False, route=route_info, hold=verdict):
+                await queue.put(ev)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:  # noqa: BLE001
+            await queue.put({"type": "_error", "error": e})
+        finally:
+            await queue.put(None)
+
+    producer = asyncio.create_task(produce())
+    guard_task = asyncio.create_task(guard_all())
+    try:
+        try:
+            warnings = await guard_task
+        except Exception:  # noqa: BLE001 - guard.check never raises in practice; fail closed to the sequential path
+            log.exception("speculative guard failed", extra={"caseId": case_id})
+            warnings = []
+        flagged = bool(warnings)
+        verdict.set_result(flagged)
+        if flagged:
+            producer.cancel()
+            for m in warnings:
+                yield actions.msg_event(m)
+            yield {"type": "_flagged"}
+            return
+        log.info("chat_route", extra={"caseId": case_id, "step": "router", **route_info})
+        while True:
+            ev = await queue.get()
+            if ev is None:
+                break
+            if ev.get("type") == "_error":
+                raise ev["error"]
+            yield ev
+    finally:
+        if not verdict.done():
+            verdict.set_result(True)  # client went away before the verdict: drop the speculative turn
+        if not producer.done():
+            producer.cancel()
+
+
 @router.post("/{case_id}/voice")
 async def voice_note(case_id: str, file: UploadFile = File(...), mimeType: str | None = Form(default=None),
                      user: User = Depends(victim_user)):
@@ -392,6 +490,9 @@ async def voice_note(case_id: str, file: UploadFile = File(...), mimeType: str |
         raise HTTPException(413, "recording too long")
     if len(data) < 200:
         return JSONResponse(status_code=422, content={"code": "VOICE_UNCLEAR", "message": t("voice_unclear", case.get("language", "en"))})
+    if not filetype.is_audio(data):  # QA BUG-04
+        log.warning("voice_bad_magic", extra={"caseId": case_id, "mime": raw_mime})
+        raise HTTPException(415, filetype.AUDIO_MSG)
     path = f"cases/{case_id}/voice/{new_id()}{voice.EXT.get(mime, '.webm')}"
     get_blobs().write_bytes(path, data, mime)
     log.info("voice_received", extra={"caseId": case_id, "mime": raw_mime, "bytes": len(data)})

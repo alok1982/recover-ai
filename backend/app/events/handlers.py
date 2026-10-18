@@ -7,6 +7,8 @@ from .pubsub import process_once, stable_key
 def bank_case_key(envelope: dict) -> str:
     """Dedupe key for fraud_case.submit: caseId + sent_at (PRD F8). Also the deterministic bank case id."""
     p = envelope.get("payload") or {}
+    if p.get("submissionSeq"):  # QA BUG-02: one bank case per (case, submission), whatever the send time
+        return stable_key("fraud_case.submit", p.get("caseId"), "seq", p["submissionSeq"])
     return stable_key("fraud_case.submit", p.get("caseId"), envelope.get("sent_at"))
 
 

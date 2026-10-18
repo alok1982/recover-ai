@@ -59,6 +59,7 @@ class Store(Protocol):
     def get_doc(self, col: str, doc_id: str) -> dict | None: ...
     def set_doc(self, col: str, doc_id: str, data: dict) -> None: ...
     def delete_doc(self, col: str, doc_id: str) -> None: ...
+    def create_doc_if_absent(self, col: str, doc_id: str, data: dict) -> bool: ...  # atomic claim (QA BUG-02)
     def list_docs(self, col: str, where: tuple[str, str] | None = None) -> list[dict]: ...
     # Pub/Sub dedupe (F15)
     def get_processed_event(self, event_key: str) -> dict | None: ...
@@ -142,6 +143,9 @@ class MemoryStore:
             for col in ("messages", "evidence"):
                 for k in [k for k, v in self.db[col].items() if v.get("_caseId") == case_id]:
                     self.db[col].pop(k)
+            claims = self.db.setdefault("submission_claims", {})
+            for k in [k for k, v in claims.items() if v.get("caseId") == case_id]:
+                claims.pop(k)
             self._save()
 
     def list_cases(self, owner_uid: str | None = None) -> list[dict]:
@@ -188,6 +192,15 @@ class MemoryStore:
         with self._lock:
             self.db.setdefault(col, {}).pop(doc_id, None)
             self._save()
+
+    def create_doc_if_absent(self, col: str, doc_id: str, data: dict) -> bool:
+        with self._lock:
+            docs = self.db.setdefault(col, {})
+            if doc_id in docs:
+                return False
+            docs[doc_id] = copy.deepcopy({**data, "id": doc_id})
+            self._save()
+            return True
 
     def list_docs(self, col: str, where: tuple[str, str] | None = None) -> list[dict]:
         with self._lock:
@@ -355,6 +368,8 @@ class FirestoreStore:
         for sub in ("messages", "evidence"):
             for d in ref.collection(sub).stream():
                 d.reference.delete()
+        for d in self.client.collection("submission_claims").where(filter=self._fs.FieldFilter("caseId", "==", case_id)).stream():
+            d.reference.delete()
         ref.delete()
 
     def list_cases(self, owner_uid: str | None = None) -> list[dict]:
@@ -388,6 +403,17 @@ class FirestoreStore:
 
     def delete_doc(self, col: str, doc_id: str) -> None:
         self.client.collection(col).document(doc_id).delete()
+
+    def create_doc_if_absent(self, col: str, doc_id: str, data: dict) -> bool:
+        """Firestore create() = a write with the precondition exists=false, committed atomically server-side:
+        of N concurrent callers exactly one succeeds."""
+        from google.api_core.exceptions import AlreadyExists
+
+        try:
+            self.client.collection(col).document(doc_id).create({**data, "id": doc_id})
+            return True
+        except AlreadyExists:
+            return False
 
     def list_docs(self, col: str, where: tuple[str, str] | None = None) -> list[dict]:
         q = self.client.collection(col)

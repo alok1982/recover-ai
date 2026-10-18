@@ -17,15 +17,22 @@ try:
     r = api.j("POST", f"/api/cases/{cid}/clock", json={"addDays": 5})
     clocks = r["case"].get("clocks") or []
     st = {c.get("id") or c.get("label"): c.get("status") for c in clocks}
-    rec("D5", "time-travel +5 days → a clock turns overdue/due_soon (amber)", any(s in ("overdue", "due_soon") for s in st.values()), json.dumps(st)[:300], "P0")
+    # PRD: the RBI 5-day dual-report clock is 'recommended' (advisory) until the rule's effective_from 2027-01-01, so it
+    # must NOT turn amber yet (the plan's 'amber' expectation conflicts with the PRD; see the results doc).
+    rec("D5", "time-travel +5 days → 5-day RBI clock stays 'recommended' (PRD: advisory until 2027-01-01); Ombudsman clock running",
+        st.get("dual_report_5d") == "recommended" and st.get("ombudsman_30d") in ("pending", "running", "due_soon", "ok"), json.dumps(st)[:300], "P0")
     r = api.j("POST", f"/api/cases/{cid}/clock", json={"jumpToDay": 31})
     cards = [m["card"] for m in r["messages"] if m.get("card")]
     esc = next((c for c in cards if c["kind"] == "escalation"), None)
+    data = (esc or {}).get("data") or {}
     blob = json.dumps(esc, ensure_ascii=False) if esc else ""
     ref = r["case"].get("publicRef")
-    rec("D5", "day 31 → escalation card with RBI Ombudsman draft citing the bank complaint date + RAI- reference",
-        esc is not None and "Ombudsman" in blob and (ref in blob) and bool(re.search(r"\d{1,2} \w{3} 2026|2026-\d\d-\d\d|\d\d/\d\d/2026", blob)),
-        f"ref in card={ref in blob}; complaint ref in card={'QA-BANK-CMP-42' in blob}", "P0")
+    draft_en = (data.get("draft") or {}).get("en") or ""
+    rec("D5", "day 31 → escalation card: bankComplaintDate + RAI- ref + user's bank ref; Ombudsman draft cites date + both refs",
+        esc is not None and "Ombudsman" in blob and bool(data.get("bankComplaintDate")) and data.get("publicRef") == ref
+        and ref in draft_en and "QA-BANK-CMP-42" in draft_en and bool(re.search(r"\d{1,2} \w{3} 2026", draft_en)),
+        f"bankComplaintDate={data.get('bankComplaintDate')}; publicRef={data.get('publicRef')}; RAI ref in draft={ref in draft_en}; "
+        f"bank ref in draft={'QA-BANK-CMP-42' in draft_en}", "P0")
     direct = Api(api.c.headers["Authorization"].split()[1], RUN_URL)
     n1 = sum(1 for m in direct.j("GET", f"/api/cases/{cid}/messages")["messages"] if (m.get("card") or {}).get("kind") == "escalation")
     api.j("GET", f"/api/cases/{cid}")  # lazy evaluation on load (= page refresh)
@@ -43,6 +50,7 @@ try:
     r = api.j("POST", f"/api/cases/{cid}/clock", json={"jumpToDay": 31})
     esc = next((m["card"] for m in r["messages"] if (m.get("card") or {}).get("kind") == "escalation"), None)
     blob = json.dumps(esc, ensure_ascii=False) if esc else ""
+    esc = (esc or {}).get("data") if esc else None  # card fields live under card.data (the QA run read the top level)
     rec("E11", "Ombudsman draft (no user bank reference) shows the RAI- ref, not the internal bank case id",
         esc is not None and sent["bankCaseId"] not in blob and not re.search(r"\bb_[0-9a-f]{12,}", blob),
         f"internal id in draft={sent['bankCaseId'] in blob}; RAI ref in draft={sent.get('publicRef') in blob}", "P1")

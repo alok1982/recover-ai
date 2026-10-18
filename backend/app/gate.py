@@ -32,6 +32,43 @@ _NAME = re.compile(r"(?:my name is|i am|i'm|this is|मेरा नाम|nama 
 _CITY = re.compile(r"(?:from|in|live in|मैं|dari|di)\s+([A-Z][a-z]{2,20})\b")
 
 
+BANK_ALIASES = {
+    "IN": ((r"\bSBI\b|एसबीआई|स्टेट बैंक", "State Bank of India"), (r"\bPNB\b|पंजाब नेशनल", "Punjab National Bank"),
+           (r"\bBOB\b|\bBoB\b|बैंक ऑफ़? बड़ौदा", "Bank of Baroda"), (r"\bkotak\b|कोटक", "Kotak Mahindra Bank"),
+           (r"\bHDFC\b|एचडीएफसी", "HDFC Bank"), (r"\bICICI\b|आईसीआईसीआई", "ICICI Bank"), (r"\baxis\b|एक्सिस", "Axis Bank"),
+           (r"\bIDFC\b", "IDFC FIRST Bank"), (r"\bunion bank\b|यूनियन बैंक", "Union Bank of India"), (r"\bcanara\b|केनरा", "Canara Bank"),
+           (r"\bpaytm\b|पेटीएम", "Paytm Payments Bank"), (r"\bairtel\b|एयरटेल", "Airtel Payments Bank")),
+    "MY": ((r"\bmaybank\b|\bMBB\b", "Maybank"), (r"\bCIMB\b", "CIMB Bank"), (r"\bpublic bank\b|\bPBB\b", "Public Bank"),
+           (r"\bRHB\b", "RHB Bank"), (r"\bhong leong\b|\bHLB\b", "Hong Leong Bank"), (r"\bambank\b", "AmBank"),
+           (r"\bBSN\b", "BSN"), (r"\bbank rakyat\b", "Bank Rakyat"), (r"\bbank islam\b", "Bank Islam")),
+}
+_PIN_WORD = re.compile(r"(pin\s*code|pincode|\bpin\b|postal code|post\s*code|postcode|poskod|पिन\s*कोड|पिनकोड|पिन)\W{0,12}$", re.I)
+_NOT_PLACE = {"sent", "paid", "lost", "transferred", "gave", "received", "total", "amount", "about", "around", "approx",
+              "only", "upi", "utr", "ref", "reference", "account", "acct", "otp", "the", "and", "was", "hantar", "bayar"}
+_AMOUNT_AFTER = re.compile(r"\s*(rs\b|inr\b|rupees?|ringgit|rm\b|/-|रुपये|रु\b)", re.I)
+_AMOUNT_WORD = re.compile(r"(rs\.?|inr|₹|rm|rupees?|ringgit|रुपये|रु\.?)\s*$", re.I)
+
+
+def _postal_from_text(text: str, country: str) -> str | None:
+    """A PIN code / postcode the victim typed: a 6-digit (IN) or 5-digit (MY) number that follows 'PIN', 'postcode',
+    'पिन' … or a place name ("Pune 411001"), never one that follows a currency word (amounts, UTRs are excluded)."""
+    n = 6 if country == "IN" else 5
+    pat = P.POSTAL.get(country)
+    if not pat:
+        return None
+    for m in re.finditer(rf"(?<![\d,.])(\d{{{n}}})(?![\d,.]\d)", text):
+        before = text[max(0, m.start() - 30):m.start()]
+        after = text[m.end():m.end() + 14]
+        if _AMOUNT_WORD.search(before) or _AMOUNT_AFTER.match(after) or not pat.match(m.group(1)):
+            continue
+        if _PIN_WORD.search(before):
+            return m.group(1)
+        place = re.search(r"\b([A-Z][a-z]{2,})(?: [A-Z][a-z]{2,})?,?\s*$", before)
+        if place and place.group(1).lower() not in _NOT_PLACE:
+            return m.group(1)
+    return None
+
+
 def owner_profile(case: dict) -> dict:
     u = get_store().get_user(case.get("ownerUid") or "") or {}
     return u.get("profile") or {}
@@ -84,6 +121,14 @@ def prefill_from_text(texts: list[str], country: str) -> dict:
         if b.lower() in low or (len(short) >= 3 and re.search(rf"\b{re.escape(short)}\b", low)):
             out["primaryBank"] = b
             break
+    if "primaryBank" not in out:  # QA BUG-08: everyday short names ("SBI", "PNB", "एसबीआई")
+        for alias, b in BANK_ALIASES.get(country, ()):
+            if re.search(alias, joined, re.I):
+                out["primaryBank"] = b
+                break
+    pc = _postal_from_text(joined, country)
+    if pc:
+        out["postalCode"] = pc
     c = _CITY.search(joined)
     if c and c.group(1).lower() not in {"india", "malaysia", "the", "my"}:
         out["district"] = c.group(1)

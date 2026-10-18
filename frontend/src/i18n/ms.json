@@ -89,6 +89,7 @@
  "status.closed": "Ditutup",
  "escalateRow": "Tiada penyelesaian → tingkatkan aduan",
  "bankRef": "Rujukan bank",
+ "recoveraiRef": "Rujukan RecoverAI",
  "bankComplaint": "Aduan bank",
  "source": "Sumber",
  "camera": "Ambil gambar",

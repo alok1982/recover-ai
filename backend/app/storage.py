@@ -149,6 +149,9 @@ class LocalBlobStore:
         p = self._p(prefix)
         if p.is_dir():
             shutil.rmtree(p)
+        elif p.is_file():  # a single object (GCS prefix semantics)
+            p.unlink()
+            p.with_name(p.name + ".mime").unlink(missing_ok=True)
 
 
 _blobs: BlobStore | None = None

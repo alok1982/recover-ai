@@ -86,6 +86,8 @@ export async function streamChat(caseId: string, body: Record<string, unknown>, 
 /** Upload a file through a backend-issued signed URL, then register it as evidence. */
 export async function uploadFile(caseId: string, file: Blob, purpose: "evidence" | "voice" = "evidence", fileName?: string) {
   const mimeType = file.type || "application/octet-stream";
+  // QA BUG-04: an empty file never leaves the device (the server rejects it too).
+  if (file.size === 0) throw new ApiError(400, "This file is empty. Please choose the screenshot again.");
   const u = await api.post<{ url: string; headers: Record<string, string>; path: string }>(
     `/api/cases/${caseId}/evidence/upload-url`,
     { mimeType, sizeBytes: file.size, purpose },

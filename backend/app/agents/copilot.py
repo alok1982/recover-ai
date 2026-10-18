@@ -112,12 +112,19 @@ def case_summary(case: dict, evidence_count: int, profile_status: dict | None = 
     }
 
 
+READ_ONLY_TOOLS = {"get_case_state", "get_profile_status", "explain_rule", "search_knowledge"}
+
+
 class Toolbox:
     """Tools for one turn. Each returns JSON for the model; cards are persisted and queued as SSE events."""
 
-    def __init__(self, case_id: str, user_text: str | None = None):
+    def __init__(self, case_id: str, user_text: str | None = None, hold: "asyncio.Future[bool] | None" = None):
         self.case_id = case_id
         self.user_text = user_text
+        # QA BUG-07: when the co-pilot starts while the guard is still running, `hold` resolves to the guard verdict
+        # (True = recovery scam). Every tool that writes (cards, facts, plan…) waits for it, so nothing is persisted or
+        # shown before the warning card; a flagged turn is cancelled and re-run.
+        self.hold = hold
         self.events: list[dict] = []
         self.calls: list[dict] = []
         self.results: list[Any] = []  # verified values for the post-check (never search snippets)
@@ -136,7 +143,17 @@ class Toolbox:
             elif ev.get("type") != "token":
                 self.events.append(ev)
 
+    async def wait_guard(self) -> None:
+        if self.hold is not None and await asyncio.shield(self.hold):
+            raise asyncio.CancelledError("recovery scam flagged; speculative turn dropped")
+
     async def _timed(self, name: str, coro) -> Any:
+        if name not in READ_ONLY_TOOLS:
+            try:
+                await self.wait_guard()
+            except BaseException:
+                coro.close()
+                raise
         t0 = time.perf_counter()
         ok = True
         try:
@@ -329,10 +346,11 @@ class Toolbox:
             """Show the urgent national hotline card (India 1930, Malaysia NSRC 997) with tap-to-call."""
             return await tb.show_hotline()
 
-        async def request_profile(full_name: str = "", district_or_city: str = "", bank: str = "") -> dict:
-            """Show the Profile card with only the missing fields, pre-filled with any name, city or bank the victim already
-            gave in the chat. The victim checks and taps Save; this tool never saves anything."""
-            pre = {"fullName": full_name, "district": district_or_city, "primaryBank": _match_bank(bank, tb._case())}
+        async def request_profile(full_name: str = "", district_or_city: str = "", bank: str = "", postal_code: str = "") -> dict:
+            """Show the Profile card with only the missing fields, pre-filled with any name, city, bank or PIN code / postcode
+            the victim already gave in the chat. The victim checks and taps Save; this tool never saves anything."""
+            pre = {"fullName": full_name, "district": district_or_city, "primaryBank": _match_bank(bank, tb._case()),
+                   "postalCode": _match_postal(postal_code, tb._case())}
             return await tb.request_profile({k: v for k, v in pre.items() if v})
 
         async def request_evidence() -> dict:
@@ -389,6 +407,15 @@ def _match_bank(name: str, case: dict) -> str:
     return gate.prefill_from_text([name], country).get("primaryBank", "")
 
 
+def _match_postal(code: str, case: dict) -> str:
+    """QA BUG-08: a PIN code / postcode from the model, kept only if it has the country's format."""
+    from .. import profile as P
+    code = re.sub(r"\s", "", code or "")
+    country = gate.owner_profile(case).get("country") or case["country"]
+    pat = P.POSTAL.get(country)
+    return code if pat and pat.match(code) else ""
+
+
 # ------------------------------------------------------------------ deterministic co-pilot (offline / fallback)
 _Q_GUARANTEE = re.compile(r"(definitely|guarantee|surely|will i get|get (?:my )?money back|पक्का|ज़रूर|जरूर|वापस मिलेगा|"
                           r"वापस मिल|pasti|dapat balik|wang .*kembali)", re.I)
@@ -396,6 +423,10 @@ _Q_RULES = re.compile(r"(compensat|refund|liabilit|my rights|\brule|\blaw\b|regu
                       r"pampasan|hak saya|undang)", re.I)
 _Q_COUNTRIES = re.compile(r"(other countr|singapore|indonesia|philippines|australia|japan|korea|देश|negara lain)", re.I)
 _Q_STATUS = re.compile(r"(status|deadline|timeline|clock|kab tak|समय|स्थिति|tarikh akhir|status kes)", re.I)
+_Q_DEADLINE = re.compile(r"(deadline|due date|time limit|timeline|how (?:many|much) (?:days|time)|by when|last date|"
+                         r"डेडलाइन|समय ?सीमा|अंतिम (?:तिथि|तारीख)|आख(?:ि|़ि)री (?:तारीख|तिथि)|कब तक|"
+                         r"tarikh akhir|had masa|tempoh masa|garis masa|bila (?:perlu|mesti|tamat))", re.I)
+_CARD_ARTIFACT = re.compile(r"\s*\[(?:showed|shown|show(?:ing)?|displayed|opened)[ _][^\]\n]{0,40}\]", re.I)
 _Q_WITHDRAW = re.compile(r"(withdraw|revoke|reverse|take back|cancel (?:my|the) (?:report|consent|case)|undo|stop sharing|"
                          r"वापस ले|वापस लो|रद्द|सहमति वापस|batal|tarik balik|tarik semula)", re.I)
 _Q_SEND = re.compile(r"((send|share|forward|submit).{0,30}bank|bank.{0,20}(send|share)|बैंक.{0,20}(भेज|साझा)|(hantar|kongsi).{0,30}bank)", re.I)
@@ -425,7 +456,7 @@ async def stage_copilot(tb: Toolbox, text: str | None, flagged: bool) -> AsyncIt
     elif _Q_COUNTRIES.search(q):
         await tb.show_countries()
         parts.append(t("countries", lang))
-    elif _Q_STATUS.search(q) and st in ("filings", "consent", "follow_up"):
+    elif (_Q_STATUS.search(q) or _Q_DEADLINE.search(q)) and st in ("filings", "consent", "follow_up"):
         await tb.show_timeline()
         parts.append(t("status_next", lang))
     elif st == "profile":
@@ -539,6 +570,12 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
         r = await tb.request_bank_consent()
         instruction += ("\nThe Consent card is now shown (" + json.dumps(r, ensure_ascii=False) + "). Say they review and "
                         "confirm it on the card; nothing has been sent.")
+    elif (_Q_DEADLINE.search(text or "") and (case.get("plan") or {}).get("steps")):
+        # QA BUG-05/07: deadline questions — show the Timeline card up front (deterministic, and one model round trip
+        # fewer); the model only explains it.
+        r = await tb.show_timeline()
+        instruction += ("\nThe Timeline card is now shown (" + json.dumps(r, ensure_ascii=False, default=str)[:1500] + "). In one or "
+                        "two sentences give the nearest deadline from it and point to the card; do not call show_timeline again.")
     gen_cfg = task_config(settings, "copilot")
     planner = {}
     if "thinking_config" in gen_cfg:  # ADK takes thinking via a planner, not generate_content_config
@@ -583,7 +620,7 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
 
 
 async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str | None = None,
-                   route: dict | None = None) -> AsyncIterator[dict]:
+                   route: dict | None = None, hold: "asyncio.Future[bool] | None" = None) -> AsyncIterator[dict]:
     """Yields SSE events (token / card / tool_status / done) and persists the assistant reply.
 
     model_tag labels the reply (F17): the Gemini model id, or "gemini-fallback" after a failed Gemma light turn.
@@ -591,7 +628,7 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
     store = get_store()
     case = actions.load(case_id)
     lang = case.get("language", "en")
-    tb = Toolbox(case_id, text)
+    tb = Toolbox(case_id, text, hold=hold)
     n_hist = get_settings().copilot_history_messages
     history = store.list_messages(case_id, limit=n_hist + 1)[:-1] if text else store.list_messages(case_id, limit=n_hist)
     llm = get_llm()
@@ -647,6 +684,15 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
         if first_token_ms is None:
             first_token_ms = int((time.perf_counter() - t0) * 1000)
         yield {"type": "token", "text": final_text}
+    # QA BUG-05: a deadline / timeline question always gets the Timeline card once there is a plan, whether or not
+    # the model called show_timeline (it sometimes only writes "[showed timeline card]").
+    if (text and _Q_DEADLINE.search(text) and (actions.load(case_id).get("plan") or {}).get("steps")
+            and not any(c["name"] == "show_timeline" for c in tb.calls)):
+        await tb.show_timeline()
+    cleaned = _CARD_ARTIFACT.sub("", final_text or "").strip()
+    if cleaned != (final_text or "").strip() and cleaned:
+        final_text = cleaned
+        yield {"type": "replace", "text": final_text}
     # Stage nudges: an incomplete profile always gets the (hotline →) profile card; a victim with no evidence
     # always sees the Upload card.
     st_now = tb.stage()
@@ -656,6 +702,7 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
         await tb.request_evidence()
     while tb.events:
         yield tb.events.pop(0)
+    await tb.wait_guard()  # never persist a speculative reply for a flagged message
     msg = None
     if final_text:
         rec = {"role": "assistant", "text": final_text, "card": None, "audioPath": None, "lang": lang, "toolCalls": tb.calls,

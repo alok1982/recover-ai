@@ -99,13 +99,18 @@ def missing_values(text: str, facts: dict, case: dict, pb: dict) -> list[str]:
     norm = _norm(text)
     found = post_check.find_values(text)
     ex = case.get("extraction") or {}
-    for key in REQUIRED_KEYS:
+    for key in REQUIRED_KEYS + tuple(facts.get("_extra_required") or ()):
         val = facts.get(key)
         if not val:
             continue
         if key == "amount":
             want = post_check._canon(Decimal(str(ex.get("amount"))))
             if not any(f.kind != "date" and f.value == want for f in found):
+                missing.append(key)
+        elif key == "bank_complaint_date" and bank_complaint_at(case):
+            loc = to_local(bank_complaint_at(case), pb["timezone"])
+            want = (loc.year, loc.month, loc.day)
+            if not any(f.kind == "date" and f.value in (want, (None, loc.month, loc.day)) for f in found):
                 missing.append(key)
         elif key == "occurred_at":
             loc = to_local(ensure_utc(case["incidentAt"]), pb["timezone"])
@@ -123,12 +128,15 @@ def missing_values(text: str, facts: dict, case: dict, pb: dict) -> list[str]:
 LABELS = {
     "en": {"reference_id": "Reference / UTR", "amount": "Amount", "occurred_at": "Date and time",
            "beneficiary_account": "Receiving account / UPI ID", "beneficiary_name": "Receiver name", "victim_name": "Complainant",
+           "bank_complaint_date": "Date complaint made to bank", "recoverai_reference": "RecoverAI case reference",
            "head": "Confirmed case details"},
     "hi": {"reference_id": "रेफ़रेंस / UTR", "amount": "राशि", "occurred_at": "तारीख़ और समय",
            "beneficiary_account": "पाने वाला खाता / UPI ID", "beneficiary_name": "पाने वाले का नाम", "victim_name": "शिकायतकर्ता",
+           "bank_complaint_date": "बैंक को शिकायत की तारीख़", "recoverai_reference": "RecoverAI केस रेफ़रेंस",
            "head": "पुष्टि किए गए केस विवरण"},
     "ms": {"reference_id": "Rujukan", "amount": "Jumlah", "occurred_at": "Tarikh dan masa",
            "beneficiary_account": "Akaun penerima", "beneficiary_name": "Nama penerima", "victim_name": "Pengadu",
+           "bank_complaint_date": "Tarikh aduan kepada bank", "recoverai_reference": "Rujukan kes RecoverAI",
            "head": "Butiran kes yang disahkan"},
 }
 
@@ -151,7 +159,8 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
     f = {k: _v(facts, k, lang) for k in (
         "reference_id", "amount", "occurred_at", "payment_method", "payer_bank", "beneficiary_name",
         "beneficiary_account", "beneficiary_bank", "beneficiary_code", "scammer_contacts", "urls", "hotline",
-        "case_id", "today", "bank_complaint_date", "bank_reference", "country", "victim_name", "victim_address")}
+        "case_id", "today", "bank_complaint_date", "bank_reference", "recoverai_reference", "country", "victim_name",
+        "victim_address")}
     narrative = facts.get("narrative_en") if lang == "en" else (facts.get("narrative_local") or facts.get("narrative_en"))
     rules = facts.get("rules_text") or {}
     st = facts.get("scam_type_key") or "other"
@@ -221,11 +230,13 @@ def template_draft(template_id: str, facts: dict, lang: str) -> str:
         if lang == "hi":
             return (f"RBI एकीकृत लोकपाल (https://cms.rbi.org.in) के लिए शिकायत सारांश\nशिकायतकर्ता: {f['victim_name']}, {f['victim_address']}\n"
                     f"बैंक: {f['payer_bank']}\nबैंक को शिकायत की तारीख़: {f['bank_complaint_date']}\nबैंक शिकायत रेफ़रेंस: {f['bank_reference']}\n"
+                    f"RecoverAI केस रेफ़रेंस: {f['recoverai_reference']}\n"
                     f"लेन-देन: {f['amount']}, {f['occurred_at']}, रेफ़रेंस {f['reference_id']}, पाने वाला {f['beneficiary_name']} ({f['beneficiary_account']})\n"
                     "शिकायत: बैंक ने 30 दिनों में मेरी शिकायत का समाधान नहीं किया।\n"
                     "माँगी गई राहत: शिकायत की जाँच, राशि की वसूली के लिए बैंक को निर्देश, और लागू नियमों के अनुसार मुआवज़े पर विचार।")
         return (f"Complaint summary for the RBI Integrated Ombudsman (https://cms.rbi.org.in)\nComplainant: {f['victim_name']}, {f['victim_address']}\n"
                 f"Bank: {f['payer_bank']}\nDate complaint made to bank: {f['bank_complaint_date']}\nBank complaint reference: {f['bank_reference']}\n"
+                f"RecoverAI case reference: {f['recoverai_reference']}\n"
                 f"Transaction: {f['amount']} on {f['occurred_at']}, reference {f['reference_id']}, receiver {f['beneficiary_name']} ({f['beneficiary_account']})\n"
                 "Grievance: the bank has not resolved my complaint within 30 days.\n"
                 "Relief sought: review of the complaint, direction to the bank to pursue recovery of the funds, and consideration "
@@ -247,13 +258,13 @@ async def _gemini_draft(template_id: str, facts: dict, pb: dict, lang: str, case
     import json
 
     # Token cut: only the facts this template uses (no internal case id, playbook notes, or unrelated rules / hotline).
-    drop = {"notes", "case_id", "scam_type_key"}
+    drop = {"notes", "case_id", "scam_type_key", "_extra_required"}
     if template_id != "bank_dispute_letter":
         drop.add("rules_text")
     if template_id != "hotline_script":
         drop.add("hotline")
     public = {k: v for k, v in facts.items() if k not in drop and v not in (None, "", {}, [])}
-    required = "\n".join(f"- {k}: {facts[k]}" for k in REQUIRED_KEYS if facts.get(k))
+    required = "\n".join(f"- {k}: {facts[k]}" for k in REQUIRED_KEYS + tuple(facts.get("_extra_required") or ()) if facts.get(k))
     system = SYSTEM.format(template_name=TEMPLATE_NAMES[template_id], country=pb["name"],
                            facts=json.dumps(public, ensure_ascii=False, default=str), required=required or "- (none)",
                            format_rules=FORMAT_RULES[template_id], language=LANG_NAMES.get(lang, "English"))
@@ -304,13 +315,35 @@ async def generate_all(case: dict, pb: dict, plan: dict) -> dict[str, dict]:
     return drafts
 
 
-async def escalation_draft(case: dict, pb: dict, clock: dict) -> dict:
+def bank_complaint_at(case: dict) -> datetime | None:
     steps = {s["id"]: s for s in (case.get("plan") or {}).get("steps", [])}
-    bank = steps.get("report_bank") or {}
-    done_at: datetime | None = bank.get("doneAt")
+    done_at = (steps.get("report_bank") or {}).get("doneAt")
+    if done_at:
+        return ensure_utc(done_at)
+    sent = (case.get("bankHandoff") or {}).get("sentAt")
+    if sent:
+        try:
+            return ensure_utc(datetime.fromisoformat(str(sent).replace("Z", "+00:00"))) if isinstance(sent, str) else ensure_utc(sent)
+        except ValueError:
+            return None
+    return None
+
+
+def escalation_refs(case: dict, pb: dict) -> dict:
+    steps = {s["id"]: s for s in (case.get("plan") or {}).get("steps", [])}
+    at = bank_complaint_at(case)
+    ref = case.get("publicRef")
+    return {"bank_complaint_date": format_date(at, pb["timezone"]) if at else None,
+            "bank_reference": (steps.get("report_bank") or {}).get("user_reference") or ref,
+            "recoverai_reference": ref}
+
+
+async def escalation_draft(case: dict, pb: dict, clock: dict) -> dict:
+    """Day-31 escalation (RBI Ombudsman). QA BUG-01: always cites the bank complaint date (the report_bank step's done
+    time, else the time the case was shared with the bank) and the public RAI- reference — never the internal b_ id."""
     facts = draft_facts(case, pb, extra={
         "scam_type_key": (case.get("extraction") or {}).get("scam_type"),
-        "bank_complaint_date": format_date(done_at, pb["timezone"]) if done_at else None,
-        "bank_reference": bank.get("user_reference") or case.get("bankCaseId"),
+        **escalation_refs(case, pb),
     })
+    facts["_extra_required"] = tuple(k for k in ("bank_complaint_date", "recoverai_reference") if facts.get(k))
     return await draft_one(clock.get("escalationTemplate") or "rbi_ombudsman_complaint", case, pb, facts)

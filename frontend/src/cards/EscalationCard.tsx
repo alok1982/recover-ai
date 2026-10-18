@@ -15,6 +15,7 @@ export function EscalationCard({ data }: CardProps) {
       <div className="row wrap">
         <span className="chip st-overdue">⏰ {data.dueDisplay}</span>
         {data.bankReference && <span className="chip">{t("bankRef")} {data.bankReference}</span>}
+        {data.publicRef && data.publicRef !== data.bankReference && <span className="chip">{t("recoveraiRef")} {data.publicRef}</span>}
         {data.bankComplaintDate && <span className="chip">{t("bankComplaint")} {data.bankComplaintDate}</span>}
       </div>
       {data.contact && <a className="btn primary" href={data.contact} target="_blank" rel="noreferrer">↗ {data.contact.replace("https://", "")}</a>}

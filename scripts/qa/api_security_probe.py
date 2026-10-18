@@ -127,6 +127,16 @@ def main() -> int:
         r = httpx.get(SITE + f"/api/cases/{cid}/messages")
         rec("K-CACHE", "unauthenticated GET via Hosting is not answered from cache", r.status_code == 401,
             f"HTTP {r.status_code} x-cache={r.headers.get('x-cache')}", "P1")
+        # I8: the same denied URL twice via Hosting → never a cache HIT; every API status carries private, no-store
+        for label, call in (("403 bank API as victim", lambda: b_.req("GET", "/api/bank/cases")),
+                            ("404 foreign case", lambda: b_.req("GET", f"/api/cases/{cid}/messages")),
+                            ("401 no token", lambda: httpx.get(SITE + f"/api/cases/{cid}")),
+                            ("200 health", lambda: httpx.get(SITE + "/api/health"))):
+            r1, r2 = call(), call()
+            cc = (r2.headers.get("cache-control") or "").lower()
+            rec("I8", f"{label}: Cache-Control private, no-store, no CDN HIT on repeat",
+                "no-store" in cc and "max-age" not in cc and "HIT" not in (r2.headers.get("x-cache") or ""),
+                f"HTTP {r1.status_code}/{r2.status_code} cache-control={cc!r} x-cache={r2.headers.get('x-cache')}", "P1")
         lst = [c["id"] for c in b_.j("GET", "/api/cases")["cases"]]
         rec("I1", "B's /api/cases lists only B's cases", cid not in lst and B_cid in lst, f"{len(lst)} cases", "P0")
         me_b = b_.j("GET", "/api/me")
@@ -246,15 +256,21 @@ def main() -> int:
         rec("E4", "send without the confirm checkbox → 400", r.status_code == 400, f"HTTP {r.status_code}", "P0")
         before = {x["id"] for x in bank.j("GET", "/api/bank/cases")["cases"]}
         tok = a_.j("POST", f"/api/cases/{cid}/send-to-bank/preview")["confirmationToken"]
-        with cf.ThreadPoolExecutor(3) as pool:
-            futs = [pool.submit(lambda: Api(ta).req("POST", f"/api/cases/{cid}/send-to-bank",
-                                                    json={"confirmationToken": tok, "confirmed": True})) for _ in range(3)]
+        import threading
+        clients = [Api(ta) for _ in range(5)]
+        barrier = threading.Barrier(5)
+
+        def fire(c):
+            barrier.wait()  # all five leave together
+            return c.req("POST", f"/api/cases/{cid}/send-to-bank", json={"confirmationToken": tok, "confirmed": True})
+        with cf.ThreadPoolExecutor(5) as pool:
+            futs = [pool.submit(fire, c) for c in clients]
             codes = sorted(f.result().status_code for f in futs)
         time.sleep(6)
         r = a_.req("POST", f"/api/cases/{cid}/send-to-bank", json={"confirmationToken": tok, "confirmed": True})
         codes.append(r.status_code)
         new = [x for x in bank.j("GET", "/api/bank/cases")["cases"] if x["id"] not in before and x.get("caseId") == cid]
-        rec("E8", "3 parallel confirms + 1 replay → exactly one bank case", len(new) == 1, f"send HTTP codes {codes}; bank cases {len(new)}", "P1")
+        rec("E8", "5 parallel confirms + 1 replay → exactly one bank case (one 200, rest 409)", len(new) == 1 and codes.count(200) == 1, f"send HTTP codes {codes}; bank cases {len(new)}", "P1")
         bc = bank.j("GET", f"/api/bank/cases/{new[0]['id']}")["case"] if new else {}
         rec("E9", "bank case sandbox=true, received by demo bank; live queue untouched",
             bc.get("sandbox") is True and bc.get("receivingBankName") == "RecoverAI Demo Bank (fictional)", "", "P0")

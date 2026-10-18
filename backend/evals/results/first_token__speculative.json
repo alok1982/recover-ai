@@ -1,0 +1,129 @@
+{
+ "n": 16,
+ "e2e_first_token_ms": {
+  "p50": 2248,
+  "p90": 6297
+ },
+ "copilot_first_token_ms": {
+  "p50": 2245,
+  "p90": 6295
+ },
+ "guard_ms": {
+  "p50": 752,
+  "p90": 1348
+ },
+ "rows": [
+  {
+   "caseId": "c_14b65350916e4750ac12",
+   "text": "What happens next with my case?",
+   "e2eFirstTokenMs": 4114,
+   "copilotFirstTokenMs": 4094,
+   "guardMs": 1348
+  },
+  {
+   "caseId": "c_6f4ef26474a44556846c",
+   "text": "अब आगे क्या होगा?",
+   "e2eFirstTokenMs": 1024,
+   "copilotFirstTokenMs": 1022,
+   "guardMs": 731
+  },
+  {
+   "caseId": "c_97f5ecbed44d40cdbf98",
+   "text": "Is it safe to share this with my bank?",
+   "e2eFirstTokenMs": 2944,
+   "copilotFirstTokenMs": 2942,
+   "guardMs": 806
+  },
+  {
+   "caseId": "c_2da05bc7f94d466dadc3",
+   "text": "मुझे अब क्या करना चाहिए?",
+   "e2eFirstTokenMs": 18657,
+   "copilotFirstTokenMs": 18656,
+   "guardMs": 603
+  },
+  {
+   "caseId": "c_1a93c166a1464f568f47",
+   "text": "Apa yang berlaku seterusnya?",
+   "e2eFirstTokenMs": 1131,
+   "copilotFirstTokenMs": 1129,
+   "guardMs": 669
+  },
+  {
+   "caseId": "c_775544b118eb4f09b4b9",
+   "text": "What should I do now?",
+   "e2eFirstTokenMs": 6141,
+   "copilotFirstTokenMs": 6139,
+   "guardMs": 752
+  },
+  {
+   "caseId": "c_e2271b37f28b41d38808",
+   "text": "When is my deadline?",
+   "e2eFirstTokenMs": 2248,
+   "copilotFirstTokenMs": 2245,
+   "guardMs": 677
+  },
+  {
+   "caseId": "c_47854b502825408a9230",
+   "text": "क्या मेरा पैसा पक्का वापस मिलेगा?",
+   "e2eFirstTokenMs": 1217,
+   "copilotFirstTokenMs": 1215,
+   "guardMs": 677
+  },
+  {
+   "caseId": "c_03b7d77281a74dd5bf9e",
+   "text": "What happens next with my case?",
+   "e2eFirstTokenMs": 1063,
+   "copilotFirstTokenMs": 1060,
+   "guardMs": 752
+  },
+  {
+   "caseId": "c_d11256d56a6f4ecd9ca9",
+   "text": "अब आगे क्या होगा?",
+   "e2eFirstTokenMs": 1129,
+   "copilotFirstTokenMs": 1127,
+   "guardMs": 868
+  },
+  {
+   "caseId": "c_4a42105bfa4046b78dda",
+   "text": "Is it safe to share this with my bank?",
+   "e2eFirstTokenMs": 1913,
+   "copilotFirstTokenMs": 1911,
+   "guardMs": 780
+  },
+  {
+   "caseId": "c_08496b8a94124512b07f",
+   "text": "मुझे अब क्या करना चाहिए?",
+   "e2eFirstTokenMs": 6161,
+   "copilotFirstTokenMs": 6159,
+   "guardMs": 1541
+  },
+  {
+   "caseId": "c_5fed64c1b874406f94ce",
+   "text": "Apa yang berlaku seterusnya?",
+   "e2eFirstTokenMs": 1141,
+   "copilotFirstTokenMs": 1139,
+   "guardMs": 692
+  },
+  {
+   "caseId": "c_027d8cb7a94b4a2db47b",
+   "text": "What should I do now?",
+   "e2eFirstTokenMs": 6297,
+   "copilotFirstTokenMs": 6295,
+   "guardMs": 932
+  },
+  {
+   "caseId": "c_2aad431be9fc489bab9c",
+   "text": "When is my deadline?",
+   "e2eFirstTokenMs": 2350,
+   "copilotFirstTokenMs": 2347,
+   "guardMs": 828
+  },
+  {
+   "caseId": "c_cc58988f9a7c46168ed6",
+   "text": "क्या मेरा पैसा पक्का वापस मिलेगा?",
+   "e2eFirstTokenMs": 1099,
+   "copilotFirstTokenMs": 1098,
+   "guardMs": 684
+  }
+ ]
+}

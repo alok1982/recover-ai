@@ -171,12 +171,12 @@ async def evaluate(case_id: str, now=None) -> list[dict]:
             draft = await filing.escalation_draft(case, pb, c)
             from .handoff import watermark_draft
             draft = watermark_draft(case, draft) if isinstance(draft, dict) else draft
-            steps = {s["id"]: s for s in case["plan"]["steps"]}
-            bank_step = steps.get("report_bank") or {}
+            at = filing.bank_complaint_at(case)  # QA BUG-01: report_bank done time, else the bank-handoff time
+            refs = filing.escalation_refs(case, pb)
             data = {"clockId": c["id"], "label": c.get("labelLocal") or c["label"], "title": c.get("escalationTitleLocal") or c.get("escalationTitle"), "contact": c.get("contact"),
                     "dueDisplay": c["dueDisplay"], "draft": draft,
-                    "bankComplaintDate": format_dt(bank_step.get("doneAt"), pb["timezone"]),
-                    "bankReference": bank_step.get("user_reference") or case.get("publicRef")}
+                    "bankComplaintDate": format_dt(at, pb["timezone"]) if at else None,
+                    "bankReference": refs["bank_reference"], "publicRef": case.get("publicRef")}
             update_case(case_id, {"status": "escalated", "escalation": data})
             msgs.append(add_card(case_id, "escalation", data, lang, text=t("escalation", lang)))
         elif c.get("urgencyOnly"):
