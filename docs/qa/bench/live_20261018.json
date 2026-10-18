@@ -1,0 +1,1247 @@
+{
+ "runUrl": "https://recoverai-api-xgw63iesqa-el.a.run.app",
+ "startedAt": "2026-10-18T15:46:01+0000",
+ "healthRttS": {
+  "n": 10,
+  "p50": 0.34,
+  "p95": 0.62,
+  "max": 0.64,
+  "min": 0.32,
+  "mean": 0.39
+ },
+ "trials": [
+  {
+   "trial": 1,
+   "lang": "en",
+   "uploadS": 5.87,
+   "factsTotalS": 14.82,
+   "factsExtractS": 8.95,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.43,
+   "draftsS": 4.95,
+   "draftsTurnS": 4.97,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.44,
+   "pdfS": 2.61,
+   "pdfOk": true,
+   "pdfKB": 144,
+   "pdfCachedS": 0.5,
+   "bankDocCreateTime": "2026-10-18T15:46:33.280529+00:00",
+   "sendWallClock": "2026-10-18T15:46:35+0000",
+   "sendCallS": 0.67,
+   "bankFirestoreS": 2.43,
+   "bankApiS": 2.92,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 2,
+   "lang": "hi",
+   "uploadS": 5.55,
+   "factsTotalS": 10.88,
+   "factsExtractS": 5.33,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 4.49,
+   "draftsTurnS": 4.5,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.37,
+   "pdfS": 3.87,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.45,
+   "bankDocCreateTime": "2026-10-18T15:47:02.219329+00:00",
+   "sendWallClock": "2026-10-18T15:47:03+0000",
+   "sendCallS": 0.67,
+   "bankFirestoreS": 1.87,
+   "bankApiS": 2.03,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 3,
+   "lang": "en",
+   "uploadS": 5.51,
+   "factsTotalS": 11.18,
+   "factsExtractS": 5.67,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.42,
+   "draftsS": 5.24,
+   "draftsTurnS": 5.26,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.45,
+   "pdfS": 2.63,
+   "pdfOk": true,
+   "pdfKB": 142,
+   "pdfCachedS": 0.46,
+   "bankDocCreateTime": "2026-10-18T15:47:28.996451+00:00",
+   "sendWallClock": "2026-10-18T15:47:29+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.69,
+   "bankApiS": 1.87,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 4,
+   "lang": "hi",
+   "uploadS": 5.44,
+   "factsTotalS": 10.52,
+   "factsExtractS": 5.08,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 4.85,
+   "draftsTurnS": 4.87,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.43,
+   "pdfS": 2.61,
+   "pdfOk": true,
+   "pdfKB": 144,
+   "pdfCachedS": 0.45,
+   "bankDocCreateTime": "2026-10-18T15:47:54.815410+00:00",
+   "sendWallClock": "2026-10-18T15:47:55+0000",
+   "sendCallS": 0.68,
+   "bankFirestoreS": 1.8,
+   "bankApiS": 2.05,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 5,
+   "lang": "en",
+   "uploadS": 5.88,
+   "factsTotalS": 12.02,
+   "factsExtractS": 6.15,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.44,
+   "draftsS": 4.4,
+   "draftsTurnS": 4.41,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.98,
+   "pdfS": 3.1,
+   "pdfOk": true,
+   "pdfKB": 142,
+   "pdfCachedS": 0.44,
+   "bankDocCreateTime": "2026-10-18T15:48:21.962296+00:00",
+   "sendWallClock": "2026-10-18T15:48:23+0000",
+   "sendCallS": 0.67,
+   "bankFirestoreS": 1.52,
+   "bankApiS": 2.0,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 6,
+   "lang": "hi",
+   "uploadS": 5.14,
+   "factsTotalS": 13.42,
+   "factsExtractS": 8.28,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.47,
+   "draftsS": 4.84,
+   "draftsTurnS": 4.85,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.43,
+   "pdfS": 2.6,
+   "pdfOk": true,
+   "pdfKB": 144,
+   "pdfCachedS": 0.47,
+   "bankDocCreateTime": "2026-10-18T15:48:50.848963+00:00",
+   "sendWallClock": "2026-10-18T15:48:51+0000",
+   "sendCallS": 0.68,
+   "bankFirestoreS": 1.65,
+   "bankApiS": 2.05,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 7,
+   "lang": "en",
+   "uploadS": 5.72,
+   "factsTotalS": 13.54,
+   "factsExtractS": 7.82,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 14.92,
+   "draftsTurnS": 14.93,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.46,
+   "pdfS": 2.71,
+   "pdfOk": true,
+   "pdfKB": 142,
+   "pdfCachedS": 0.44,
+   "bankDocCreateTime": "2026-10-18T15:49:31.286847+00:00",
+   "sendWallClock": "2026-10-18T15:49:32+0000",
+   "sendCallS": 1.19,
+   "bankFirestoreS": 2.16,
+   "bankApiS": 2.55,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 8,
+   "lang": "hi",
+   "uploadS": 5.47,
+   "factsTotalS": 10.32,
+   "factsExtractS": 4.85,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.44,
+   "draftsS": 5.05,
+   "draftsTurnS": 5.07,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.39,
+   "pdfS": 2.57,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.43,
+   "bankDocCreateTime": "2026-10-18T15:49:56.946819+00:00",
+   "sendWallClock": "2026-10-18T15:49:57+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.58,
+   "bankApiS": 1.95,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 9,
+   "lang": "en",
+   "uploadS": 5.36,
+   "factsTotalS": 13.8,
+   "factsExtractS": 8.44,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.46,
+   "draftsS": 4.38,
+   "draftsTurnS": 4.39,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.36,
+   "pdfS": 2.59,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.45,
+   "bankDocCreateTime": "2026-10-18T15:50:25.615693+00:00",
+   "sendWallClock": "2026-10-18T15:50:26+0000",
+   "sendCallS": 0.64,
+   "bankFirestoreS": 1.8,
+   "bankApiS": 1.98,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 10,
+   "lang": "hi",
+   "uploadS": 5.57,
+   "factsTotalS": 11.45,
+   "factsExtractS": 5.89,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.42,
+   "draftsS": 4.77,
+   "draftsTurnS": 4.79,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 2.12,
+   "pdfS": 3.3,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.44,
+   "bankDocCreateTime": "2026-10-18T15:50:52.549282+00:00",
+   "sendWallClock": "2026-10-18T15:50:53+0000",
+   "sendCallS": 0.68,
+   "bankFirestoreS": 1.49,
+   "bankApiS": 2.05,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 11,
+   "lang": "en",
+   "uploadS": 5.92,
+   "factsTotalS": 12.11,
+   "factsExtractS": 6.2,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 4.39,
+   "draftsTurnS": 4.4,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.42,
+   "pdfS": 2.6,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.44,
+   "bankDocCreateTime": "2026-10-18T15:51:19.642891+00:00",
+   "sendWallClock": "2026-10-18T15:51:20+0000",
+   "sendCallS": 0.64,
+   "bankFirestoreS": 1.43,
+   "bankApiS": 1.86,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 12,
+   "lang": "hi",
+   "uploadS": 6.92,
+   "factsTotalS": 15.4,
+   "factsExtractS": 8.49,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.5,
+   "draftsS": 4.53,
+   "draftsTurnS": 4.54,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.48,
+   "pdfS": 2.6,
+   "pdfOk": true,
+   "pdfKB": 144,
+   "pdfCachedS": 0.48,
+   "bankDocCreateTime": "2026-10-18T15:51:50.293643+00:00",
+   "sendWallClock": "2026-10-18T15:51:51+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.62,
+   "bankApiS": 1.95,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 13,
+   "lang": "en",
+   "uploadS": 5.56,
+   "factsTotalS": 13.22,
+   "factsExtractS": 7.65,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 4.82,
+   "draftsTurnS": 4.84,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.5,
+   "pdfS": 2.74,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.43,
+   "bankDocCreateTime": "2026-10-18T15:52:18.897638+00:00",
+   "sendWallClock": "2026-10-18T15:52:20+0000",
+   "sendCallS": 0.67,
+   "bankFirestoreS": 1.49,
+   "bankApiS": 1.97,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 14,
+   "lang": "hi",
+   "uploadS": 6.36,
+   "factsTotalS": 12.16,
+   "factsExtractS": 5.79,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 4.66,
+   "draftsTurnS": 4.67,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.26,
+   "pdfS": 2.38,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.78,
+   "bankDocCreateTime": "2026-10-18T15:52:46.134729+00:00",
+   "sendWallClock": "2026-10-18T15:52:47+0000",
+   "sendCallS": 0.71,
+   "bankFirestoreS": 1.52,
+   "bankApiS": 2.03,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 15,
+   "lang": "en",
+   "uploadS": 7.13,
+   "factsTotalS": 14.09,
+   "factsExtractS": 6.96,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.45,
+   "draftsS": 4.51,
+   "draftsTurnS": 4.52,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 2.06,
+   "pdfS": 3.23,
+   "pdfOk": true,
+   "pdfKB": 142,
+   "pdfCachedS": 0.51,
+   "bankDocCreateTime": "2026-10-18T15:53:16.147814+00:00",
+   "sendWallClock": "2026-10-18T15:53:17+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.52,
+   "bankApiS": 2.05,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 16,
+   "lang": "hi",
+   "uploadS": 5.35,
+   "factsTotalS": 13.98,
+   "factsExtractS": 8.63,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.46,
+   "draftsS": 4.63,
+   "draftsTurnS": 4.65,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.37,
+   "pdfS": 2.62,
+   "pdfOk": true,
+   "pdfKB": 142,
+   "pdfCachedS": 0.46,
+   "bankDocCreateTime": "2026-10-18T15:53:45.243590+00:00",
+   "sendWallClock": "2026-10-18T15:53:46+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.51,
+   "bankApiS": 2.03,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 17,
+   "lang": "en",
+   "uploadS": 5.82,
+   "factsTotalS": 12.0,
+   "factsExtractS": 6.18,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.44,
+   "draftsS": 4.57,
+   "draftsTurnS": 4.57,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.64,
+   "pdfS": 2.8,
+   "pdfOk": true,
+   "pdfKB": 142,
+   "pdfCachedS": 0.43,
+   "bankDocCreateTime": "2026-10-18T15:54:12.385381+00:00",
+   "sendWallClock": "2026-10-18T15:54:13+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.53,
+   "bankApiS": 1.84,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 18,
+   "lang": "hi",
+   "uploadS": 5.21,
+   "factsTotalS": 10.95,
+   "factsExtractS": 5.73,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.42,
+   "draftsS": 5.53,
+   "draftsTurnS": 5.54,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.39,
+   "pdfS": 2.62,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.75,
+   "bankDocCreateTime": "2026-10-18T15:54:39.297160+00:00",
+   "sendWallClock": "2026-10-18T15:54:40+0000",
+   "sendCallS": 0.65,
+   "bankFirestoreS": 1.44,
+   "bankApiS": 2.01,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 19,
+   "lang": "en",
+   "uploadS": 5.46,
+   "factsTotalS": 15.02,
+   "factsExtractS": 9.56,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.42,
+   "draftsS": 4.52,
+   "draftsTurnS": 4.53,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.41,
+   "pdfS": 2.59,
+   "pdfOk": true,
+   "pdfKB": 144,
+   "pdfCachedS": 0.47,
+   "bankDocCreateTime": "2026-10-18T15:55:09.741985+00:00",
+   "sendWallClock": "2026-10-18T15:55:10+0000",
+   "sendCallS": 0.66,
+   "bankFirestoreS": 1.55,
+   "bankApiS": 1.96,
+   "sandbox": "SANDBOX"
+  },
+  {
+   "trial": 20,
+   "lang": "hi",
+   "uploadS": 5.64,
+   "factsTotalS": 19.2,
+   "factsExtractS": 13.55,
+   "fields": {
+    "amount": true,
+    "reference_id": true,
+    "occurred_at": true,
+    "beneficiary.account_or_vpa": true,
+    "beneficiary.bank": false,
+    "scam_type": true,
+    "currency": true,
+    "beneficiary.name": true,
+    "payer_bank": true,
+    "payment_method": true
+   },
+   "planS": 0.44,
+   "draftsS": 7.75,
+   "draftsTurnS": 7.76,
+   "draftKinds": [
+    "drafts",
+    "consent"
+   ],
+   "pdfUrlS": 1.94,
+   "pdfS": 3.16,
+   "pdfOk": true,
+   "pdfKB": 143,
+   "pdfCachedS": 0.42,
+   "bankDocCreateTime": "2026-10-18T15:55:47.675249+00:00",
+   "sendWallClock": "2026-10-18T15:55:48+0000",
+   "sendCallS": 0.7,
+   "bankFirestoreS": 1.63,
+   "bankApiS": 2.06,
+   "sandbox": "SANDBOX"
+  }
+ ],
+ "fixtures": [
+  {
+   "fixture": "fixtures/in_case (UPI screenshot + WhatsApp)",
+   "seconds": 8.93,
+   "fields": {
+    "amount": {
+     "truth": 195000,
+     "got": 195000.0,
+     "ok": true
+    },
+    "reference_id": {
+     "truth": "612345678901",
+     "got": "612345678901",
+     "ok": true
+    },
+    "occurred_at": {
+     "truth": "2026-10-17T14:02:00+05:30",
+     "got": "2026-10-17T14:02:00",
+     "ok": true
+    },
+    "beneficiary.account_or_vpa": {
+     "truth": "cbi.verify.desk@okdemo",
+     "got": "cbi.verify.desk@okdemo",
+     "ok": true
+    },
+    "beneficiary.bank": {
+     "truth": "Sample Co-operative Bank",
+     "got": "Sample Co-op Bk",
+     "ok": false
+    },
+    "scam_type": {
+     "truth": "digital_arrest",
+     "got": "digital_arrest",
+     "ok": true
+    },
+    "currency": {
+     "truth": "INR",
+     "got": "INR",
+     "ok": true
+    },
+    "beneficiary.name": {
+     "truth": "CBI Verification Desk",
+     "got": "CBI Verification Desk",
+     "ok": true
+    },
+    "payer_bank": {
+     "truth": "Bank of Demo",
+     "got": "Bank of Demo",
+     "ok": true
+    },
+    "payment_method": {
+     "truth": "UPI",
+     "got": "UPI",
+     "ok": true
+    }
+   }
+  },
+  {
+   "fixture": "fixtures/my_case (bank-transfer screenshot + SMS)",
+   "seconds": 8.94,
+   "fields": {
+    "amount": {
+     "truth": 4800,
+     "got": 4800.0,
+     "ok": true
+    },
+    "reference_id": {
+     "truth": "DN202610170042",
+     "got": "DN202610170042",
+     "ok": true
+    },
+    "occurred_at": {
+     "truth": "2026-10-17T10:15:00+08:00",
+     "got": "2026-10-17T10:15:00",
+     "ok": true
+    },
+    "beneficiary.account_or_vpa": {
+     "truth": "5140 1234 5678",
+     "got": "5140 1234 5678",
+     "ok": true
+    },
+    "beneficiary.bank": {
+     "truth": "Bank Contoh Berhad",
+     "got": "Bank Contoh Berhad",
+     "ok": true
+    },
+    "scam_type": {
+     "truth": "fake_courier_customs",
+     "got": "fake_courier_customs",
+     "ok": true
+    },
+    "currency": {
+     "truth": "MYR",
+     "got": "MYR",
+     "ok": true
+    },
+    "beneficiary.name": {
+     "truth": "PUSAT KASTAM PARCEL",
+     "got": "PUSAT KASTAM PARCEL",
+     "ok": true
+    },
+    "payer_bank": {
+     "truth": "Bank Demo Malaysia",
+     "got": "Bank Demo Malaysia",
+     "ok": true
+    },
+    "payment_method": {
+     "truth": "DuitNow",
+     "got": "DuitNow",
+     "ok": true
+    }
+   }
+  },
+  {
+   "fixture": "backend/evals/data ex_000 (IN, hi)",
+   "seconds": 8.8,
+   "fields": {
+    "amount": {
+     "truth": 12500,
+     "got": 12500.0,
+     "ok": true
+    },
+    "reference_id": {
+     "truth": "628023288358",
+     "got": "628023288358",
+     "ok": true
+    },
+    "occurred_at": {
+     "truth": "2026-10-17T14:51:00+05:30",
+     "got": "2026-10-17T14:51:00",
+     "ok": true
+    },
+    "beneficiary.account_or_vpa": {
+     "truth": "sharma.verify65@upi",
+     "got": "sharma.verify65@upi",
+     "ok": true
+    },
+    "beneficiary.bank": {
+     "truth": "Fictional Bank of India",
+     "got": "Fictional Bank of India",
+     "ok": true
+    },
+    "scam_type": {
+     "truth": "digital_arrest",
+     "got": "digital_arrest",
+     "ok": true
+    },
+    "currency": {
+     "truth": "INR",
+     "got": "INR",
+     "ok": true
+    },
+    "beneficiary.name": {
+     "truth": "Sharma Investment Hub",
+     "got": "Sharma Investment Hub",
+     "ok": true
+    },
+    "payer_bank": {
+     "truth": "Example Gramin Bank",
+     "got": "Example Gramin Bank",
+     "ok": true
+    },
+    "payment_method": {
+     "truth": "UPI",
+     "got": "UPI",
+     "ok": true
+    }
+   }
+  },
+  {
+   "fixture": "backend/evals/data ex_004 (IN, hi)",
+   "seconds": 8.68,
+   "fields": {
+    "amount": {
+     "truth": 195000,
+     "got": 195000.0,
+     "ok": true
+    },
+    "reference_id": {
+     "truth": "540796738687",
+     "got": "540796738687",
+     "ok": true
+    },
+    "occurred_at": {
+     "truth": "2026-10-14T09:44:00+05:30",
+     "got": "2026-10-14T09:44:00",
+     "ok": true
+    },
+    "beneficiary.account_or_vpa": {
+     "truth": "mumbai.desk69@upi",
+     "got": "mumbai.desk69@upi",
+     "ok": true
+    },
+    "beneficiary.bank": {
+     "truth": "Demo National Bank",
+     "got": "Demo National Bank",
+     "ok": true
+    },
+    "scam_type": {
+     "truth": "kyc_update",
+     "got": "kyc_update",
+     "ok": true
+    },
+    "currency": {
+     "truth": "INR",
+     "got": "INR",
+     "ok": true
+    },
+    "beneficiary.name": {
+     "truth": "Mumbai Customs Office",
+     "got": "Mumbai Customs Office",
+     "ok": true
+    },
+    "payer_bank": {
+     "truth": "Bank of Demo",
+     "got": "Bank of Demo",
+     "ok": true
+    },
+    "payment_method": {
+     "truth": "UPI",
+     "got": "UPI",
+     "ok": true
+    }
+   }
+  },
+  {
+   "fixture": "backend/evals/data ex_002 (MY, ms)",
+   "seconds": 8.44,
+   "fields": {
+    "amount": {
+     "truth": 980.0,
+     "got": 980.0,
+     "ok": true
+    },
+    "reference_id": {
+     "truth": "MY6946574731",
+     "got": "MY6946574731",
+     "ok": true
+    },
+    "occurred_at": {
+     "truth": "2026-10-05T12:42:00+08:00",
+     "got": "2026-10-05T12:42:00",
+     "ok": true
+    },
+    "beneficiary.account_or_vpa": {
+     "truth": "1829 6701 1314",
+     "got": "1829 6701 1314",
+     "ok": true
+    },
+    "beneficiary.bank": {
+     "truth": "Bank Contoh Berhad",
+     "got": "Bank Contoh Berhad",
+     "ok": true
+    },
+    "scam_type": {
+     "truth": "investment_trading",
+     "got": "investment_trading",
+     "ok": true
+    },
+    "currency": {
+     "truth": "MYR",
+     "got": "MYR",
+     "ok": true
+    },
+    "beneficiary.name": {
+     "truth": "Siti Nur Aisyah",
+     "got": "Siti Nur Aisyah",
+     "ok": true
+    },
+    "payer_bank": {
+     "truth": "Sampel Bank Berhad",
+     "got": "Sampel Bank Berhad",
+     "ok": true
+    },
+    "payment_method": {
+     "truth": "IBG",
+     "got": "IBG",
+     "ok": true
+    }
+   }
+  },
+  {
+   "fixture": "backend/evals/data ex_006 (MY, ms)",
+   "seconds": 8.33,
+   "fields": {
+    "amount": {
+     "truth": 25000.0,
+     "got": 25000.0,
+     "ok": true
+    },
+    "reference_id": {
+     "truth": "MY5238353357",
+     "got": "MY5238353357",
+     "ok": true
+    },
+    "occurred_at": {
+     "truth": "2026-10-15T15:54:00+08:00",
+     "got": "2026-10-15T15:54:00",
+     "ok": true
+    },
+    "beneficiary.account_or_vpa": {
+     "truth": "1134 8657 6527",
+     "got": "1134 8657 6527",
+     "ok": true
+    },
+    "beneficiary.bank": {
+     "truth": "Bank Contoh Berhad",
+     "got": "Bank Contoh Berhad",
+     "ok": true
+    },
+    "scam_type": {
+     "truth": "romance",
+     "got": "romance",
+     "ok": true
+    },
+    "currency": {
+     "truth": "MYR",
+     "got": "MYR",
+     "ok": true
+    },
+    "beneficiary.name": {
+     "truth": "Siti Nur Aisyah",
+     "got": "Siti Nur Aisyah",
+     "ok": true
+    },
+    "payer_bank": {
+     "truth": "Sampel Bank Berhad",
+     "got": "Sampel Bank Berhad",
+     "ok": true
+    },
+    "payment_method": {
+     "truth": "DuitNow",
+     "got": "DuitNow",
+     "ok": true
+    }
+   }
+  }
+ ],
+ "guard": [
+  {
+   "lang": "en",
+   "message": "Pay ₹5,000 processing fee to recover your money — Cyber Recovery Cell",
+   "flagged": true,
+   "warningBeforeReply": true,
+   "cards": [
+    "warning",
+    "upload"
+   ],
+   "turnS": 4.62
+  },
+  {
+   "lang": "hi",
+   "message": "अपना पैसा वापस पाने के लिए ₹5,000 प्रोसेसिंग फीस भरें — साइबर रिकवरी सेल",
+   "flagged": true,
+   "warningBeforeReply": true,
+   "cards": [
+    "warning",
+    "upload"
+   ],
+   "turnS": 4.54
+  },
+  {
+   "lang": "ms",
+   "message": "Bayar yuran pemprosesan RM500 untuk dapatkan semula wang anda — Unit Pemulihan Siber",
+   "flagged": true,
+   "warningBeforeReply": true,
+   "cards": [
+    "warning",
+    "upload"
+   ],
+   "turnS": 7.83
+  }
+ ],
+ "caseIds": [
+  "c_61a4335acb15493085fb",
+  "c_750582ae6a3545ab801f",
+  "c_bffb41b9048e41368229",
+  "c_85918ed9f78e4d3996e3",
+  "c_aa09129ba08e4ab1bb19",
+  "c_dbafb21d4e1d4594a7a3",
+  "c_be51ecfc1b9049989c88",
+  "c_d26afe76fc2746b58e8d",
+  "c_76069a38bbcd408e86ed",
+  "c_9add54c702de44d5b7a4",
+  "c_112c70c621d84d138acd",
+  "c_743cc5aabfb446dd8ff9",
+  "c_f90bb861c77644c884a2",
+  "c_99739eea14be4fe3babd",
+  "c_0f40418d717e4731b53e",
+  "c_8a0fa36e66184187bdd4",
+  "c_848ca94473a8426c960d",
+  "c_73efa9470c264b3ebfd5",
+  "c_ba20ba0051104b7aa4f9",
+  "c_5bc5998c0c9141e78770",
+  "c_f2da28017d044443b760",
+  "c_9354531a44a14c1999c8",
+  "c_64f528e8cf3348168d9d",
+  "c_d176dca9c0ce4aa4ad62",
+  "c_c76c1c2593cf4afc9b2b",
+  "c_306d55afcd734494a91e",
+  "c_840dd22fbbb54a79a781",
+  "c_fde476d043ec49f7a1d1",
+  "c_b3a8fe68ae3f40c1820e"
+ ],
+ "bankCaseIds": [
+  "b_671d581c77787cb7ed0722c4",
+  "b_ec8996ff90e98f3b8ec33a1e",
+  "b_2453394a9936b8b02c20c519",
+  "b_b11efe5d45b470b69844408d",
+  "b_edd35ea968615bbe7e752777",
+  "b_a6e73aed8a16779e73c580cd",
+  "b_7f2cd817333d465a1cdd6a34",
+  "b_d7e33fd061dd84a926e3897c",
+  "b_beaba4cfc859c3766b0cad11",
+  "b_48aa92fcf716f9af3473897c",
+  "b_5f207bac41be90766d55dbad",
+  "b_461e2a585a504cdeb84b55fa",
+  "b_1d6eda9027ed9f255d4599cb",
+  "b_19583978e2a3811225f5f1f8",
+  "b_eeb61a1829dfabd388828b05",
+  "b_74653cbf3e3a4ca500bc366a",
+  "b_86fdbb83bb4f3f31791a077f",
+  "b_963b9f251673a88956ed930e",
+  "b_d611bf79f833966b925b0db4",
+  "b_387b886890e7d334d732eab2"
+ ],
+ "summary": {
+  "factsTotalS": {
+   "n": 20,
+   "p50": 12.69,
+   "p95": 15.59,
+   "max": 19.2,
+   "min": 10.32,
+   "mean": 13.0
+  },
+  "factsExtractS": {
+   "n": 20,
+   "p50": 6.58,
+   "p95": 9.76,
+   "max": 13.55,
+   "min": 4.85,
+   "mean": 7.26
+  },
+  "draftsS": {
+   "n": 20,
+   "p50": 4.71,
+   "p95": 8.11,
+   "max": 14.92,
+   "min": 4.38,
+   "mean": 5.39
+  },
+  "pdfS": {
+   "n": 20,
+   "p50": 2.62,
+   "p95": 3.33,
+   "max": 3.87,
+   "min": 2.38,
+   "mean": 2.8
+  },
+  "pdfHindiS": {
+   "n": 10,
+   "p50": 2.62,
+   "p95": 3.61,
+   "max": 3.87,
+   "min": 2.38,
+   "mean": 2.83
+  },
+  "pdfCachedS": {
+   "n": 20,
+   "p50": 0.45,
+   "p95": 0.75,
+   "max": 0.78,
+   "min": 0.42,
+   "mean": 0.48
+  },
+  "bankFirestoreS": {
+   "n": 20,
+   "p50": 1.56,
+   "p95": 2.17,
+   "max": 2.43,
+   "min": 1.43,
+   "mean": 1.66
+  },
+  "bankApiS": {
+   "n": 20,
+   "p50": 2.02,
+   "p95": 2.57,
+   "max": 2.92,
+   "min": 1.84,
+   "mean": 2.06
+  },
+  "errors": []
+ }
+}

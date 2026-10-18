@@ -1,0 +1,1395 @@
+{
+ "source": "Cloud Logging, revision recoverai-api-00018-t5d, 15:45:50\u201315:58 UTC (21:15\u201321:28 IST): Cloud Run request logs (httpRequest.latency, timestamp) + app 'gemini_call' logs (usage_metadata)",
+ "summary": {
+  "extractServerS": {
+   "n": 20,
+   "p50": 6.28,
+   "p95": 9.48,
+   "max": 13.26
+  },
+  "draftsTurnServerS": {
+   "n": 20,
+   "p50": 4.38,
+   "p95": 7.76,
+   "max": 14.56
+  },
+  "pdfRebuildServerS": {
+   "n": 20,
+   "p50": 1.13,
+   "p95": 1.77,
+   "max": 1.83
+  },
+  "bankDocCreatedAfterSendStartS": {
+   "n": 20,
+   "p50": 1.26,
+   "p95": 1.86,
+   "max": 2.13
+  },
+  "sendServerS": {
+   "n": 20,
+   "p50": 0.3,
+   "p95": 0.36,
+   "max": 0.83
+  },
+  "liveLoggedTokensPerCase": {
+   "bank_reason": {
+    "avg_in": 667,
+    "avg_out": 126,
+    "avg_calls": 1
+   },
+   "draft:bank_dispute_letter": {
+    "avg_in": 839,
+    "avg_out": 788,
+    "avg_calls": 1
+   },
+   "draft:hotline_script": {
+    "avg_in": 691,
+    "avg_out": 296,
+    "avg_calls": 1
+   },
+   "draft:ncrp_complaint": {
+    "avg_in": 813,
+    "avg_out": 543,
+    "avg_calls": 1.15
+   },
+   "guard": {
+    "avg_in": 1410,
+    "avg_out": 68,
+    "avg_calls": 2
+   },
+   "intake": {
+    "avg_in": 3242,
+    "avg_out": 557,
+    "avg_calls": 1
+   },
+   "plan_explain": {
+    "avg_in": 436,
+    "avg_out": 153,
+    "avg_calls": 1
+   }
+  },
+  "liveLoggedTokensPerCaseTotal": 10629
+ },
+ "rows": [
+  {
+   "caseId": "c_61a4335acb15493085fb",
+   "extractServerS": 8.67,
+   "draftsTurnServerS": 4.6,
+   "pdfRebuildServerS": 1.13,
+   "bankDocCreatedAfterSendStartS": 2.13,
+   "sendServerS": 0.32,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 155,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 840,
+     "out": 780,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 709,
+     "out": 470,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 692,
+     "out": 275,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 135,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3239,
+     "out": 558,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 68,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_750582ae6a3545ab801f",
+   "extractServerS": 5.02,
+   "draftsTurnServerS": 4.13,
+   "pdfRebuildServerS": 1.08,
+   "bankDocCreatedAfterSendStartS": 1.55,
+   "sendServerS": 0.29,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 109,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 837,
+     "out": 804,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 706,
+     "out": 473,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 689,
+     "out": 247,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 186,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3238,
+     "out": 555,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 66,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_bffb41b9048e41368229",
+   "extractServerS": 5.38,
+   "draftsTurnServerS": 4.89,
+   "pdfRebuildServerS": 1.17,
+   "bankDocCreatedAfterSendStartS": 1.38,
+   "sendServerS": 0.3,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 124,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 2,
+     "in": 1412,
+     "out": 903,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 837,
+     "out": 752,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 689,
+     "out": 343,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 137,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3236,
+     "out": 555,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 72,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_85918ed9f78e4d3996e3",
+   "extractServerS": 4.75,
+   "draftsTurnServerS": 4.48,
+   "pdfRebuildServerS": 1.13,
+   "bankDocCreatedAfterSendStartS": 1.49,
+   "sendServerS": 0.29,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 111,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 855,
+     "out": 875,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 724,
+     "out": 490,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 707,
+     "out": 302,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 112,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3248,
+     "out": 573,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 68,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_aa09129ba08e4ab1bb19",
+   "extractServerS": 5.83,
+   "draftsTurnServerS": 4.06,
+   "pdfRebuildServerS": 1.69,
+   "bankDocCreatedAfterSendStartS": 1.2,
+   "sendServerS": 0.29,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 161,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 831,
+     "out": 747,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 700,
+     "out": 473,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 683,
+     "out": 291,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 169,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3235,
+     "out": 549,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 68,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_dbafb21d4e1d4594a7a3",
+   "extractServerS": 7.97,
+   "draftsTurnServerS": 4.5,
+   "pdfRebuildServerS": 1.1,
+   "bankDocCreatedAfterSendStartS": 1.35,
+   "sendServerS": 0.32,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 114,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 823,
+     "out": 812,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 692,
+     "out": 460,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 675,
+     "out": 339,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 144,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3242,
+     "out": 541,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 68,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_be51ecfc1b9049989c88",
+   "extractServerS": 7.52,
+   "draftsTurnServerS": 14.56,
+   "pdfRebuildServerS": 1.18,
+   "bankDocCreatedAfterSendStartS": 1.85,
+   "sendServerS": 0.83,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 150,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 831,
+     "out": 885,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 2,
+     "in": 1400,
+     "out": 900,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 683,
+     "out": 363,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 197,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3240,
+     "out": 549,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 68,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_d26afe76fc2746b58e8d",
+   "extractServerS": 4.55,
+   "draftsTurnServerS": 4.71,
+   "pdfRebuildServerS": 1.11,
+   "bankDocCreatedAfterSendStartS": 1.28,
+   "sendServerS": 0.29,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 143,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 853,
+     "out": 864,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 722,
+     "out": 475,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 705,
+     "out": 253,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 112,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3244,
+     "out": 571,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 69,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_76069a38bbcd408e86ed",
+   "extractServerS": 8.16,
+   "draftsTurnServerS": 4.05,
+   "pdfRebuildServerS": 1.07,
+   "bankDocCreatedAfterSendStartS": 1.48,
+   "sendServerS": 0.29,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 142,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 829,
+     "out": 736,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 698,
+     "out": 448,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 681,
+     "out": 316,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 144,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3237,
+     "out": 547,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 67,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_9add54c702de44d5b7a4",
+   "extractServerS": 5.59,
+   "draftsTurnServerS": 4.42,
+   "pdfRebuildServerS": 1.83,
+   "bankDocCreatedAfterSendStartS": 1.18,
+   "sendServerS": 0.31,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 121,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 836,
+     "out": 838,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 705,
+     "out": 480,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 688,
+     "out": 265,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 144,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3246,
+     "out": 554,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 65,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_112c70c621d84d138acd",
+   "extractServerS": 5.9,
+   "draftsTurnServerS": 4.03,
+   "pdfRebuildServerS": 1.13,
+   "bankDocCreatedAfterSendStartS": 1.13,
+   "sendServerS": 0.3,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 112,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 849,
+     "out": 777,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 718,
+     "out": 519,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 701,
+     "out": 346,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 183,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3239,
+     "out": 568,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 66,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_743cc5aabfb446dd8ff9",
+   "extractServerS": 8.19,
+   "draftsTurnServerS": 4.19,
+   "pdfRebuildServerS": 1.2,
+   "bankDocCreatedAfterSendStartS": 1.32,
+   "sendServerS": 0.3,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 110,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 856,
+     "out": 836,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 725,
+     "out": 500,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 708,
+     "out": 301,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 149,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3241,
+     "out": 574,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 71,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_f90bb861c77644c884a2",
+   "extractServerS": 7.36,
+   "draftsTurnServerS": 4.46,
+   "pdfRebuildServerS": 1.21,
+   "bankDocCreatedAfterSendStartS": 1.16,
+   "sendServerS": 0.29,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 142,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 837,
+     "out": 808,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 706,
+     "out": 459,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 689,
+     "out": 305,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 205,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3242,
+     "out": 555,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 72,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_99739eea14be4fe3babd",
+   "extractServerS": 5.51,
+   "draftsTurnServerS": 4.33,
+   "pdfRebuildServerS": 0.98,
+   "bankDocCreatedAfterSendStartS": 1.22,
+   "sendServerS": 0.34,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 90,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 827,
+     "out": 802,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 696,
+     "out": 455,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 679,
+     "out": 293,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 146,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3246,
+     "out": 545,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 72,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_0f40418d717e4731b53e",
+   "extractServerS": 6.65,
+   "draftsTurnServerS": 4.2,
+   "pdfRebuildServerS": 1.77,
+   "bankDocCreatedAfterSendStartS": 1.21,
+   "sendServerS": 0.3,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 112,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 829,
+     "out": 745,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 698,
+     "out": 492,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 681,
+     "out": 295,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 203,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3235,
+     "out": 547,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 67,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_8a0fa36e66184187bdd4",
+   "extractServerS": 8.33,
+   "draftsTurnServerS": 4.29,
+   "pdfRebuildServerS": 1.09,
+   "bankDocCreatedAfterSendStartS": 1.22,
+   "sendServerS": 0.28,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 158,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 850,
+     "out": 804,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 719,
+     "out": 496,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 702,
+     "out": 281,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 151,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3248,
+     "out": 568,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 66,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_848ca94473a8426c960d",
+   "extractServerS": 5.89,
+   "draftsTurnServerS": 4.22,
+   "pdfRebuildServerS": 1.33,
+   "bankDocCreatedAfterSendStartS": 1.21,
+   "sendServerS": 0.28,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 101,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 855,
+     "out": 572,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 724,
+     "out": 506,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 707,
+     "out": 310,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 134,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3240,
+     "out": 573,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 70,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_73efa9470c264b3ebfd5",
+   "extractServerS": 5.44,
+   "draftsTurnServerS": 5.2,
+   "pdfRebuildServerS": 1.1,
+   "bankDocCreatedAfterSendStartS": 1.15,
+   "sendServerS": 0.31,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 126,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 2,
+     "in": 1380,
+     "out": 892,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 821,
+     "out": 716,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 673,
+     "out": 248,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 110,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3244,
+     "out": 539,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 70,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_ba20ba0051104b7aa4f9",
+   "extractServerS": 9.28,
+   "draftsTurnServerS": 4.19,
+   "pdfRebuildServerS": 1.11,
+   "bankDocCreatedAfterSendStartS": 1.24,
+   "sendServerS": 0.3,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 115,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 846,
+     "out": 824,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 715,
+     "out": 464,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 698,
+     "out": 258,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 426,
+     "out": 152,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3242,
+     "out": 564,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 68,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  },
+  {
+   "caseId": "c_5bc5998c0c9141e78770",
+   "extractServerS": 13.26,
+   "draftsTurnServerS": 7.4,
+   "pdfRebuildServerS": 1.66,
+   "bankDocCreatedAfterSendStartS": 1.31,
+   "sendServerS": 0.32,
+   "geminiCallsLogged": {
+    "bank_reason": {
+     "calls": 1,
+     "in": 667,
+     "out": 123,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "draft:bank_dispute_letter": {
+     "calls": 1,
+     "in": 833,
+     "out": 779,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:ncrp_complaint": {
+     "calls": 1,
+     "in": 702,
+     "out": 509,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "draft:hotline_script": {
+     "calls": 1,
+     "in": 685,
+     "out": 287,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "plan_explain": {
+     "calls": 1,
+     "in": 447,
+     "out": 151,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    },
+    "intake": {
+     "calls": 1,
+     "in": 3248,
+     "out": 551,
+     "model": [
+      "gemini-3.1-flash-lite"
+     ]
+    },
+    "guard": {
+     "calls": 2,
+     "in": 1410,
+     "out": 66,
+     "model": [
+      "gemini-3.5-flash-lite"
+     ]
+    }
+   }
+  }
+ ]
+}

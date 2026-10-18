@@ -1,0 +1,726 @@
+{
+ "method": "local in-process backend, same Vertex models/prompts as Cloud Run; usage_metadata from every call",
+ "cases": 3,
+ "core": {
+  "avg_total": 14584,
+  "avg": {
+   "in": 12112.0,
+   "out": 2472.0,
+   "think": 0.0
+  },
+  "by_task": {
+   "guard": {
+    "in": 1800.0,
+    "out": 98.3,
+    "think": 0.0,
+    "calls": 3.0
+   },
+   "copilot": {
+    "in": 4257.0,
+    "out": 76.7,
+    "think": 0.0,
+    "calls": 3.0
+   },
+   "intake": {
+    "in": 2731.0,
+    "out": 554.7,
+    "think": 0.0,
+    "calls": 1.0
+   },
+   "plan_explain": {
+    "in": 447.0,
+    "out": 147.7,
+    "think": 0.0,
+    "calls": 1.0
+   },
+   "drafts": {
+    "in": 2211.0,
+    "out": 1485.3,
+    "think": 0.0,
+    "calls": 3.0
+   },
+   "bank_reason": {
+    "in": 666.0,
+    "out": 109.3,
+    "think": 0.0,
+    "calls": 1.0
+   }
+  },
+  "by_model": {
+   "gemini-3.5-flash-lite": {
+    "in": 7170.0,
+    "out": 432.0,
+    "think": 0.0,
+    "calls": 8.0
+   },
+   "gemini-3.1-flash-lite": {
+    "in": 4942.0,
+    "out": 2040.0,
+    "think": 0.0,
+    "calls": 4.0
+   }
+  }
+ },
+ "with_extra_question": {
+  "avg_total": 17307,
+  "avg": {
+   "in": 14695.7,
+   "out": 2611.3,
+   "think": 0.0
+  },
+  "by_task": {
+   "guard": {
+    "in": 2180.0,
+    "out": 130.0,
+    "think": 0.0,
+    "calls": 4.0
+   },
+   "copilot": {
+    "in": 6460.7,
+    "out": 184.3,
+    "think": 0.0,
+    "calls": 4.0
+   },
+   "intake": {
+    "in": 2731.0,
+    "out": 554.7,
+    "think": 0.0,
+    "calls": 1.0
+   },
+   "plan_explain": {
+    "in": 447.0,
+    "out": 147.7,
+    "think": 0.0,
+    "calls": 1.0
+   },
+   "drafts": {
+    "in": 2211.0,
+    "out": 1485.3,
+    "think": 0.0,
+    "calls": 3.0
+   },
+   "bank_reason": {
+    "in": 666.0,
+    "out": 109.3,
+    "think": 0.0,
+    "calls": 1.0
+   }
+  },
+  "by_model": {
+   "gemini-3.5-flash-lite": {
+    "in": 9753.7,
+    "out": 571.3,
+    "think": 0.0,
+    "calls": 10.0
+   },
+   "gemini-3.1-flash-lite": {
+    "in": 4942.0,
+    "out": 2040.0,
+    "think": 0.0,
+    "calls": 4.0
+   }
+  }
+ },
+ "raw": [
+  {
+   "caseId": "c_7d87883c03994ca695d1",
+   "steps": [
+    {
+     "step": "1 typed message (guard + co-pilot)",
+     "seconds": 7.2,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 390,
+       "out": 34,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1391,
+       "out": 11,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1425,
+       "out": 10,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1441,
+       "out": 44,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 4647,
+      "out": 99,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "2 evidence → extraction (guard on pasted text + intake)",
+     "seconds": 6.84,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 705,
+       "out": 33,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 705,
+       "out": 35,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "intake",
+       "in": 2731,
+       "out": 562,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 4141,
+      "out": 630,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "3 facts confirmed → plan",
+     "seconds": 0.92,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "plan_explain",
+       "in": 447,
+       "out": 151,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 447,
+      "out": 151,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "4 generate_all → drafts",
+     "seconds": 5.99,
+     "calls": [
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 672,
+       "out": 238,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 689,
+       "out": 460,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 820,
+       "out": 680,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 2181,
+      "out": 1378,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "5 evidence pack PDF",
+     "seconds": 0.0,
+     "calls": [],
+     "tokens": {
+      "in": 0,
+      "out": 0,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "6 consent → share with bank (bank case receiver reasoning)",
+     "seconds": 1.96,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "bank_reason",
+       "in": 666,
+       "out": 114,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 666,
+      "out": 114,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "7 extra co-pilot question (optional)",
+     "seconds": 1.51,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 380,
+       "out": 31,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 2206,
+       "out": 141,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 2586,
+      "out": 172,
+      "think": 0,
+      "cached": 0
+     }
+    }
+   ]
+  },
+  {
+   "caseId": "c_61cb2d5ada6245ee8338",
+   "steps": [
+    {
+     "step": "1 typed message (guard + co-pilot)",
+     "seconds": 3.28,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 390,
+       "out": 25,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1391,
+       "out": 11,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1425,
+       "out": 10,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1441,
+       "out": 50,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 4647,
+      "out": 96,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "2 evidence → extraction (guard on pasted text + intake)",
+     "seconds": 3.8,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 705,
+       "out": 32,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 705,
+       "out": 35,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "intake",
+       "in": 2731,
+       "out": 551,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 4141,
+      "out": 618,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "3 facts confirmed → plan",
+     "seconds": 1.01,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "plan_explain",
+       "in": 447,
+       "out": 144,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 447,
+      "out": 144,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "4 generate_all → drafts",
+     "seconds": 3.12,
+     "calls": [
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 687,
+       "out": 303,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 704,
+       "out": 468,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 835,
+       "out": 798,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 2226,
+      "out": 1569,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "5 evidence pack PDF",
+     "seconds": 0.0,
+     "calls": [],
+     "tokens": {
+      "in": 0,
+      "out": 0,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "6 consent → share with bank (bank case receiver reasoning)",
+     "seconds": 1.9,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "bank_reason",
+       "in": 666,
+       "out": 105,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 666,
+      "out": 105,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "7 extra co-pilot question (optional)",
+     "seconds": 1.39,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 380,
+       "out": 32,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 2201,
+       "out": 81,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 2581,
+      "out": 113,
+      "think": 0,
+      "cached": 0
+     }
+    }
+   ]
+  },
+  {
+   "caseId": "c_6959228dd6b649e999ca",
+   "steps": [
+    {
+     "step": "1 typed message (guard + co-pilot)",
+     "seconds": 3.51,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 390,
+       "out": 29,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1391,
+       "out": 11,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1425,
+       "out": 10,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 1441,
+       "out": 73,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 4647,
+      "out": 123,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "2 evidence → extraction (guard on pasted text + intake)",
+     "seconds": 3.91,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 705,
+       "out": 36,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 705,
+       "out": 36,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "intake",
+       "in": 2731,
+       "out": 551,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 4141,
+      "out": 623,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "3 facts confirmed → plan",
+     "seconds": 0.89,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "plan_explain",
+       "in": 447,
+       "out": 148,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 447,
+      "out": 148,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "4 generate_all → drafts",
+     "seconds": 3.36,
+     "calls": [
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 687,
+       "out": 262,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 704,
+       "out": 454,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.1-flash-lite",
+       "task": "drafts",
+       "in": 835,
+       "out": 793,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 2226,
+      "out": 1509,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "5 evidence pack PDF",
+     "seconds": 0.0,
+     "calls": [],
+     "tokens": {
+      "in": 0,
+      "out": 0,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "6 consent → share with bank (bank case receiver reasoning)",
+     "seconds": 1.98,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "bank_reason",
+       "in": 666,
+       "out": 109,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 666,
+      "out": 109,
+      "think": 0,
+      "cached": 0
+     }
+    },
+    {
+     "step": "7 extra co-pilot question (optional)",
+     "seconds": 1.39,
+     "calls": [
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "guard",
+       "in": 380,
+       "out": 32,
+       "think": 0,
+       "cached": 0
+      },
+      {
+       "model": "gemini-3.5-flash-lite",
+       "task": "copilot",
+       "in": 2204,
+       "out": 101,
+       "think": 0,
+       "cached": 0
+      }
+     ],
+     "tokens": {
+      "in": 2584,
+      "out": 133,
+      "think": 0,
+      "cached": 0
+     }
+    }
+   ]
+  }
+ ]
+}
