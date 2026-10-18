@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .config import get_settings
+from .config import TASK_DEFAULTS, get_settings
 from .logging_setup import setup_logging
 from .routers import bank, cases, events, local_blob
 from .timeutil import utcnow
@@ -47,7 +47,8 @@ async def lifespan(_app: FastAPI):
     log.info("startup", extra={"mock": s.mock_mode, "demo": s.demo_mode, "auth": s.effective_auth_mode,
                                "model": s.gemini_model, "runtime": s.copilot_runtime, "bus": s.effective_event_bus,
                                "analytics": s.effective_analytics_backend,
-                               "search": "vertex" if s.vertex_search_serving_config else "local/playbook"})
+                               "search": "vertex" if s.vertex_search_serving_config else "local/playbook",
+                               "taskModels": {t: s.task_model(t) for t in TASK_DEFAULTS}})
     yield
 
 
