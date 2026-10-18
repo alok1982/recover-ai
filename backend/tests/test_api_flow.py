@@ -186,3 +186,13 @@ def test_time_travel_disabled_without_demo_mode(client, monkeypatch):
     cid = client.post("/api/cases", json={"country": "IN"}, headers=H()).json()["caseId"]
     monkeypatch.setattr(actions, "get_settings", lambda: Settings(demo_mode=False, mock_mode=True))
     assert client.post(f"/api/cases/{cid}/clock", json={"addDays": 1}, headers=H()).status_code == 403
+
+
+def test_every_assistant_chat_turn_has_text(client):
+    """Every co-pilot turn writes a non-empty reply alongside any card (mock co-pilot; e2e_demo checks it live)."""
+    from helpers import ready_india_case
+    cid = ready_india_case(client)
+    for q in ["What should I do now?", "What is the Ombudsman?", "send it to my bank", "Will I get my money back?", "ok"]:
+        ev = sse(client, cid, {"text": q})
+        assert text_of(ev).strip(), q
+        assert (ev[-1].get("message") or {}).get("text"), q

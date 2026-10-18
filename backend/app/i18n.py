@@ -158,6 +158,16 @@ T: dict[str, dict[str, str]] = {
         "hi": "आपके बैंक को बता दिया गया है कि आपने सहमति वापस ले ली है (रेफ़रेंस {ref})।",
         "ms": "Bank anda telah dimaklumkan bahawa anda menarik balik persetujuan (rujukan {ref}).",
     },
+    "reply_fallback": {
+        "en": "I have updated your case above. Please look at the card shown.",
+        "hi": "मैंने ऊपर आपका केस अपडेट कर दिया है। कृपया दिखाया गया कार्ड देखें।",
+        "ms": "Saya telah mengemas kini kes anda di atas. Sila lihat kad yang dipaparkan.",
+    },
+    "reply_fallback_next": {
+        "en": "The most urgent step now: {step}.",
+        "hi": "अभी सबसे ज़रूरी कदम: {step}।",
+        "ms": "Langkah paling mendesak sekarang: {step}.",
+    },
     "withdraw_not_shared": {
         "en": "This case has not been shared with a bank, so there is nothing to withdraw.",
         "hi": "यह केस किसी बैंक के साथ साझा नहीं हुआ है, इसलिए वापस लेने के लिए कुछ नहीं है।",

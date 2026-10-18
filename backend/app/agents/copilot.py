@@ -379,6 +379,26 @@ def _history_events(history: list[dict], author: str):
     return events
 
 
+def _drop_empty_model_chunk(callback_context, llm_response):
+    """ADK after_model_callback — root cause of the blank replies.
+
+    With SSE streaming, Gemini 3 ends a function-call response with a separate chunk whose only part is empty (it
+    carries just a thought_signature, finish_reason=STOP). ADK 1.14 turns every streamed chunk into its own event, so
+    that empty chunk lands AFTER the function response, counts as the "final response", and ends the invocation
+    before the model is called again to write the reply. Dropping such content-free chunks (content=None → ADK skips
+    the event) lets the flow make the follow-up model call that produces the text."""
+    from google.adk.models.llm_response import LlmResponse
+
+    c = llm_response.content
+    if llm_response.error_code or llm_response.partial or not c or not c.parts:
+        return None
+    for p in c.parts:
+        if (p.text or p.function_call or p.function_response or p.inline_data or p.file_data
+                or getattr(p, "executable_code", None) or getattr(p, "code_execution_result", None)):
+            return None
+    return LlmResponse(content=None, usage_metadata=llm_response.usage_metadata, turn_complete=llm_response.turn_complete)
+
+
 async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -> AsyncIterator[str]:
     from google.adk.agents import LlmAgent
     from google.adk.agents.run_config import RunConfig, StreamingMode
@@ -421,6 +441,7 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
         instruction=lambda _ctx: instruction,  # provider: bypasses {state} templating of braces in JSON
         tools=tb.adk_tools(),
         generate_content_config=types.GenerateContentConfig(temperature=0.4),
+        after_model_callback=_drop_empty_model_chunk,
     )
     ss = InMemorySessionService()
     session = await ss.create_session(app_name="recoverai", user_id=case["ownerUid"], session_id=tb.case_id, state={})
@@ -507,6 +528,14 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
     if gate.dropped:
         log.warning("post_check_violation", extra={"caseId": case_id, "step": "copilot",
                                                    "values": [f.raw for f in gate.dropped], "fixed": True})
+    if not (final_text or "").strip():
+        # Guaranteed text: every assistant turn writes a reply in the case language, alongside any card.
+        final_text, fb_source = await _text_fallback(case_id, tb, text, lang, use_adk and not llm.is_mock)
+        log.warning("empty_reply_fallback", extra={"caseId": case_id, "step": "copilot", "source": fb_source,
+                                                    "tools": [c["name"] for c in tb.calls]})
+        if first_token_ms is None:
+            first_token_ms = int((time.perf_counter() - t0) * 1000)
+        yield {"type": "token", "text": final_text}
     # Stage nudge: a victim with no evidence must always see the Upload card.
     case = actions.load(case_id)
     if stage(case, len(store.list_evidence(case_id))) == "evidence" and not any(c["name"] == "request_evidence" for c in tb.calls):
@@ -527,6 +556,40 @@ async def run_turn(case_id: str, text: str | None, flagged: bool, model_tag: str
                                     "runtime": "adk" if use_adk else "stage", "model": model})
     yield {"type": "done", "messageId": msg["id"] if msg else None, "message": jsonable(msg) if msg else None,
            "firstTokenMs": first_token_ms, "model": model}
+
+
+def _deterministic_reply(case: dict, lang: str) -> str:
+    steps = [st for st in (case.get("plan") or {}).get("steps", []) if st.get("status") != "done"]
+    txt = t("reply_fallback", lang)
+    if steps:
+        txt += " " + t("reply_fallback_next", lang, step=steps[0].get("titleLocal") or steps[0].get("title") or "")
+    return txt
+
+
+async def _text_fallback(case_id: str, tb: Toolbox, text: str | None, lang: str, use_llm: bool) -> tuple[str, str]:
+    """Non-empty reply when the model produced none: one plain Gemini text call (no tools, post-checked), else a
+    deterministic sentence in the case language. Never empty."""
+    case = actions.load(case_id)
+    if use_llm:
+        try:
+            summary = case_summary(case, len(get_store().list_evidence(case_id)))
+            shown = [e.get("name") for e in tb.calls]
+            system = (SYSTEM_PROMPT.format(country={"IN": "India", "MY": "Malaysia"}[case["country"]],
+                                           language=LANG_NAMES.get(lang, "English"))
+                      + "\n" + INJECTION_GUARD
+                      + f"\nTools already ran this turn (their cards are shown to the user): {shown}."
+                      + "\nTool results: " + json.dumps(jsonable(tb.results), ensure_ascii=False)[:6000]
+                      + "\nCase state: " + json.dumps(jsonable(summary), ensure_ascii=False)
+                      + f"\nWrite the reply to the user's last message in {LANG_NAMES.get(lang, 'English')}: 1-3 short "
+                        "sentences, refer to the card(s) if any, no new numbers. Return only the reply text.")
+            txt = await get_llm().generate_text(system=system, parts=[f"<user_message>{text or '(continue)'}</user_message>"],
+                                                temperature=0.3, step="reply_fallback", case_id=case_id)
+            clean, bad = post_check.sanitize(txt or "", actions.allowed_values(case, tb.results))
+            if clean.strip():  # sentences with unverified values are dropped
+                return clean.strip(), "gemini_text"
+        except Exception:  # noqa: BLE001 - fall through to the deterministic reply
+            log.exception("reply fallback model call failed", extra={"caseId": case_id})
+    return _deterministic_reply(case, lang), "deterministic"
 
 
 async def _regenerate(case_id: str, raw: str, gate: post_check.StreamGate, tb: Toolbox) -> str | None:

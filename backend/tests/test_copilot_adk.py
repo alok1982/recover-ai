@@ -72,3 +72,60 @@ def test_outcome_question_is_grounded_even_without_tool_call(client, monkeypatch
     assert done["message"]["sources"], "honest answer must cite at least one official source"
     assert any(c["name"] == "explain_rule" for c in done["message"]["toolCalls"])
     assert "Grounding for this question" in SEEN[0]
+
+
+class Gemini3StreamLlm(BaseLlm):
+    """Replays what Gemini 3 sends with SSE streaming: a function-call chunk, then a separate content-free chunk
+    (only a thought_signature, finish STOP). Before the fix ADK took that empty chunk as the final response and never
+    asked the model for the reply text."""
+
+    model: str = "gemini3-like"
+    calls: int = 0
+    reply: str = "मैंने अपलोड कार्ड दिखाया है। कृपया स्क्रीनशॉट जोड़ें।"
+    always_empty: bool = False
+
+    async def generate_content_async(self, llm_request, stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
+        self.calls += 1
+        last = llm_request.contents[-1]
+        empty = LlmResponse(content=types.Content(role="model", parts=[types.Part(thought_signature=b"sig")]))
+        if any(getattr(p, "function_response", None) for p in last.parts) and not self.always_empty:
+            yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=self.reply)]), partial=True)
+            yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=self.reply)]))
+            yield empty
+        elif any(getattr(p, "function_response", None) for p in last.parts):
+            yield empty
+        else:
+            yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+                function_call=types.FunctionCall(name="request_evidence", args={}), thought_signature=b"sig")]))
+            yield empty
+
+
+def test_empty_trailing_chunk_after_tool_call_does_not_end_the_turn(client, monkeypatch):
+    fake = Gemini3StreamLlm()
+    monkeypatch.setattr(copilot, "ADK_MODEL_OVERRIDE", fake)
+    cid = client.post("/api/cases", json={"country": "IN", "language": "hi"}, headers=H()).json()["caseId"]
+    ev = sse(client, cid, {"text": "मेरे साथ ठगी हुई"})
+    assert "upload" in cards(ev)
+    assert fake.calls == 2, "the model must be called again after the tool response"
+    assert text_of(ev) == fake.reply
+    assert ev[-1]["message"]["text"] == fake.reply
+
+
+def test_reply_is_never_empty_and_in_case_language(client, monkeypatch):
+    fake = Gemini3StreamLlm(always_empty=True)  # the model never writes text
+    monkeypatch.setattr(copilot, "ADK_MODEL_OVERRIDE", fake)
+    cid = client.post("/api/cases", json={"country": "IN", "language": "hi"}, headers=H()).json()["caseId"]
+    ev = sse(client, cid, {"text": "मेरे साथ ठगी हुई"})
+    reply = text_of(ev)
+    assert "upload" in cards(ev) and reply.strip()
+    assert any("\u0900" <= ch <= "\u097f" for ch in reply), reply  # Hindi case → Hindi fallback
+    assert ev[-1]["message"]["text"] == reply
+
+
+def test_drop_empty_chunk_keeps_real_content():
+    from google.adk.models.llm_response import LlmResponse as R
+    empty = R(content=types.Content(role="model", parts=[types.Part(thought_signature=b"s")]))
+    assert copilot._drop_empty_model_chunk(None, empty).content is None
+    for keep in (types.Part(text="hi"), types.Part(function_call=types.FunctionCall(name="x", args={}))):
+        assert copilot._drop_empty_model_chunk(None, R(content=types.Content(role="model", parts=[keep]))) is None
+    assert copilot._drop_empty_model_chunk(None, R(content=None, error_code="SAFETY")) is None
