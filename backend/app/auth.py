@@ -49,6 +49,13 @@ def verify_token(token: str) -> User:
         parts = token.split(":", 2)
         if len(parts) == 3 and parts[1] == "bank":
             return User(uid=f"bank-{parts[2]}", role="bank", name=parts[2])
+        if len(parts) == 3 and parts[1] == "admin":  # CR-04 mock admin: "mock:admin:<name>"
+            return User(uid=f"admin-{parts[2]}", role="admin", name=parts[2], email=f"{parts[2].lower()}@admin.mock")
+        if len(parts) == 3 and parts[1] == "staff":  # CR-04 mock work-email account; claims live in the local store
+            from .roles import mock_claims, mock_uid_for_email
+            uid = mock_uid_for_email(parts[2])
+            c = mock_claims(uid)
+            return User(uid=uid, role=c.get("role"), name=c.get("name"), email=parts[2].lower())
         if len(parts) == 3 and parts[1] == "phone":  # mock phone account: "mock:phone:+919000000001"
             from .profile import phone_email
             digits = parts[2].lstrip("+")
@@ -78,12 +85,28 @@ def bank_user(authorization: str | None = Header(default=None)) -> User:
     user = current_user(authorization)
     if not user.is_bank:
         raise HTTPException(403, "bank analyst role required")
+    from .roles import request_blocks_bank
+    if request_blocks_bank(user.uid):  # CR-04: revoked (or not yet approved) access ends at once
+        raise HTTPException(403, {"code": "BANK_ACCESS_REVOKED", "message": "Bank access is not active for this account."})
+    return user
+
+
+def admin_user(authorization: str | None = Header(default=None)) -> User:
+    """CR-04: the admin console and its APIs need the `role: admin` custom claim."""
+    user = current_user(authorization)
+    if user.role != "admin":
+        raise HTTPException(403, {"code": "ADMIN_REQUIRED", "message": "Admin role required."})
     return user
 
 
 def victim_user(authorization: str | None = Header(default=None)) -> User:
-    """Victim routes: a signed-in phone account (anonymous sessions are no longer accepted, CR-03 B)."""
+    """Victim routes: a signed-in phone account (anonymous sessions are no longer accepted, CR-03 B). Staff
+    (work-email) accounts — bank applicants, analysts, admins — are not victims (CR-04)."""
     user = current_user(authorization)
     if user.anonymous:
         raise HTTPException(401, {"code": "SIGN_IN_REQUIRED", "message": "Please sign in with your phone number."})
+    from .roles import is_staff_email
+    if user.role in ("bank", "admin") or is_staff_email(user.email):
+        raise HTTPException(403, {"code": "VICTIM_ACCOUNT_REQUIRED",
+                                  "message": "This is a staff account. Victims sign in with their phone number."})
     return user

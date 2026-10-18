@@ -2,8 +2,15 @@ rules_version = '2';
 // RecoverAI: clients only READ (live listeners). ALL writes go through the backend (Admin SDK bypasses rules).
 service cloud.firestore {
   match /databases/{database}/documents {
+    // CR-04: a bank claim counts only while its access request (if the account has one) is APPROVED, so a revoke
+    // takes effect at once even though an issued ID token keeps its claims until it expires.
     function isBank() {
-      return request.auth != null && request.auth.token.role == "bank";
+      return request.auth != null && request.auth.token.role == "bank"
+        && (!exists(/databases/$(database)/documents/bank_access_requests/$(request.auth.uid))
+            || get(/databases/$(database)/documents/bank_access_requests/$(request.auth.uid)).data.status == "APPROVED");
+    }
+    function isAdmin() {
+      return request.auth != null && request.auth.token.role == "admin";
     }
 
     match /cases/{caseId} {
@@ -20,6 +27,16 @@ service cloud.firestore {
     // CR-03: victim account + profile. Only the owner can read it; all writes go through the backend.
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // CR-04: bank access requests — the applicant and admins may read; writes only through the backend.
+    match /bank_access_requests/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
+    }
+    match /admin_audit/{id} {
+      allow read: if isAdmin();
       allow write: if false;
     }
 

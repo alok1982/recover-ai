@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from .. import profile as P
-from ..auth import User, victim_user
+from ..auth import User, current_user, victim_user
+from .. import roles as R
 from ..config import get_settings
 from ..services import jsonable
 from ..storage import get_blobs
@@ -56,9 +57,24 @@ def view(doc: dict) -> dict:
             "firstName": P.first_name(prof)}
 
 
+def staff_view(user: User) -> dict:
+    """CR-04: a work-email account (bank applicant, analyst or admin). No victim profile is created for it."""
+    req = R.get_request(user.uid)
+    role = user.role
+    if role == "bank" and R.request_blocks_bank(user.uid):
+        role = None  # revoked: the old ID token may still carry the claim until it expires
+    public = {k: jsonable(v) for k, v in (req or {}).items() if k not in ("id",)} if req else None
+    return {"uid": user.uid, "accountType": "staff", "email": user.email, "role": role or None,
+            "requestStatus": (req or {}).get("status"), "request": public, "banks": P.BANKS}
+
+
 @router.get("")
-def me(user: User = Depends(victim_user)) -> dict:
-    return {**view(ensure_user(user)), "banks": P.BANKS}
+def me(user: User = Depends(current_user)) -> dict:
+    if user.anonymous:
+        raise HTTPException(401, {"code": "SIGN_IN_REQUIRED", "message": "Please sign in with your phone number."})
+    if user.role in ("bank", "admin") or R.is_staff_email(user.email):
+        return staff_view(user)
+    return {**view(ensure_user(user)), "accountType": "victim", "role": "victim", "requestStatus": None, "banks": P.BANKS}
 
 
 @router.post("/terms")
@@ -89,10 +105,22 @@ def put_profile(req: ProfileReq, user: User = Depends(victim_user)) -> dict:
 
 
 @router.delete("")
-def delete_me(user: User = Depends(victim_user)) -> dict:
+def delete_me(user: User = Depends(current_user)) -> dict:
     """SHOULD: delete the account, its profile and the cases it owns (evidence files included). Records already
-    shared with a bank stay with the bank under the consent given."""
+    shared with a bank stay with the bank under the consent given. CR-04: a staff account deletes its bank access
+    request (the admin audit log is kept); admins cannot delete themselves here."""
     store = get_store()
+    if user.anonymous:
+        raise HTTPException(401, {"code": "SIGN_IN_REQUIRED", "message": "Please sign in."})
+    if user.role == "admin":
+        raise HTTPException(409, {"code": "ADMIN_ACCOUNT", "message": "Admin accounts are managed with scripts/create_admin.py."})
+    if user.role == "bank" or R.is_staff_email(user.email):
+        had = R.get_request(user.uid)
+        if had:
+            store.delete_doc(R.REQ_COL, user.uid)
+            R.audit(user, "request_deleted_by_applicant", user.uid, previousStatus=had.get("status"))
+        log.info("staff_user_deleted", extra={"step": "me"})
+        return {"deleted": True, "cases": 0}
     cases = store.list_cases(owner_uid=user.uid)
     for c in cases:
         try:

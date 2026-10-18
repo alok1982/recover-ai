@@ -55,6 +55,11 @@ class Store(Protocol):
     def set_user(self, uid: str, data: dict) -> None: ...
     def update_user(self, uid: str, patch: dict) -> None: ...
     def delete_user(self, uid: str) -> None: ...
+    # CR-04: bank_access_requests/{uid} and admin_audit (generic small collections, backend-only writes)
+    def get_doc(self, col: str, doc_id: str) -> dict | None: ...
+    def set_doc(self, col: str, doc_id: str, data: dict) -> None: ...
+    def delete_doc(self, col: str, doc_id: str) -> None: ...
+    def list_docs(self, col: str, where: tuple[str, str] | None = None) -> list[dict]: ...
     # Pub/Sub dedupe (F15)
     def get_processed_event(self, event_key: str) -> dict | None: ...
     def put_processed_event(self, event_key: str, data: dict) -> None: ...
@@ -167,6 +172,27 @@ class MemoryStore:
         with self._lock:
             self.db.setdefault("users", {}).pop(uid, None)
             self._save()
+
+    # generic docs (CR-04)
+    def get_doc(self, col: str, doc_id: str) -> dict | None:
+        with self._lock:
+            d = self.db.setdefault(col, {}).get(doc_id)
+            return copy.deepcopy(d) if d else None
+
+    def set_doc(self, col: str, doc_id: str, data: dict) -> None:
+        with self._lock:
+            self.db.setdefault(col, {})[doc_id] = copy.deepcopy({**data, "id": doc_id})
+            self._save()
+
+    def delete_doc(self, col: str, doc_id: str) -> None:
+        with self._lock:
+            self.db.setdefault(col, {}).pop(doc_id, None)
+            self._save()
+
+    def list_docs(self, col: str, where: tuple[str, str] | None = None) -> list[dict]:
+        with self._lock:
+            return [copy.deepcopy(d) for d in self.db.setdefault(col, {}).values()
+                    if where is None or d.get(where[0]) == where[1]]
 
     # messages
     def add_message(self, case_id: str, msg: dict) -> dict:
@@ -351,6 +377,23 @@ class FirestoreStore:
 
     def delete_user(self, uid: str) -> None:
         self.client.collection("users").document(uid).delete()
+
+    # generic docs (CR-04)
+    def get_doc(self, col: str, doc_id: str) -> dict | None:
+        snap = self.client.collection(col).document(doc_id).get()
+        return {**snap.to_dict(), "id": snap.id} if snap.exists else None
+
+    def set_doc(self, col: str, doc_id: str, data: dict) -> None:
+        self.client.collection(col).document(doc_id).set({**data, "id": doc_id})
+
+    def delete_doc(self, col: str, doc_id: str) -> None:
+        self.client.collection(col).document(doc_id).delete()
+
+    def list_docs(self, col: str, where: tuple[str, str] | None = None) -> list[dict]:
+        q = self.client.collection(col)
+        if where:
+            q = q.where(filter=self._fs.FieldFilter(where[0], "==", where[1]))
+        return [{**d.to_dict(), "id": d.id} for d in q.stream()]
 
     def add_message(self, case_id: str, msg: dict) -> dict:
         """A caller-supplied id makes the write idempotent (Pub/Sub redelivery): an existing message is returned as is."""
