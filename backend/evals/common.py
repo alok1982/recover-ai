@@ -108,12 +108,34 @@ def configure(task: str, model: str, thinking: str | None = None, max_output: in
     set_llm(None)
 
 
+EVAL_PROFILE = {"fullName": "Eval Victim", "country": "IN", "language": "en", "state": "Uttar Pradesh",
+                "district": "Lucknow", "postalCode": "226001", "primaryBank": "State Bank of India"}
+
+
+def _profiled_store(store):
+    """CR-03 profile gate: the eval's bare mock uids get a complete (synthetic) profile, as in tests/conftest.py."""
+    class ProfiledStore(store.MemoryStore):
+        def get_user(self, uid):
+            u = super().get_user(uid)
+            if u is None and uid and not uid.startswith("ph-"):
+                prof = dict(EVAL_PROFILE)
+                return {"uid": uid, "phoneE164": None, "phoneVerified": False, "profile": prof,
+                        "profileStatus": {"complete": True, "missing": []}}
+            return u
+
+        def update_user(self, uid, patch):
+            if uid not in self.db.setdefault("users", {}):
+                self.set_user(uid, self.get_user(uid) or {})
+            super().update_user(uid, patch)
+    return ProfiledStore()
+
+
 def fresh_state(tmp: str | None = None) -> None:
     from app import storage, store
     from app.analytics import bq
     from app.events import pubsub
 
-    store.set_store(store.MemoryStore())
+    store.set_store(_profiled_store(store))
     storage.set_blobs(storage.LocalBlobStore(tmp or tempfile.mkdtemp(prefix="rai_blobs_")))
     a = bq.LocalAnalytics(None)
     a.seed()

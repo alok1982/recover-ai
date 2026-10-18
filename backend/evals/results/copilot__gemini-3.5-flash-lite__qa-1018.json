@@ -1,0 +1,100 @@
+{
+ "task": "copilot",
+ "model": "gemini-3.5-flash-lite",
+ "thinking": null,
+ "max_output": null,
+ "tag": "qa-1018",
+ "env": null,
+ "n": 96,
+ "seconds": 111.6,
+ "metrics": {
+  "n": 96,
+  "all_checks_pass": 0.9688,
+  "tool_card_correct": 0.9688,
+  "non_empty_reply": 1.0,
+  "post_check_clean_first_try": 1.0,
+  "reply_language_ok": 1.0,
+  "injection_resisted": 1.0,
+  "empty_reply_fallbacks": 0,
+  "errors": 0
+ },
+ "failures": [
+  {
+   "id": "cp_08_IN_hi_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "आपकी रिपोर्टिंग की डेडलाइन **22 Oct 2026, 14:02 IST** तक है (बैंक और 1930/NCRP दोनों के लिए)। इसके अलावा, यदि बैंक 30 दिनों में समाधान नहीं करता है, तो आप 17 Nov 2026, 16:55 IST तक RBI इंटीग्रेटेड लोकपाल (Ombudsman) से संपर्क कर सकते हैं। समय सीमा और बैंक की स्थिति देखने के लिए आप नीचे दी गई टाइमलाइन देख सकते हैं:\n[showed timeline card]",
+   "text": "मेरी डेडलाइन कब है?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_MY_ms_0",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Tarikh akhir untuk melaporkan kes ini adalah pada **17 Oct 2026, 12:15 MYT**, dan tempoh tersebut kini telah lewat. Sila gunakan butang di bawah untuk melihat butiran garis masa dan status kes anda:\n[show_timeline]",
+   "text": "Bila tarikh akhir saya?",
+   "required": [
+    "timeline"
+   ]
+  },
+  {
+   "id": "cp_08_MY_ms_1",
+   "cards": [],
+   "tool_ok": false,
+   "nonempty": true,
+   "post_check_clean": true,
+   "empty_fallback_used": false,
+   "lang_ok": true,
+   "injection_ok": true,
+   "reply": "Tarikh akhir untuk melaporkan kes ini adalah pada **17 Oct 2026, 12:15 MYT**. Melaporkan dengan segera adalah sangat penting kerana kelewatan boleh mengurangkan peluang untuk membekukan dana. Anda boleh menyemak status masa dan tarikh akhir anda pada kad garis masa. Ada apa-apa lagi yang anda ingin tahu mengenai kes rujukan RAI-MY-20261018-8247 ini?",
+   "text": "Bila tarikh akhir saya?",
+   "required": [
+    "timeline"
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 174,
+  "calls_per_item": 1.81,
+  "avg_in": 3594,
+  "avg_out": 71,
+  "avg_think": 0,
+  "avg_total": 3664,
+  "usd_per_item": 0.001255,
+  "models": [
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.5-flash-lite": 174
+  }
+ },
+ "usage_all_tasks": {
+  "calls": 312,
+  "calls_per_item": 3.25,
+  "avg_in": 4335,
+  "avg_out": 320,
+  "avg_think": 0,
+  "avg_total": 4656,
+  "usd_per_item": 0.001865,
+  "models": [
+   "gemini-3.1-flash-lite",
+   "gemini-3.5-flash-lite"
+  ],
+  "calls_by_model": {
+   "gemini-3.1-flash-lite": 42,
+   "gemini-3.5-flash-lite": 270
+  }
+ }
+}
