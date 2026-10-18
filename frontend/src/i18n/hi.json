@@ -15,7 +15,7 @@
  "attach": "जोड़ें",
  "uploadTitle": "अपने सबूत जोड़ें",
  "uploadHint": "भुगतान का स्क्रीनशॉट, ठग के संदेश, या वॉइस नोट।",
- "chooseFiles": "फ़ाइल / कैमरा चुनें",
+ "chooseFiles": "फ़ाइल चुनें",
  "pasteText": "SMS / चैट टेक्स्ट चिपकाएँ",
  "addText": "टेक्स्ट जोड़ें",
  "recordNote": "वॉइस नोट रिकॉर्ड करें",
@@ -90,5 +90,13 @@
  "escalateRow": "समाधान नहीं → आगे शिकायत करें",
  "bankRef": "बैंक संदर्भ",
  "bankComplaint": "बैंक शिकायत",
- "source": "स्रोत"
+ "source": "स्रोत",
+ "camera": "फ़ोटो लें",
+ "evType.image": "फ़ोटो",
+ "evType.text": "टेक्स्ट",
+ "evType.audio": "ऑडियो",
+ "evType.voice": "आवाज़",
+ "hashes": "SHA-256 हैश दिखाएँ",
+ "hideHashes": "हैश छिपाएँ",
+ "missingCheck": "नहीं मिला — कृपया जोड़ें"
 }

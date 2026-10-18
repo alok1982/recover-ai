@@ -118,6 +118,17 @@ tr.lvl-red td { background: var(--red-bg); } tr.lvl-amber td { background: #fffa
   .mobile-tabs button.on { border-color: var(--accent); color: var(--accent); }
   .layout { display: block; } .chat { height: calc(100vh - 160px); border-right: none; } .panel { height: auto; }
   .tab-chat .panel { display: none; } .tab-case .chat { display: none; }
+  /* §13.1 mobile: bottom tab bar (Chat / My case); the chat fills the space between header and tab bar */
+  .mobile-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: #fff; border-top: 1px solid var(--line);
+                 box-shadow: 0 -2px 8px rgba(0,0,0,.06); padding-bottom: env(safe-area-inset-bottom); }
+  .mobile-tabs button { min-height: 58px; border-bottom: none; border-top: 3px solid transparent; font-size: 1rem; }
+  .mobile-tabs button.on { border-top-color: var(--accent); }
+  .app { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+  .app.tab-chat { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+  .app.tab-chat .layout { flex: 1; min-height: 0; } .app.tab-chat .chat { height: 100%; }
+  .app.tab-chat .disclaimer { display: none; }
+  /* large mic on mobile */
+  .inputbar .icon-btn.mic { min-width: 64px; min-height: 64px; font-size: 1.7rem; border-width: 2px; }
   .grid2 { grid-template-columns: 1fr; } .bubble { max-width: 92%; }
   .inbox { font-size: .85rem; } .inbox th:nth-child(5), .inbox td:nth-child(5) { display: none; }
 }
@@ -145,3 +156,11 @@ tr.lvl-red td { background: var(--red-bg); } tr.lvl-amber td { background: #fffa
 .c-MY { background: #2f7de0; }
 .legend { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 10px; vertical-align: middle; }
 table.compact td, table.compact th { padding: 4px 8px; }
+
+/* Upload items: type + time; panel hash expander; timeline step actions */
+.ev-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ev-meta .ev-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hashes { margin-top: 6px; } .hash-list { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
+.hash-list li { background: #f5f8fa; border-radius: 8px; padding: 6px 8px; } .hash-list .sha { font-size: .72rem; word-break: break-all; display: block; }
+.clock-steps { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
+.clock-steps li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+.clock-steps li.done { color: var(--muted); } .mark-done input { max-width: 160px; }

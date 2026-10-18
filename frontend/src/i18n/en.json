@@ -15,7 +15,7 @@
  "attach": "Attach",
  "uploadTitle": "Add your evidence",
  "uploadHint": "Payment screenshot, scammer messages, or a voice note.",
- "chooseFiles": "Choose files / camera",
+ "chooseFiles": "Choose files",
  "pasteText": "Paste SMS / chat text",
  "addText": "Add text",
  "recordNote": "Record voice note",
@@ -90,5 +90,13 @@
  "escalateRow": "No resolution → escalate",
  "bankRef": "Bank ref",
  "bankComplaint": "Bank complaint",
- "source": "Source"
+ "source": "Source",
+ "camera": "Take photo",
+ "evType.image": "Image",
+ "evType.text": "Text",
+ "evType.audio": "Audio",
+ "evType.voice": "Voice",
+ "hashes": "Show SHA-256 hashes",
+ "hideHashes": "Hide hashes",
+ "missingCheck": "Missing — please add"
 }

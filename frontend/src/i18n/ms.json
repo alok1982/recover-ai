@@ -15,7 +15,7 @@
  "attach": "Lampir",
  "uploadTitle": "Tambah bukti anda",
  "uploadHint": "Tangkapan skrin pembayaran, mesej penipu, atau nota suara.",
- "chooseFiles": "Pilih fail / kamera",
+ "chooseFiles": "Pilih fail",
  "pasteText": "Tampal teks SMS / sembang",
  "addText": "Tambah teks",
  "recordNote": "Rakam nota suara",
@@ -90,5 +90,13 @@
  "escalateRow": "Tiada penyelesaian → tingkatkan aduan",
  "bankRef": "Rujukan bank",
  "bankComplaint": "Aduan bank",
- "source": "Sumber"
+ "source": "Sumber",
+ "camera": "Ambil gambar",
+ "evType.image": "Imej",
+ "evType.text": "Teks",
+ "evType.audio": "Audio",
+ "evType.voice": "Suara",
+ "hashes": "Tunjuk hash SHA-256",
+ "hideHashes": "Sembunyi hash",
+ "missingCheck": "Tiada — sila tambah"
 }

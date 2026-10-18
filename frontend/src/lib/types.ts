@@ -50,6 +50,7 @@ export interface Clock {
   escalationTemplate?: string | null;
   escalationNotifiedAt?: string | null;
   contact?: string | null;
+  appliesToSteps?: string[];
 }
 
 export interface CaseDoc {

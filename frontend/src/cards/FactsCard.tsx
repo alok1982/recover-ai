@@ -48,7 +48,7 @@ export function FactsCard({ data, messageId }: CardProps) {
               <tr key={f.key} className={`lvl-${f.level}`}>
                 <th>
                   <span className={`dot ${f.level}`} aria-hidden /> {LABELS[f.key] || f.key}
-                  {f.level === "red" && !f.missing && <span className="chip warn">{t("checkThis")}</span>}
+                  {f.level === "red" && <span className="chip warn">{f.missing ? t("missingCheck") : t("checkThis")}</span>}
                 </th>
                 <td>
                   {editing === f.key ? (

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../lib/api";
-import { resolveUrl } from "../lib/config";
+import { doc, onSnapshot } from "firebase/firestore";
+import { MOCK, resolveUrl } from "../lib/config";
+import { bankDb } from "../lib/firebase";
 import { riskBadge } from "./Inbox";
 
 export function fmtMoney(v: number | null | undefined, currency?: string | null): string {
@@ -19,7 +21,20 @@ export function CaseDetail({ analyst }: { analyst: string }) {
   const load = useCallback(() => api.bankGet<any>(`/api/bank/cases/${id}`).then(setD).catch((e) => setErr(e.message)), [id]);
   useEffect(() => {
     load();
-  }, [load]);
+    // Live: the receiver fills in the Gemini reason and ML score a few seconds after the case appears, and decisions
+    // change status/audit. Re-read the API view whenever the bank_cases doc changes (rules: role=bank only).
+    if (MOCK) {
+      const iv = window.setInterval(load, 2000);
+      return () => window.clearInterval(iv);
+    }
+    let first = true;
+    let fallback: number | undefined;
+    const unsub = onSnapshot(doc(bankDb(), "bank_cases", id!), () => {
+      if (first) { first = false; return; }
+      load();
+    }, () => { fallback = window.setInterval(load, 3000); });  // listener refused: poll instead
+    return () => { unsub(); if (fallback) window.clearInterval(fallback); };
+  }, [load, id]);
   if (err) return <main className="bank-main"><p className="error">{err}</p></main>;
   if (!d) return <main className="bank-main">…</main>;
   const c = d.case;

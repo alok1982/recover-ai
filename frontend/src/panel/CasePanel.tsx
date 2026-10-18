@@ -6,6 +6,39 @@ import { countdown, effectiveNow } from "../lib/live";
 import { useCopilot } from "../copilot/context";
 import { openEvidencePack } from "../cards/DraftsCard";
 import { useT } from "../i18n";
+import { fmtTime } from "../cards/UploadCard";
+
+/** F2/§13.3: evidence count with an expander listing every item's type, time and full SHA-256. */
+function EvidenceHashes({ caseId, count }: { caseId: string; count: number }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<any[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    api.get<{ evidence: any[] }>(`/api/cases/${caseId}/evidence`).then((r) => setItems(r.evidence)).catch((e) => setErr(e.message));
+  }, [open, caseId, count]);
+  if (!count) return null;
+  return (
+    <div className="hashes">
+      <button className="link small" aria-expanded={open} onClick={() => setOpen(!open)}>
+        🔐 {open ? t("hideHashes") : t("hashes")} {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <ul className="hash-list">
+          {err && <li className="error">{err}</li>}
+          {!items && !err && <li className="muted">…</li>}
+          {items?.map((e) => (
+            <li key={e.id}>
+              <div className="small"><b>{t(`evType.${e.type}`)}</b>{e.fileName ? ` · ${e.fileName}` : ""} · {fmtTime(e.uploadedAt)}</div>
+              <code className="sha">{e.sha256}</code>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function amountDisplay(ex: any): string | null {
   if (!ex || ex.amount == null) return null;
@@ -85,6 +118,7 @@ export function CasePanel() {
           <span className="chip">{c.evidenceCount || 0} 📎</span>
           {c.evidencePackPath && <button className="btn small" onClick={() => openEvidencePack(caseId)}>📄 {t("evidencePack")}</button>}
         </div>
+        <EvidenceHashes caseId={caseId} count={c.evidenceCount || 0} />
       </section>
       {DEMO_UI && c.demoMode && (
         <section className="demo">
