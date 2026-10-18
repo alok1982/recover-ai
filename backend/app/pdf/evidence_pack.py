@@ -4,11 +4,18 @@ from __future__ import annotations
 import base64
 import html
 import logging
+from pathlib import Path
 
 from ..rules.formatting import format_amount, format_dt
 from ..timeutil import utcnow
 
 log = logging.getLogger("recoverai.pdf")
+
+# Approved RecoverAI logo (outlined SVG, no font dependency), embedded on the cover as a data URI.
+try:
+    _LOGO_URI = "data:image/svg+xml;base64," + base64.b64encode((Path(__file__).with_name("rai_logo.svg")).read_bytes()).decode()
+except OSError:  # pragma: no cover - the asset ships with the package
+    _LOGO_URI = ""
 
 DISCLAIMER = ("RecoverAI prepares drafts and reminders. It is not legal advice, does not handle money, and never charges "
               "victims. Official agencies and your bank make all decisions.")
@@ -119,11 +126,12 @@ th {{ width: 32%; color: #333; font-weight: 600; }} .muted {{ color: #888; }} .h
 .thumb {{ max-width: 70pt; max-height: 120pt; border: 1px solid #ddd; }} .snip {{ max-width: 150pt; font-size: 7pt; color: #444; }}
 .cols {{ display: flex; gap: 8pt; }} .cols > div {{ flex: 1; }}
 pre {{ white-space: pre-wrap; font-family: 'Noto Sans', 'Noto Sans Devanagari', sans-serif; font-size: 7.6pt; margin: 0; background: #f7fafb; padding: 4pt; }}
+.logo {{ height: 26pt; width: auto; display: block; margin: 0 0 5pt; }}
 .cover {{ background: #eaf4f7; padding: 8pt 10pt; border-left: 4pt solid #0B6E8A; margin-bottom: 6pt; }}
 .disc {{ margin-top: 10pt; font-size: 7.5pt; color: #444; border-top: 1px solid #ccc; padding-top: 4pt; }}
 </style></head><body>
 {wm_body}
-<div class="cover"><h1>Evidence pack</h1>
+<div class="cover">{f'<img class="logo" src="{_LOGO_URI}" alt="RecoverAI">' if _LOGO_URI else ''}<h1>Evidence pack</h1>
 <div><b>Case reference:</b> {cid} &nbsp; <b>Country:</b> {_e(pb['name'])} &nbsp; <b>Playbook:</b> {_e(pb['version'])}</div>
 <div><b>Generated:</b> {_e(gen)} &nbsp; <b>Status:</b> {_e(case.get('status'))} &nbsp; <b>Bank status:</b> {_e(case.get('bankStatus'))}</div>{_desk_line(case)}</div>
 <h2>Incident summary</h2><p>{_e(ex.get('narrative_en'))}</p>{'<p>' + _e(ex.get('narrative_local')) + '</p>' if ex.get('narrative_local') and ex.get('narrative_local') != ex.get('narrative_en') else ''}

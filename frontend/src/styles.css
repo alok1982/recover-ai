@@ -268,3 +268,11 @@ ul.cases a { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; pad
 .flash { background: #e6f6ea; border: 1px solid #9bd3a8; padding: 8px 12px; border-radius: 10px; }
 .btn.danger, .link.danger { color: #b42318; }
 .demo-note { background: #fff7e0; border: 1px solid #f2d27a; padding: 6px 10px; border-radius: 8px; }
+
+/* brand logo (approved RAI mark) */
+.logo { display: block; flex: none; }
+.brand:has(.logo) { display: inline-flex; align-items: center; gap: 8px; line-height: 1; }
+.brand-text { font-weight: 700; color: var(--ink); }
+.brand-sep { color: var(--muted); font-weight: 400; }
+.login-brand { display: flex; align-items: center; gap: 10px; }
+.login-brand h1 { margin: 0; }

@@ -4,6 +4,7 @@ import { useVictim, victimSignOut } from "../lib/auth";
 import type { Lang } from "../lib/types";
 import { LANG_LABEL, useT } from "../i18n";
 import { useHealth } from "../lib/health";
+import { Logo } from "./Logo";
 
 /** Shared header for the victim pages: brand, EN/HI/MS switch, account menu (My cases · Profile · Log out). */
 export function AppHeader({ lang, setLang, children }: { lang?: Lang; setLang?: (l: Lang) => void; children?: React.ReactNode }) {
@@ -15,7 +16,7 @@ export function AppHeader({ lang, setLang, children }: { lang?: Lang; setLang?: 
     <>
       <DemoRibbon />
       <header className="top site-head">
-        <Link className="brand small" to="/">✔ RecoverAI</Link>
+        <Link className="brand small" to="/" aria-label="RecoverAI home"><Logo height={34} /></Link>
         <div className="row">
           {children}
           {setLang && (

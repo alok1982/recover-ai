@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import { Logo } from "../ui/Logo";
 
 /** CR-03 B: Terms & Privacy notice linked from signup (purpose limitation under India's DPDP Act 2023 / Malaysia's PDPA). */
 export function Privacy() {
   return (
     <main className="landing privacy">
-      <Link className="brand small" to="/">✔ RecoverAI</Link>
+      <Link className="brand small" to="/" aria-label="RecoverAI home"><Logo height={34} /></Link>
       <h2>Terms &amp; Privacy</h2>
       <p><b>Purpose.</b> RecoverAI uses your phone number, name, location and bank only to help you report and recover from
         fraud: preparing complaints, bank letters and evidence packs, and — only when you tap to consent — sharing your case

@@ -6,6 +6,7 @@ import { passwordOk } from "../lib/phone";
 import { useHealth } from "../lib/health";
 import { DEMO_BANK_NAME } from "../lib/demobank";
 import { DemoRibbon } from "../ui/AppHeader";
+import { Logo } from "../ui/Logo";
 import {
   requestBankAccess, routeStaff, staffDeleteAccount, staffMe, staffSignIn, staffSignOut, staffSignUp, StaffApiError,
   type StaffMe,
@@ -157,7 +158,7 @@ export function PendingPage() {
     <>
     <DemoRibbon />
     <main className="landing staff-page" data-testid="pending-page">
-      <header className="row staff-top"><b>✔ RecoverAI · Bank staff</b>
+      <header className="row staff-top"><span className="brand small"><Logo height={30} /><span className="brand-sep">·</span><b className="brand-text">Bank staff</b></span>
         <button className="link" data-testid="staff-logout" onClick={async () => { await staffSignOut(); nav("/"); }}>Log out</button></header>
       {!me && !err && <p className="loading">…</p>}
       {err && <p className="error">{err}</p>}

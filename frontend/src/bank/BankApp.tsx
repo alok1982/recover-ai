@@ -14,6 +14,7 @@ export function useDeskName(): string {
 import { Inbox } from "./Inbox";
 import { CaseDetail } from "./CaseDetail";
 import { ScamIntelligence } from "./ScamIntelligence";
+import { Logo } from "../ui/Logo";
 
 function Login({ onDone }: { onDone: (u: BankUser) => void }) {
   const desk = useDeskName();
@@ -25,7 +26,7 @@ function Login({ onDone }: { onDone: (u: BankUser) => void }) {
     <>
     <DemoRibbon />
     <main className="bank-login">
-      <h1 data-testid="desk-title">🏦 {desk}</h1>
+      <div className="login-brand"><Logo variant="mark" height={44} /><h1 data-testid="desk-title">{desk}</h1></div>
       <p className="muted">Demo analyst login {MOCK ? "(offline mock: any name)" : "(Firebase email/password, role=bank)"}</p>
       <label>Name<input value={name} onChange={(e) => setName(e.target.value)} /></label>
       {!MOCK && (
@@ -51,7 +52,7 @@ export function BankApp() {
     <div className="bank">
       <DemoRibbon />
       <header className="top bank-top">
-        <Link className="brand small" to="/bank" data-testid="desk-title">🏦 {desk}</Link>
+        <Link className="brand small" to="/bank"><Logo variant="mark" height={30} /><span data-testid="desk-title">{desk}</span></Link>
         <nav className="row">
           <Link to="/bank">Inbox</Link>
           <Link to="/bank/intel">Scam intelligence</Link>

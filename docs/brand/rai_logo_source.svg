@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 120" width="470" height="120">
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="#0F5E6B"/>
+  <text y="66" font-family="Inter, 'Noto Sans', sans-serif" font-weight="800" font-size="44"><tspan x="20" fill="#FFFFFF">R</tspan><tspan x="51" fill="#F5A524">A</tspan><tspan x="88" fill="#F5A524">I</tspan></text>
+  <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 94 L44 84 L58 90 L92 76"/>
+    <path d="M81 75 L93 75.5 L90 87"/>
+  </g>
+  <text x="138" y="80" font-family="Inter, 'Noto Sans', sans-serif" font-size="58" font-weight="700" letter-spacing="-1"><tspan fill="#1F2A3A">Recover</tspan><tspan fill="#0F5E6B">AI</tspan></text>
+</svg>

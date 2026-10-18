@@ -6,6 +6,7 @@ import { DEMO_BANK_ID } from "../lib/demobank";
 import { DemoRibbon } from "../ui/AppHeader";
 import { AuthError } from "../lib/auth";
 import { ADMIN_EMAIL, staffApi, StaffApiError, staffMe, staffSignIn, staffSignOut, type AccessRequest, type RequestStatus, type StaffMe } from "../lib/staff";
+import { Logo } from "../ui/Logo";
 
 interface AuditEntry { id: string; at: string; actorEmail: string | null; action: string; targetUid: string; reason?: string | null; bankId?: string }
 const TABS: RequestStatus[] = ["PENDING", "APPROVED", "REJECTED", "REVOKED"];
@@ -91,7 +92,7 @@ export function AdminLogin() {
     <>
       <DemoRibbon />
       <main className="bank-login admin-login" data-testid="admin-login">
-        <h1>🛡️ RecoverAI Admin</h1>
+        <div className="login-brand"><Logo variant="mark" height={44} /><h1>RecoverAI Admin</h1></div>
         <p className="muted">Admin console sign-in. Requires the admin role.</p>
         <form className="form" onSubmit={submit} noValidate>
           <label>Email<input name="email" type="email" autoComplete="username" placeholder={ADMIN_EMAIL} value={email} onChange={(e) => setEmail(e.target.value)} /></label>
@@ -150,7 +151,7 @@ export function AdminApp() {
     <div className="bank admin" data-testid="admin-console">
       <DemoRibbon />
       <header className="top bank-top">
-        <span className="brand small">🛡️ RecoverAI · Admin console</span>
+        <span className="brand small"><Logo height={30} /><span className="brand-sep">·</span><span className="brand-text">Admin console</span></span>
         <nav className="row"><span className="muted">{me.email}</span><button className="link" onClick={logout}>Sign out</button></nav>
       </header>
       <main className="admin-main">
