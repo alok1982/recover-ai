@@ -4,6 +4,7 @@ import { countdown, effectiveNow } from "../lib/live";
 import { useT } from "../i18n";
 import type { Clock, Step } from "../lib/types";
 import { MarkDone } from "./PlanCard";
+import { WithdrawAction } from "./WithdrawCard";
 import type { CardProps } from ".";
 
 export function ClockList({ clocks, actions }: { clocks: Clock[]; actions?: boolean }) {
@@ -58,7 +59,10 @@ export function TimelineCard({ data }: CardProps) {
     <div className="card timeline-card">
       <h3>⏱ {t("timelineTitle")}</h3>
       <ClockList clocks={clocks} actions />
-      <p><b>{t("bankStatus")}:</b> <span className={`pill bank-${bank}`}>{t(`bank.${bank}`)}</span></p>
+      <p><b>{t("bankStatus")}:</b> <span className={`pill bank-${bank}`}>{t(`bank.${bank}`)}</span>
+        {caseDoc?.publicRef && bank !== "NONE" && <span className="muted"> · {t("publicRef")} <code>{caseDoc.publicRef}</code></span>}
+        {caseDoc?.sandbox && <span className="pill sandbox-pill">{t("sandboxPill")}</span>}</p>
+      <WithdrawAction compact />
     </div>
   );
 }

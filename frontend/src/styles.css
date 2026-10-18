@@ -170,3 +170,31 @@ table.compact td, table.compact th { padding: 4px 8px; }
               border: 1px solid var(--line); color: var(--muted); background: #fff; letter-spacing: .02em; }
 .model-chip.gemma { border-color: #7b61ff; color: #5a3fd6; background: #f3f0ff; }
 .model-chip.gemini { border-color: #9ec5ff; color: #1a5fb4; background: #eef5ff; }
+
+/* CR-01 — safe bank handoff */
+.pill.sandbox-pill { background: var(--amber-bg); color: var(--amber); letter-spacing: .04em; margin-left: 6px; }
+.pill.dest-SANDBOX { background: var(--amber-bg); color: var(--amber); }
+.pill.dest-LIVE { background: var(--red-bg); color: var(--red); }
+.pill.bank-WITHDRAWN { background: #eee; color: #555; }
+.sandbox-note { color: var(--amber); margin: 6px 0; }
+.sandbox-toggle { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.public-ref { margin-top: 6px; }
+.panel-withdraw { margin: 8px 0; }
+.withdraw-confirm { border-left: 3px solid var(--red); padding-left: 10px; margin-top: 8px; }
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.sheet { background: #fff; width: min(560px, 100%); max-height: 90vh; overflow: auto; border-radius: 16px 16px 0 0; padding: 18px 20px 24px; box-shadow: 0 -6px 24px rgba(0, 0, 0, .2); }
+@media (min-width: 720px) { .sheet-backdrop { align-items: center; } .sheet { border-radius: 16px; } }
+.confirm-sheet.is-sandbox { border-top: 6px solid var(--amber); }
+.confirm-sheet .dest { padding: 8px 10px; border-radius: 8px; background: var(--amber-bg); }
+.confirm-sheet .dest-LIVE { background: var(--red-bg); }
+.confirm-check { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0; font-weight: 600; }
+.confirm-check input { width: 22px; height: 22px; flex: none; }
+.undo-row .countdown { font-weight: 700; font-size: 1.1rem; }
+.tabs { display: flex; gap: 6px; margin: 8px 0; }
+.tab { border: 1px solid #ccd; background: #fff; padding: 6px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; }
+.tab.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tab.sandbox-tab.on { background: var(--amber); border-color: var(--amber); }
+.sandbox-banner { background: repeating-linear-gradient(45deg, #fff3cd, #fff3cd 12px, #ffe08a 12px, #ffe08a 24px); color: #6b4e00; font-weight: 700; padding: 10px 14px; border-radius: 8px; margin: 8px 0; }
+.withdrawn-banner { background: #eee; color: #333; font-weight: 600; padding: 10px 14px; border-radius: 8px; margin: 8px 0; }
+.inbox-sandbox tbody tr { background: #fffaf0; }
+.pill.bstat-WITHDRAWN_BY_CUSTOMER { background: #eee; color: #555; }

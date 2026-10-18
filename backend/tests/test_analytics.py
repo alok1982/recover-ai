@@ -89,15 +89,15 @@ def con(local):
         currency VARCHAR, counterparty_key VARCHAR, txn_time TIMESTAMPTZ)""")
     c.execute("""CREATE TABLE recoverai_analytics.case_events (event_id VARCHAR, case_id VARCHAR, event_type VARCHAR, country VARCHAR,
         scam_type VARCHAR, amount DOUBLE, currency VARCHAR, beneficiary_hash VARCHAR, risk_level VARCHAR, decision VARCHAR,
-        event_time TIMESTAMPTZ)""")
+        sandbox BOOLEAN, event_time TIMESTAMPTZ)""")
     d = local.data
     c.executemany("INSERT INTO recoverai_analytics.bank_accounts VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                   [[a[k] for k in bq.ACCOUNT_COLUMNS] for a in d["accounts"]])
     c.executemany("INSERT INTO recoverai_analytics.bank_txn VALUES (?,?,?,?,?,?,?)",
                   [[t[k] for k in ("txn_id", "account_key", "direction", "amount", "currency", "counterparty_key", "txn_time")] for t in d["txns"]])
-    c.executemany("INSERT INTO recoverai_analytics.case_events VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                  [[e[k] for k in ("event_id", "case_id", "event_type", "country", "scam_type", "amount", "currency", "beneficiary_hash",
-                                   "risk_level", "decision", "event_time")] for e in d["case_events"]])
+    c.executemany("INSERT INTO recoverai_analytics.case_events VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                  [[e.get(k) for k in ("event_id", "case_id", "event_type", "country", "scam_type", "amount", "currency", "beneficiary_hash",
+                                       "risk_level", "decision", "sandbox", "event_time")] for e in d["case_events"]])
     return c
 
 
@@ -180,3 +180,15 @@ def test_local_persistence_roundtrip(tmp_path):
     assert any(e["event_id"] == "e1" for e in b.case_events())
     b.insert_case_event({"event_id": "e1", "case_id": "c1", "event_type": "case_confirmed", "event_time": NOW})
     assert sum(e["event_id"] == "e1" for e in b.case_events()) == 1  # idempotent on event_id
+
+
+def test_sandbox_case_events_are_excluded_from_scam_intelligence(local):
+    """CR-01: sandbox (test) submissions never count in the Scam intelligence panels (python mirror + SQL text)."""
+    before = local.scam_intelligence(NOW)
+    ev = dict(local.data["case_events"][-1])
+    for i in range(3):
+        local.data["case_events"].append({**ev, "event_id": f"sbx-{i}", "case_id": f"c_sbx{i}", "beneficiary_hash": "sbx-hash",
+                                          "sandbox": True, "event_type": "case_confirmed", "event_time": NOW})
+    after = local.scam_intelligence(NOW)
+    assert after == before
+    assert all("sandbox IS NOT TRUE" in sql for sql in sql_sections(load_sql("scam_intel")).values())

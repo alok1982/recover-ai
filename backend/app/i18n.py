@@ -137,6 +137,37 @@ T: dict[str, dict[str, str]] = {
         "hi": "पैसा वापस दिलाने का वादा करने वाले किसी को भी कभी भुगतान न करें।",
         "ms": "Jangan sekali-kali bayar sesiapa yang menawarkan untuk mendapatkan semula wang anda.",
     },
+    # ---- CR-01 safe bank handoff
+    "sent_to_sandbox": {
+        "en": "Sent to the sandbox (test) — nothing was sent to a real bank. Reference {ref}.",
+        "hi": "सैंडबॉक्स (टेस्ट) में भेजा गया — किसी असली बैंक को कुछ नहीं भेजा गया। रेफ़रेंस {ref}।",
+        "ms": "Dihantar ke sandbox (ujian) — tiada apa yang dihantar kepada bank sebenar. Rujukan {ref}.",
+    },
+    "sent_to_bank_ref": {
+        "en": "Sent to your bank. Reference {ref}. I'll tell you as soon as they respond.",
+        "hi": "आपके बैंक को भेज दिया गया। रेफ़रेंस {ref}। जवाब आते ही मैं आपको बताऊँगा।",
+        "ms": "Telah dihantar kepada bank anda. Rujukan {ref}. Saya akan maklumkan sebaik sahaja mereka menjawab.",
+    },
+    "withdraw_ask": {
+        "en": "You can withdraw your consent for case {ref}. Please read what it means and confirm on the card.",
+        "hi": "आप केस {ref} के लिए अपनी सहमति वापस ले सकते हैं। कृपया इसका मतलब पढ़ें और कार्ड पर पुष्टि करें।",
+        "ms": "Anda boleh menarik balik persetujuan untuk kes {ref}. Sila baca maksudnya dan sahkan pada kad.",
+    },
+    "withdrawn": {
+        "en": "Your bank has been told you withdrew consent (reference {ref}).",
+        "hi": "आपके बैंक को बता दिया गया है कि आपने सहमति वापस ले ली है (रेफ़रेंस {ref})।",
+        "ms": "Bank anda telah dimaklumkan bahawa anda menarik balik persetujuan (rujukan {ref}).",
+    },
+    "withdraw_not_shared": {
+        "en": "This case has not been shared with a bank, so there is nothing to withdraw.",
+        "hi": "यह केस किसी बैंक के साथ साझा नहीं हुआ है, इसलिए वापस लेने के लिए कुछ नहीं है।",
+        "ms": "Kes ini belum dikongsi dengan bank, jadi tiada apa untuk ditarik balik.",
+    },
+    "demo_sandbox": {
+        "en": "This looks like RecoverAI's demo evidence, so this case runs in sandbox mode. Nothing will be sent to a real bank.",
+        "hi": "यह RecoverAI का डेमो सबूत लगता है, इसलिए यह केस सैंडबॉक्स मोड में चलेगा। किसी असली बैंक को कुछ नहीं भेजा जाएगा।",
+        "ms": "Ini kelihatan seperti bukti demo RecoverAI, jadi kes ini berjalan dalam mod sandbox. Tiada apa akan dihantar kepada bank sebenar.",
+    },
 }
 
 

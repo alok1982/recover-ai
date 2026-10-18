@@ -41,13 +41,13 @@ CASE SUMMARY: {case_summary}
 # A request for a draft, consent, escalation, sending to the bank, uploading, or a change to the facts → Gemini.
 _FULL_KEYWORDS = re.compile(
     r"(draft|write|letter|generate|consent|share|send|escalat|upload|attach|screenshot|photo|picture|"
-    r"change|correct|wrong|mistake|edit|fix|delete|remove|new number|"
+    r"change|correct|wrong|mistake|edit|fix|delete|remove|new number|withdraw|revoke|reverse|cancel|take back|undo|"
     # Hindi
     r"ड्राफ्ट|ड्राफ़्ट|लिखो|लिख दो|लिख दें|लिखिए|लिखें|पत्र|चिट्ठी|बना\s*दो|बनाओ|सहमति|साझा|शेयर|भेजो|भेज दो|भेज दें|भेज दीजिए|भेजिए|भेजें|एस्केलेट|अपलोड|स्क्रीनशॉट|फ़ोटो|फोटो|"
-    r"बदल|गलत|ग़लत|सुधार|ठीक कर|हटा|"
+    r"बदल|गलत|ग़लत|सुधार|ठीक कर|हटा|वापस ले|वापस लो|रद्द|"
     # Malay
     r"draf|tulis|surat|jana|persetujuan|kongsi|hantar|eskalasi|muat naik|tangkapan skrin|gambar|"
-    r"tukar|ubah|salah|betulkan|padam)",
+    r"tukar|ubah|salah|betulkan|padam|batal|tarik balik)",
     re.I,
 )
 # "Will I definitely get my money back?" stays on Gemini: outcome questions are grounded with explain_rule + citations.

@@ -49,6 +49,7 @@ class Store(Protocol):
     def list_bank_cases(self, limit: int = 100) -> list[dict]: ...
     def delete_bank_case(self, bank_case_id: str) -> None: ...
     def create_bank_case_if_absent(self, bank_case_id: str, data: dict) -> bool: ...
+    def claim_public_ref(self, ref: str, case_id: str) -> bool: ...  # CR-01 F8.5: atomic, unique RAI-… reference
     # Pub/Sub dedupe (F15)
     def get_processed_event(self, event_key: str) -> dict | None: ...
     def put_processed_event(self, event_key: str, data: dict) -> None: ...
@@ -217,6 +218,15 @@ class MemoryStore:
             self._save()
             return True
 
+    def claim_public_ref(self, ref: str, case_id: str) -> bool:
+        with self._lock:
+            refs = self.db.setdefault("public_refs", {})
+            if ref in refs:
+                return False
+            refs[ref] = case_id
+            self._save()
+            return True
+
     def get_processed_event(self, event_key: str) -> dict | None:
         with self._lock:
             e = self.db["processed_events"].get(event_key)
@@ -355,6 +365,15 @@ class FirestoreStore:
 
         try:
             self.client.collection("bank_cases").document(bank_case_id).create({**data, "id": bank_case_id})
+            return True
+        except AlreadyExists:
+            return False
+
+    def claim_public_ref(self, ref: str, case_id: str) -> bool:
+        from google.api_core.exceptions import AlreadyExists
+
+        try:
+            self.client.collection("public_refs").document(ref).create({"caseId": case_id, "at": self._fs.SERVER_TIMESTAMP})
             return True
         except AlreadyExists:
             return False

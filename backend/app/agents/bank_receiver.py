@@ -130,6 +130,9 @@ async def receive(envelope: dict, meta: dict | None = None) -> dict:
     txn_note = {"unavailable": TXN_UNAVAILABLE, "not_found": TXN_NOT_FOUND}.get(fx["status"])
     doc = {
         "caseId": p["caseId"], "country": p["country"], "receivedAt": utcnow(), "amount": p.get("amount"),
+        # CR-01: sandbox cases only appear in the dashboard's Sandbox tab; publicRef is the only id people see
+        "sandbox": bool(p.get("sandbox")) or ((meta or {}).get("attributes") or {}).get("env") == "sandbox",
+        "publicRef": p.get("publicRef"),
         "currency": p.get("currency"), "amountDisplay": format_amount(p.get("amount"), p.get("currency")),
         "reference_id": p.get("reference_id"), "occurredAt": parse_iso(p.get("occurred_at_utc")),
         "occurredAtDisplay": _occurred_display(p),
@@ -182,3 +185,26 @@ def _txn_features(f: dict | None) -> dict | None:
         if out.get(k) is not None:
             out[k] = round(float(out[k]), 1)
     return out
+
+
+async def withdraw(envelope: dict, meta: dict | None = None) -> dict:
+    """CR-01 / F8.4: customer withdrew consent → WITHDRAWN_BY_CUSTOMER; evidence and contacts removed from the analyst
+    view (metadata and the audit trail stay)."""
+    p = envelope.get("payload") or {}
+    store = get_store()
+    bank_case_id = p.get("bankCaseId")
+    bc = store.get_bank_case(bank_case_id) if bank_case_id else None
+    if not bc:
+        raise RuntimeError(f"bank case {bank_case_id} not found yet")  # 5xx → Pub/Sub retries (submit may still be in flight)
+    if bc.get("status") == "WITHDRAWN_BY_CUSTOMER":
+        return {"bankCaseId": bank_case_id, "status": bc["status"]}
+    ev_count = len(bc.get("evidence") or [])
+    store.update_bank_case(bank_case_id, {
+        "status": "WITHDRAWN_BY_CUSTOMER", "withdrawnAt": parse_iso(p.get("withdrawnAt")) or utcnow(), "statusBeforeWithdrawal": bc.get("status"),
+        "evidence": [], "scammer_contacts": [], "urls": [], "narrative_en": None, "dataHidden": True, "hiddenEvidenceCount": ev_count,
+    })
+    store.add_audit({"actor": envelope.get("from_agent"), "action": "CONSENT_WITHDRAWN", "bankCaseId": bank_case_id,
+                     "caseId": p.get("caseId"), "details": {"publicRef": p.get("publicRef"), "messageId": (meta or {}).get("messageId"),
+                                                            "previousStatus": bc.get("status")}})
+    log.info("bank_case_withdrawn", extra={"caseId": p.get("caseId"), "bankCaseId": bank_case_id, "step": "a2a_withdraw"})
+    return {"bankCaseId": bank_case_id, "status": "WITHDRAWN_BY_CUSTOMER"}

@@ -40,7 +40,14 @@ def _get(d: dict, dotted: str):
 def build_html(case: dict, pb: dict, evidence: list[dict], images: dict[str, bytes]) -> str:
     tz = pb["timezone"]
     ex = case.get("extraction") or {}
-    cid = html.escape(case["id"])
+    cid = html.escape(case.get("publicRef") or case["id"])  # CR-01 / F8.5: readable reference, not the internal id
+    from ..handoff import SANDBOX_WATERMARK, is_sandbox
+
+    sandbox = is_sandbox(case)
+    wm_css = (f"@bottom-left {{ content: \"{SANDBOX_WATERMARK}\"; font: bold 8pt 'Noto Sans'; color: #b45309; }}"
+              if sandbox else "")
+    wm_body = (f"<div class='sandbox-wm'>{SANDBOX_WATERMARK}</div><div class='sandbox-banner'>{SANDBOX_WATERMARK} — "
+               "test case, never sent to a real bank</div>" if sandbox else "")
     gen = format_dt(utcnow(), tz)
     rows = []
     for label, key in FIELD_ROWS:
@@ -82,7 +89,11 @@ def build_html(case: dict, pb: dict, evidence: list[dict], images: dict[str, byt
 @page {{ size: A4; margin: 16mm 13mm 18mm 13mm;
   @top-left {{ content: "RecoverAI evidence pack"; font: 8pt 'Noto Sans'; color: #0B6E8A; }}
   @top-right {{ content: "Case {cid} · page " counter(page) " of " counter(pages); font: 8pt 'Noto Sans'; color: #555; }}
-  @bottom-center {{ content: "{DISCLAIMER}"; font: 6.5pt 'Noto Sans'; color: #666; }} }}
+  @bottom-center {{ content: "{DISCLAIMER}"; font: 6.5pt 'Noto Sans'; color: #666; }} {wm_css} }}
+.sandbox-wm {{ position: fixed; top: 40%; left: 0; right: 0; text-align: center; transform: rotate(-30deg); font-size: 44pt;
+  font-weight: bold; color: rgba(180, 83, 9, 0.13); z-index: -1; }}
+.sandbox-banner {{ background: repeating-linear-gradient(45deg, #fff3cd, #fff3cd 8pt, #ffe08a 8pt, #ffe08a 16pt); color: #7a4b00;
+  font-weight: bold; padding: 4pt 8pt; margin-bottom: 6pt; }}
 body {{ font-family: 'Noto Sans', 'Noto Sans Devanagari', sans-serif; font-size: 8.6pt; color: #111; }}
 h1 {{ color: #0B6E8A; font-size: 18pt; margin: 0 0 4pt; }} h2 {{ color: #0B6E8A; font-size: 11pt; margin: 10pt 0 4pt; border-bottom: 1px solid #cfe3ea; }}
 h3 {{ font-size: 9.5pt; margin: 6pt 0 2pt; }} h4 {{ font-size: 8pt; margin: 0 0 2pt; color: #555; }}
@@ -94,8 +105,9 @@ pre {{ white-space: pre-wrap; font-family: 'Noto Sans', 'Noto Sans Devanagari', 
 .cover {{ background: #eaf4f7; padding: 8pt 10pt; border-left: 4pt solid #0B6E8A; margin-bottom: 6pt; }}
 .disc {{ margin-top: 10pt; font-size: 7.5pt; color: #444; border-top: 1px solid #ccc; padding-top: 4pt; }}
 </style></head><body>
+{wm_body}
 <div class="cover"><h1>Evidence pack</h1>
-<div><b>Case ID:</b> {cid} &nbsp; <b>Country:</b> {_e(pb['name'])} &nbsp; <b>Playbook:</b> {_e(pb['version'])}</div>
+<div><b>Case reference:</b> {cid} &nbsp; <b>Country:</b> {_e(pb['name'])} &nbsp; <b>Playbook:</b> {_e(pb['version'])}</div>
 <div><b>Generated:</b> {_e(gen)} &nbsp; <b>Status:</b> {_e(case.get('status'))} &nbsp; <b>Bank status:</b> {_e(case.get('bankStatus'))}</div></div>
 <h2>Incident summary</h2><p>{_e(ex.get('narrative_en'))}</p>{'<p>' + _e(ex.get('narrative_local')) + '</p>' if ex.get('narrative_local') and ex.get('narrative_local') != ex.get('narrative_en') else ''}
 <h2>Extracted and confirmed facts</h2><table>{''.join(rows)}</table>

@@ -1,0 +1,17 @@
+{
+ "sha256": {
+  "0431019bd723e82b5a97f6adf7e27242372df0f54506aeb3848f232edc424a26": "recovery_scam.txt",
+  "0dc206b61b5686ba4d466e0b54d34a3ddaa28b7db63a50a5dd7c5d710fe1a50b": "in_whatsapp_scam.txt",
+  "1461c7daba43b65fb8d56dea66b3f14604bb267aaca8a495518ac9e86f93027c": "in_upi_success.png",
+  "24b9d3480ec488f8061398097a97d2e76f41bc1369a4179a59a2f35fb86f6924": "in_voice_note.txt (pasted)",
+  "579dbacb6633f1339e60317758a94df0e14076031f92645b1a79ed54642cec02": "in_voice_note.mp3",
+  "7d2c14b37620a10800fc423d1105e8e7f8e180926b782ca057a01ceed180c857": "my_bank_transfer.png",
+  "7d74a3ee09cf289eced9c73feb1a1d1661936f76ce4af6c42a80741212fd159d": "my_sms.txt",
+  "8147fcee7a8d62137f97fb2d43d0b5d03b91168f27c12b9adfca8ec10b3e9618": "in_whatsapp_scam.txt (pasted)",
+  "9102007ad2bb0d7056a9d0c488910966cbbd22bce53b91e7f749f870bf3ddd5a": "injection_scam.txt",
+  "930c42d691edaf50d578647c3299c382852c27d5e9efa707c358c75d2dbc3c5e": "in_voice_note.txt",
+  "a12d3b847a6c9ee044af301211857c66355881d62dec3f7d6cc81b481d3db504": "injection_scam.txt (pasted)",
+  "aef07c92caff8aa1e98950c3d931d2089a054b72f0b22253f58e696ba02bd32f": "my_sms.txt (pasted)",
+  "cbb902aea7b4a30186a89e3d640cad9a3371610839001ba6013d2e0dc13cee56": "recovery_scam.txt (pasted)"
+ }
+}

@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import type { Country, Lang } from "../lib/types";
 import { COMING_SOON, COUNTRY_LANGS, DEFAULT_LANG, LANG_LABEL, LangContext, translate } from "../i18n";
 import { Disclaimer } from "./Disclaimer";
+import { useHealth } from "../lib/health";
 
 export function Landing() {
   const nav = useNavigate();
@@ -11,6 +12,9 @@ export function Landing() {
   const [lang, setLang] = useState<Lang>(DEFAULT_LANG);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const health = useHealth();
+  const [sandbox, setSandbox] = useState<boolean | null>(null);
+  const sandboxOn = sandbox ?? health?.sandboxDefault !== false;
   const last = localStorage.getItem("recoverai.lastCase");
   const t = (k: string) => translate(lang, k);
 
@@ -18,7 +22,7 @@ export function Landing() {
     setBusy(true);
     setErr(null);
     try {
-      const r = await api.post<{ caseId: string }>("/api/cases", { country, language: lang });
+      const r = await api.post<{ caseId: string }>("/api/cases", { country, language: lang, sandbox: health?.allowLiveSubmission ? sandboxOn : true });
       localStorage.setItem("recoverai.lastCase", r.caseId);
       nav(`/case/${r.caseId}`);
     } catch (e: any) {
@@ -57,6 +61,11 @@ export function Landing() {
             </div>
           </label>
         </div>
+        {health?.allowLiveSubmission ? (
+          <label className="sandbox-toggle">
+            <input type="checkbox" checked={sandboxOn} onChange={(e) => setSandbox(e.target.checked)} /> {t("sandboxNote")}
+          </label>
+        ) : health && <p className="sandbox-note small"><span className="pill sandbox-pill">{t("sandboxPill")}</span> {t("sandboxNote")}</p>}
         <button className="btn primary cta" onClick={start} disabled={busy}>{t("start")}</button>
         {last && <a className="link" href={`/case/${last}`}>{t("continue")} →</a>}
         {err && <p className="error">{err}</p>}

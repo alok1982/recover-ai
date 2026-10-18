@@ -101,18 +101,25 @@ def drafts_card_data(case: dict) -> dict:
 
 
 def consent_card_data(case: dict) -> dict:
+    from . import handoff
+
     lang = case.get("language", "en")
     ex = case.get("extraction") or {}
+    b = ex.get("beneficiary") or {}
     return {"version": CONSENT_VERSION, "text": CONSENT_TEXT.get(lang, CONSENT_TEXT["en"]),
             "purpose": "Fraud investigation and fund recovery", "withdrawable": True,
             "items": ["Confirmed transaction facts (amount, reference, date, receiver)", "Evidence files with SHA-256 hashes",
                       "Scammer contacts and links", "Your incident summary"],
-            "amount": format_amount(ex.get("amount"), ex.get("currency")), "given": bool(case.get("consentGivenAt"))}
+            "amount": format_amount(ex.get("amount"), ex.get("currency")), "given": bool(case.get("consentGivenAt")),
+            # CR-01 / F8.2: the destination and who receives it; the button only opens the confirmation sheet
+            "destination": handoff.destination(case), "liveAllowed": handoff.live_allowed(),
+            "bankName": ex.get("payer_bank"), "beneficiaryMasked": handoff._mask(b.get("account_or_vpa"))}
 
 
 def timeline_card_data(case: dict) -> dict:
     return {"clocks": case.get("clocks") or [], "steps": (case.get("plan") or {}).get("steps", []),
-            "bankStatus": case.get("bankStatus"), "effectiveNow": effective_now(case), "clockOffsetDays": case.get("clockOffsetDays", 0)}
+            "bankStatus": case.get("bankStatus"), "effectiveNow": effective_now(case), "clockOffsetDays": case.get("clockOffsetDays", 0),
+            "publicRef": case.get("publicRef")}
 
 
 def upload_card_data(lang: str, prompt: str | None = None) -> dict:
@@ -141,12 +148,14 @@ async def evaluate(case_id: str, now=None) -> list[dict]:
         if c.get("escalationTemplate"):
             case = load(case_id)
             draft = await filing.escalation_draft(case, pb, c)
+            from .handoff import watermark_draft
+            draft = watermark_draft(case, draft) if isinstance(draft, dict) else draft
             steps = {s["id"]: s for s in case["plan"]["steps"]}
             bank_step = steps.get("report_bank") or {}
             data = {"clockId": c["id"], "label": c.get("labelLocal") or c["label"], "title": c.get("escalationTitleLocal") or c.get("escalationTitle"), "contact": c.get("contact"),
                     "dueDisplay": c["dueDisplay"], "draft": draft,
                     "bankComplaintDate": format_dt(bank_step.get("doneAt"), pb["timezone"]),
-                    "bankReference": bank_step.get("user_reference") or case.get("bankCaseId")}
+                    "bankReference": bank_step.get("user_reference") or case.get("publicRef")}
             update_case(case_id, {"status": "escalated", "escalation": data})
             msgs.append(add_card(case_id, "escalation", data, lang, text=t("escalation", lang)))
         elif c.get("urgencyOnly"):
@@ -240,7 +249,8 @@ def record_confirmed_event(case: dict) -> None:
         "event_id": f"{case['id']}-confirmed", "case_id": case["id"], "event_type": "case_confirmed", "country": case["country"],
         "scam_type": ex.get("scam_type"), "amount": ex.get("amount"), "currency": ex.get("currency"),
         "beneficiary_hash": beneficiary_hash((ex.get("beneficiary") or {}).get("account_or_vpa")),
-        "risk_level": None, "decision": None, "event_time": case.get("confirmedAt") or utcnow()})
+        "risk_level": None, "decision": None, "sandbox": case.get("sandbox", True) or not get_settings().allow_live_submission,
+        "event_time": case.get("confirmedAt") or utcnow()})
 
 
 # ------------------------------------------------------------------ plan
@@ -306,6 +316,8 @@ async def drafts_stream(case_id: str) -> AsyncIterator[dict]:
     yield {"type": "tool_status", "name": "generate_drafts", "state": "running"}
     t0 = time.perf_counter()
     drafts = await filing.generate_all(case, pb_for(case), case["plan"])
+    from .handoff import watermark_draft  # CR-01: sandbox drafts carry "SANDBOX — NOT SUBMITTED"
+    drafts = {k: watermark_draft(case, d) for k, d in drafts.items()}
     latency = int((time.perf_counter() - t0) * 1000)
     update_case(case_id, {"drafts": drafts, "status": "filed" if case.get("status") in ("confirmed", "extracted") else case.get("status")})
     try:
@@ -405,46 +417,18 @@ async def guard_turn(case_id: str, text: str, lang: str) -> tuple[list[dict], di
 
 
 # ------------------------------------------------------------------ bank handoff
-async def send_to_bank(case_id: str, consent: bool, version: str) -> tuple[dict, list[dict]]:
-    """Consent → publish the A2A envelope to Pub/Sub `fraud-case-submitted` (F8/F15).
+async def send_to_bank(case_id: str, consent: bool, version: str, token: str | None = None,
+                       confirmed: bool = False) -> tuple[dict, list[dict]]:
+    """Consent card answer. "Not now" records the decline; a send needs the confirmation sheet (CR-01 / F8.2):
+    a confirmationToken from /send-to-bank/preview plus confirmed=true — see handoff.send."""
+    from . import handoff
 
-    The bank case id is derived from caseId + sent_at, so the victim side knows it before the push subscription
-    delivers the envelope to the Bank Case Receiver, and redelivery cannot create a second bank case.
-    """
     case = load(case_id)
     lang = case.get("language", "en")
     if not consent:
         system_event(case_id, "User declined to share with bank", lang)
         return case, [append_message(case_id, role="assistant", text=t("consent_declined", lang), lang=lang)]
-    if case.get("bankCaseId"):
-        return case, []
-    if not case.get("extraction"):
-        raise HTTPException(409, "confirm the facts first")
-    if not case.get("plan"):
-        case = recompute_plan(case_id)
-    now = utcnow()
-    update_case(case_id, {"consentGivenAt": now, "consentVersion": version or CONSENT_VERSION})
-    case = load(case_id)
-    envelope = bank_receiver.build_envelope(case, get_store().list_evidence(case_id), effective_now(case))
-    bank_case_id = bank_receiver.bank_case_id_for(envelope)
-    settings = get_settings()
-    try:
-        message_id = await pubsub.publish(settings.topic_case_submitted, envelope,
-                                          {"eventTopic": settings.topic_case_submitted, "caseId": case_id})
-    except Exception as e:  # noqa: BLE001
-        log.exception("publish fraud-case-submitted failed", extra={"caseId": case_id})
-        raise HTTPException(503, "could not send to the bank right now; please try again") from e
-    update_case(case_id, {"bankCaseId": bank_case_id, "bankStatus": "SENT", "status": "sent_to_bank",
-                          "bankHandoff": {"topic": settings.topic_case_submitted, "messageId": message_id, "sentAt": envelope["sent_at"]}})
-    case = load(case_id)
-    steps = {s["id"]: s for s in (case.get("plan") or {}).get("steps", [])}
-    bank_step = "report_bank" if "report_bank" in steps else ("call_bank" if "call_bank" in steps else None)
-    if bank_step and steps[bank_step].get("status") != "done":
-        set_step(case_id, bank_step, "done", bank_case_id)
-    system_event(case_id, f"Case sent to bank (bank case {bank_case_id})", lang)
-    case = load(case_id)
-    msgs = [add_card(case_id, "timeline", timeline_card_data(case), lang, text=t("sent_to_bank", lang))]
-    return case, msgs
+    return await handoff.send(case_id, token, confirmed)
 
 
 DECISION_STATUS = {"APPROVE_HOLD": "HOLD_APPROVED", "REQUEST_INFO": "INFO_REQUESTED", "REJECT": "REJECTED"}
@@ -456,9 +440,14 @@ async def bank_decision(bank_case_id: str, decision: str, note: str | None, anal
     bc = store.get_bank_case(bank_case_id)
     if not bc:
         raise HTTPException(404, "bank case not found")
+    if bc.get("status") == "WITHDRAWN_BY_CUSTOMER":
+        raise HTTPException(409, "The customer withdrew consent for this case")
     status = DECISION_STATUS[decision]
     decided_at = utcnow()
     store.update_bank_case(bank_case_id, {"status": status, "decidedAt": decided_at, "decidedBy": analyst, "decisionNote": note})
+    from .bank.connectors import connector_for  # CR-01: sandbox cases never reach a real bank system
+
+    connector_for(bc).record(bank_case_id, decision, {"holdLimitAmount": bc.get("holdLimitAmount"), "note": note})
     store.add_audit({"actor": analyst, "action": decision, "bankCaseId": bank_case_id, "caseId": bc["caseId"],
                      "details": {"note": note, "holdLimitAmount": bc.get("holdLimitAmount") if decision == "APPROVE_HOLD" else None}})
     event_id = pubsub.stable_key("bank-decision", bank_case_id, decision, to_iso(decided_at))
@@ -478,7 +467,7 @@ async def bank_decision(bank_case_id: str, decision: str, note: str | None, anal
         "event_id": f"{bc['caseId']}-decision-{event_id[:8]}", "case_id": bc["caseId"], "event_type": "bank_decision",
         "country": bc.get("country"), "scam_type": bc.get("scam_type"), "amount": bc.get("amount"), "currency": bc.get("currency"),
         "beneficiary_hash": bc.get("beneficiaryHash"), "risk_level": bc.get("riskLevel"), "decision": decision,
-        "event_time": decided_at})
+        "sandbox": bool(bc.get("sandbox")), "event_time": decided_at})
     return store.get_bank_case(bank_case_id)
 
 
@@ -489,6 +478,9 @@ async def apply_bank_decision(event: dict) -> dict:
     if not case:
         log.warning("bank decision for unknown case", extra={"caseId": event["caseId"]})
         return {"applied": False, "reason": "case not found"}
+    if case.get("bankStatus") == "WITHDRAWN" and event.get("bankCaseId") == case.get("bankCaseId"):
+        log.info("decision after withdrawal ignored", extra={"caseId": case["id"], "bankCaseId": event.get("bankCaseId")})
+        return {"applied": False, "reason": "consent withdrawn"}
     decision, note = event["decision"], event.get("note")
     status = DECISION_STATUS[decision]
     lang = case.get("language", "en")

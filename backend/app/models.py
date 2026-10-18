@@ -110,6 +110,7 @@ class GuardResult(BaseModel):
 class CreateCaseReq(BaseModel):
     country: Country = "IN"
     language: Lang = "en"
+    sandbox: bool | None = None  # CR-01: start-screen checkbox; None = SANDBOX_DEFAULT
 
 
 class UpdateCaseReq(BaseModel):
@@ -159,8 +160,18 @@ class GuardReq(BaseModel):
 
 
 class SendToBankReq(BaseModel):
-    consent: bool
+    consent: bool = True  # False = "Not now" on the Consent card
     consentVersion: str = "v1"
+    confirmationToken: str | None = None  # CR-01 / F8.2: from /send-to-bank/preview
+    confirmed: bool = False  # the required "I confirm these details…" checkbox
+
+
+class SandboxReq(BaseModel):
+    sandbox: bool
+
+
+class WithdrawReq(BaseModel):
+    confirmed: bool = False
 
 
 class DecisionReq(BaseModel):

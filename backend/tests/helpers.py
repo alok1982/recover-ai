@@ -50,3 +50,13 @@ def ready_india_case(client, uid="victim1"):
     sse(client, cid, {"trigger": "facts_confirmed"}, uid=uid)
     sse(client, cid, {"trigger": "generate_all"}, uid=uid)
     return cid
+
+
+def confirmed_send(client, case_id, uid="victim1"):
+    """CR-01: preview → confirmationToken → confirmed send (what the confirmation sheet does after the 10 s undo)."""
+    pv = client.post(f"/api/cases/{case_id}/send-to-bank/preview", headers=H(uid))
+    assert pv.status_code == 200, pv.text
+    r = client.post(f"/api/cases/{case_id}/send-to-bank",
+                    json={"confirmationToken": pv.json()["confirmationToken"], "confirmed": True}, headers=H(uid))
+    assert r.status_code == 200, r.text
+    return r

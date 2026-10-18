@@ -4,6 +4,7 @@
   backend: MOCK_MODE=true uvicorn app.main:app --port 8080   frontend: VITE_MOCK=true npm run dev
   python scripts/ui_smoke.py [--base http://localhost:5173]
 """
+import re
 import argparse
 import shutil
 from pathlib import Path
@@ -61,8 +62,27 @@ def main() -> None:
         pg.wait_for_timeout(800)
         pg.locator(".plan-card").scroll_into_view_if_needed()
         pg.screenshot(path=str(SHOTS / "02-copilot-plan-drafts-panel.png"))
-        pg.get_by_role("button", name="✓ मेरे बैंक से साझा करें").click()
-        pg.wait_for_selector(".timeline-card")
+        # CR-01 / F8.2: Review and send → confirmation sheet → required checkbox → 10 s undo; Undo publishes nothing
+        pg.get_by_role("button", name="✓ जाँचें और भेजें").click()
+        sheet = pg.locator(".confirm-sheet")
+        sheet.locator(".kv").wait_for()
+        assert "सैंडबॉक्स" in sheet.inner_text() and "RAI-IN-" in sheet.inner_text()
+        confirm_btn = sheet.get_by_role("button", name="पुष्टि करें और सैंडबॉक्स में भेजें")
+        assert confirm_btn.is_disabled(), "confirm needs the checkbox"
+        sheet.locator(".confirm-check input").check()
+        pg.wait_for_timeout(300)
+        sheet.screenshot(path=str(SHOTS / "11-confirm-sheet.png"))
+        confirm_btn.click()
+        sheet.locator(".countdown").wait_for()
+        pg.wait_for_timeout(1200)
+        sheet.get_by_role("button", name="वापस लें").click()
+        sheet.locator("text=नहीं भेजा गया").wait_for()
+        pg.wait_for_timeout(500)
+        assert (pg.request.get(a.base + "/api/bank/cases", headers={"Authorization": "Bearer mock:bank:Smoke"}).json()
+                or {}).get("cases", []) == [], "undo published nothing"
+        sheet.get_by_role("button", name="पुष्टि करें और सैंडबॉक्स में भेजें").click()  # back on the sheet after Undo
+        pg.wait_for_selector(".timeline-card", timeout=20000)
+        assert pg.locator(".panel .sandbox-pill").count() == 1
         case_url = pg.url
         # gap 3: mark a clock's step done from the timeline card, with a reference
         tl = pg.locator(".timeline-card")
@@ -80,8 +100,14 @@ def main() -> None:
         bank = b.new_page(viewport={"width": 1366, "height": 900})
         bank.goto(a.base + "/bank")
         bank.get_by_role("button", name="Sign in").click()
+        bank.wait_for_selector(".tabs")
+        bank.wait_for_timeout(2500)
+        assert bank.locator(".inbox tbody tr a").count() == 0, "live queue stays empty (CR-01)"
+        bank.get_by_role("tab", name=re.compile("Sandbox")).click()
         bank.wait_for_selector(".inbox tbody tr a")
+        bank.wait_for_selector(".sandbox-banner")
         bank.screenshot(path=str(SHOTS / "03-bank-inbox.png"))
+        bank.screenshot(path=str(SHOTS / "12-bank-sandbox-tab.png"))
         bank.locator(".inbox tbody tr a").first.click()
         bank.wait_for_selector(".signals li")
         bank.screenshot(path=str(SHOTS / "04-bank-case-detail.png"), full_page=True)
@@ -90,7 +116,7 @@ def main() -> None:
         detail_url = bank.url
         watcher.goto(a.base + "/bank")
         watcher.get_by_role("button", name="Sign in").click()
-        watcher.wait_for_selector(".inbox tbody tr a")
+        watcher.wait_for_selector(".tabs")  # CR-01: the case is in the Sandbox tab; the live queue is empty
         watcher.goto(detail_url)
         watcher.wait_for_selector(".signals li")
         bank.get_by_role("button", name="Approve temporary hold").click()
@@ -123,6 +149,18 @@ def main() -> None:
         pg.wait_for_timeout(500)
         pg.locator(".escalation-card").scroll_into_view_if_needed()
         pg.screenshot(path=str(SHOTS / "06-day31-escalation.png"))
+        # CR-01 / F8.4: withdraw from chat → withdraw card → confirm → bank case WITHDRAWN_BY_CUSTOMER
+        pg.fill(".inputbar textarea", "Reverse the consent which has sent to bank")
+        pg.keyboard.press("Enter")
+        wc = pg.locator(".withdraw-card").last
+        wc.wait_for(timeout=20000)
+        wc.locator(".withdraw-btn").click()
+        wc.get_by_role("button", name="हाँ, सहमति वापस लें").click()
+        pg.wait_for_selector(".panel .pill.bank-WITHDRAWN")
+        bank.goto(detail_url)
+        bank.wait_for_selector(".pill.bstat-WITHDRAWN_BY_CUSTOMER", timeout=8000)
+        bank.wait_for_selector(".withdrawn-banner")
+        bank.screenshot(path=str(SHOTS / "13-bank-withdrawn.png"), full_page=True)
 
         m = pg
         m.set_viewport_size({"width": 360, "height": 780})

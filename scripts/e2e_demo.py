@@ -58,6 +58,13 @@ class Api:
             raise SystemExit(f"POST {p} -> {r.status_code}: {r.text[:300]}")
         return r.json()
 
+    def post_status(self, p, body=None) -> tuple[int, dict]:
+        r = self.c.post(self.url(p), json=body or {})
+        try:
+            return r.status_code, r.json()
+        except ValueError:
+            return r.status_code, {}
+
     def patch(self, p, body):
         r = self.c.patch(self.url(p), json=body)
         r.raise_for_status()
@@ -140,13 +147,37 @@ def india(v: Api, bank: Api) -> None:
     light_routing(v, cid, w["evidence"]["id"])
     pack = v.post(f"/api/cases/{cid}/evidence-pack")
     check(httpx.get(v.url(pack["url"]), timeout=60).content[:4] == b"%PDF", "evidence pack PDF downloads")
+    # CR-01 / F8: sandbox path — preview + confirmation token + undo; nothing reaches the live queue
+    live_before = live_queue(bank)
+    sent_before = {r["id"] for r in bank.get("/api/bank/cases")["cases"]}
+    pv = v.post(f"/api/cases/{cid}/send-to-bank/preview")
+    ref = pv["summary"]["publicRef"]
+    check(pv["summary"]["destination"] == "SANDBOX" and re.fullmatch(r"RAI-IN-\d{8}-\d{4}", ref or "") is not None,
+          f"preview: destination SANDBOX, readable reference {ref}")
+    time.sleep(2)  # the client's 10 s undo = simply never calling send-to-bank
+    check({r["id"] for r in bank.get("/api/bank/cases")["cases"]} == sent_before and v.get(f"/api/cases/{cid}")["case"]["bankStatus"] == "NONE",
+          "preview / undo publishes nothing")
+    v.patch(f"/api/cases/{cid}/extraction", {"fields": {"beneficiary.bank": "Sample Co-operative Bank Ltd"}})
+    st, body = v.post_status(f"/api/cases/{cid}/send-to-bank", {"confirmationToken": pv["confirmationToken"], "confirmed": True})
+    check(st == 409 and body.get("detail") == "Details changed — please review again", f"edited facts after preview → {st} {body.get('detail')}")
+    v.patch(f"/api/cases/{cid}/extraction", {"fields": {"beneficiary.bank": "Sample Co-operative Bank"}})
+    st, _ = v.post_status(f"/api/cases/{cid}/send-to-bank", {"confirmationToken": pv["confirmationToken"], "confirmed": False})
+    check(st == 400, "send without the confirmation checkbox → 400")
+    pv = v.post(f"/api/cases/{cid}/send-to-bank/preview")
     t_send = time.time()
-    case = v.post(f"/api/cases/{cid}/send-to-bank", {"consent": True})["case"]
-    check(case["bankStatus"] == "SENT" and case.get("bankCaseId"), "consent → published to fraud-case-submitted")
+    r = v.post(f"/api/cases/{cid}/send-to-bank", {"confirmationToken": pv["confirmationToken"], "confirmed": True})
+    case = r["case"]
+    check(case["bankStatus"] == "SENT" and case.get("bankCaseId") and (case.get("submission") or {}).get("destination") == "SANDBOX",
+          "confirmed send → published to fraud-case-submitted (env=sandbox)")
+    reply = " ".join(m.get("text") or "" for m in r["messages"])
+    check(ref in reply and case["bankCaseId"] not in reply, f"reply shows {ref}, no internal id")
     print(f"  (victim flow {time.time() - t0:.1f}s)")
     d = poll(lambda: bank.get_or_none(f"/api/bank/cases/{case['bankCaseId']}"), 30)
     check(d is not None, f"bank case created by Pub/Sub push ({time.time() - t_send:.1f}s after consent)")
     d = d["case"]
+    check(d.get("sandbox") is True and d.get("publicRef") == ref, "bank case stored with sandbox=true + publicRef (Sandbox tab)")
+    check(live_queue(bank) == live_before, f"live queue unchanged by this run ({len(live_before)} pre-existing live-tab case(s))")
+    SANDBOX.update({"caseId": cid, "publicRef": ref, "bankCaseId": case["bankCaseId"]})
     check(d["riskLevel"] == "HIGH" and d["recommendedAction"] == "TEMPORARY_HOLD", "bank: HIGH risk, temporary hold recommended")
     f = d.get("txnFeatures") or {}
     check(d.get("txnStatus") == "ok" and f.get("credits_24h") == 9 and f.get("account_age_days") == 21,
@@ -171,6 +202,23 @@ def india(v: Api, bank: Api) -> None:
     r = v.post(f"/api/cases/{cid}/clock", {"jumpToDay": 31})
     check([m["card"]["kind"] for m in r["messages"] if m.get("card")] == ["escalation"], "day-31 ombudsman escalation")
     check(v.post(f"/api/cases/{cid}/clock", {"addDays": 1})["messages"] == [], "escalation fires exactly once")
+    # CR-01 / F8.4: withdraw consent from chat
+    evs = v.chat(cid, {"text": "Reverse the consent which has sent to bank"})
+    wtext = text(evs).lower()
+    check("withdraw" in kinds(evs) and "impossible" not in wtext and "cannot be withdrawn" not in wtext, "withdraw request → withdraw card")
+    t_w = time.time()
+    r = v.post(f"/api/cases/{cid}/withdraw-consent", {"confirmed": True})
+    w = poll(lambda: (lambda x: x if x and x["case"]["status"] == "WITHDRAWN_BY_CUSTOMER" else None)(
+        bank.get_or_none(f"/api/bank/cases/{case['bankCaseId']}")), 10, 0.2)
+    took = time.time() - t_w
+    check(w is not None and took <= 3, f"bank case WITHDRAWN_BY_CUSTOMER in {took:.1f}s (target ≤ 3 s)")
+    check(w["case"]["evidence"] == [] and "CONSENT_WITHDRAWN" in [x["action"] for x in w["audit"]], "evidence hidden + audit entry")
+    wr = " ".join(m.get("text") or "" for m in r["messages"])
+    check(r["case"]["bankStatus"] == "WITHDRAWN" and ref in wr, f"victim: WITHDRAWN, reply shows {ref}")
+    msgs = v.get(f"/api/cases/{cid}/messages")["messages"]
+    shown = " ".join(m.get("text") or "" for m in msgs if m["role"] != "system_event")
+    check(case["bankCaseId"] not in shown and not re.search(r"\bb_[0-9a-f]{8,}", shown), "no internal ids in any co-pilot reply")
+    SANDBOX["withdrawS"] = round(took, 2)
 
 
 def _done(evs):
@@ -178,6 +226,12 @@ def _done(evs):
 
 
 ROUTING: list[dict] = []
+SANDBOX: dict = {}
+
+
+def live_queue(bank: Api) -> set[str]:
+    """Bank cases the dashboard's Live queue tab shows (sandbox !== true)."""
+    return {r["id"] for r in bank.get("/api/bank/cases")["cases"] if r.get("sandbox") is not True}
 
 
 def light_routing(v: Api, cid: str, evidence_id: str) -> None:
@@ -236,6 +290,7 @@ def main() -> None:
     check(httpx.get(v.url("/api/health"), timeout=30).json().get("ok") is True, f"healthz {a.api}")
     india(v, bank)
     malaysia(v)
+    print("SANDBOX", json.dumps(SANDBOX))
     print("E2E OK")
 
 

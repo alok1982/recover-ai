@@ -2,7 +2,7 @@
 import pytest
 
 from conftest import BANK, PUSH, H
-from helpers import ready_india_case
+from helpers import confirmed_send, ready_india_case
 
 from app.analytics import bq
 from app.analytics.synthetic import beneficiary_hash
@@ -11,9 +11,7 @@ from app.events import pubsub
 
 
 def _send(client, cid):
-    r = client.post(f"/api/cases/{cid}/send-to-bank", json={"consent": True}, headers=H())
-    assert r.status_code == 200, r.text
-    return r.json()["case"]
+    return confirmed_send(client, cid).json()["case"]  # CR-01: preview + confirmation
 
 
 def test_consent_publishes_to_fraud_case_topic_and_push_creates_bank_case(client):
@@ -155,7 +153,9 @@ def test_case_events_are_anonymised(client):
     assert ev[0]["beneficiary_hash"] == beneficiary_hash("cbi.verify.desk@okdemo")
     si = client.get("/api/bank/analytics", headers=BANK).json()
     rep = {r["beneficiary_hash"]: r["cases"] for r in si["repeat_beneficiaries"]}
-    assert rep[beneficiary_hash("cbi.verify.desk@okdemo")] >= 3  # 2 seeded earlier cases + this one
+    # CR-01: this case ran in sandbox (ALLOW_LIVE_SUBMISSION=false), so its rows are flagged and excluded from the panels
+    assert all(e.get("sandbox") is True for e in ev)
+    assert rep[beneficiary_hash("cbi.verify.desk@okdemo")] == 2  # the 2 seeded earlier cases only
 
 
 def test_ml_score_is_advisory_and_flagged(client, monkeypatch):

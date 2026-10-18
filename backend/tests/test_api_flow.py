@@ -2,7 +2,7 @@
 import subprocess
 
 from conftest import BANK, H
-from helpers import cards, paste, sse, text_of, upload
+from helpers import cards, confirmed_send, paste, sse, text_of, upload
 
 
 def test_india_storyline(client, tmp_path):
@@ -56,6 +56,7 @@ def test_india_storyline(client, tmp_path):
             assert "612345678901" in txt and "1,95,000" in txt and "cbi.verify.desk@okdemo" in txt
 
     # evidence pack PDF
+    ref = client.get(f"/api/cases/{cid}", headers=H()).json()["case"]["publicRef"]
     r = client.post(f"/api/cases/{cid}/evidence-pack", headers=H())
     pdf = client.get(r.json()["url"]).content
     assert pdf[:4] == b"%PDF"
@@ -66,18 +67,18 @@ def test_india_storyline(client, tmp_path):
     assert pages <= 5
     for i in range(1, pages + 1):
         txt = subprocess.run(["pdftotext", "-f", str(i), "-l", str(i), str(p), "-"], capture_output=True, text=True).stdout
-        assert cid in txt
+        assert ref in txt  # CR-01 / F8.5: the readable reference, never the internal id
+        assert "SANDBOX" in txt
     alltxt = subprocess.run(["pdftotext", str(p), "-"], capture_output=True, text=True).stdout
     assert "612345678901" in alltxt
     assert "अरेस्ट" in alltxt  # Devanagari embedded as text, not boxes (visual shaping checked in docs/screenshots)
 
     # 5. consent -> bank case
-    r = client.post(f"/api/cases/{cid}/send-to-bank", json={"consent": True}, headers=H())
-    assert r.status_code == 200
+    r = confirmed_send(client, cid)  # CR-01: preview + confirmation (sandbox)
     case = r.json()["case"]
     assert case["bankStatus"] == "SENT" and case["consentVersion"] == "v1"
     steps = {s["id"]: s for s in case["plan"]["steps"]}
-    assert steps["report_bank"]["status"] == "done" and steps["report_bank"]["user_reference"] == case["bankCaseId"]
+    assert steps["report_bank"]["status"] == "done" and steps["report_bank"]["user_reference"] == f"{ref} (sandbox)"
     assert any(c["id"] == "ombudsman_30d" for c in case["clocks"])
 
     # bank dashboard
@@ -113,7 +114,7 @@ def test_india_storyline(client, tmp_path):
     kinds = [m["card"]["kind"] for m in r.json()["messages"] if m.get("card")]
     assert kinds == ["escalation"]
     esc = r.json()["messages"][0]["card"]["data"]
-    assert case["bankCaseId"] in esc["draft"]["en"] and esc["bankComplaintDate"]
+    assert ref in esc["draft"]["en"] and case["bankCaseId"] not in esc["draft"]["en"] and esc["bankComplaintDate"]
     assert r.json()["case"]["status"] == "escalated"
     r = client.post(f"/api/cases/{cid}/clock", json={"addDays": 1}, headers=H())
     assert r.json()["messages"] == []
@@ -138,7 +139,7 @@ def test_malaysia_storyline(client):
     drafts = next(e for e in ev if e.get("type") == "card")["card"]["data"]["drafts"]
     assert any(d["stepId"] == "police_statement" for d in drafts)
     assert all("DN202610170042" in d["en"] for d in drafts if d["templateId"] != "note")
-    r = client.post(f"/api/cases/{cid}/send-to-bank", json={"consent": True}, headers=H("aiman"))
+    r = confirmed_send(client, cid, uid="aiman")
     bc = client.get(f"/api/bank/cases/{r.json()['case']['bankCaseId']}", headers=BANK).json()["case"]
     assert bc["holdLimitDisplay"] == "RM 4,800" and bc["riskLevel"] == "HIGH"
 

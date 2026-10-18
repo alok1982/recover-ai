@@ -42,7 +42,8 @@ def make_router(prefix: str) -> APIRouter:
         for b in get_store().list_bank_cases():
             v = jsonable({k: b.get(k) for k in ("id", "caseId", "country", "receivedAt", "amount", "currency", "amountDisplay",
                                                 "scam_type", "riskLevel", "riskScore", "recommendedAction",
-                                                "recommendedActionLabel", "status", "holdLimitDisplay", "occurredAt")})
+                                                "recommendedActionLabel", "status", "holdLimitDisplay", "occurredAt",
+                                                "sandbox", "publicRef")})
             occ = b.get("occurredAt")
             v["hoursSinceTxn"] = round((now - occ).total_seconds() / 3600, 1) if occ else None
             out.append(v)

@@ -200,7 +200,7 @@ class LocalAnalytics:
 
     def scam_intelligence(self, now: datetime) -> dict:
         now = ensure_utc(now)
-        ev = self._load()["case_events"]
+        ev = [e for e in self._load()["case_events"] if not e.get("sandbox")]  # CR-01: sandbox rows excluded
         recent = [e for e in ev if now - timedelta(days=30) <= e["event_time"] <= now]
         by_type: dict[str, set] = {}
         for e in recent:
@@ -260,7 +260,7 @@ def _decode(o: Any) -> Any:
 
 # ------------------------------------------------------------------ BigQuery backend
 CASE_EVENT_COLUMNS = ("event_id", "case_id", "event_type", "country", "scam_type", "amount", "currency", "beneficiary_hash",
-                      "risk_level", "decision", "event_time")
+                      "risk_level", "decision", "sandbox", "event_time")
 
 
 class BigQueryAnalytics:
@@ -315,6 +315,9 @@ class BigQueryAnalytics:
             if c == "amount":
                 params.append(P(c, "STRING", None if v is None else str(v)))
                 exprs.append("CAST(@amount AS NUMERIC)")
+            elif c == "sandbox":
+                params.append(P(c, "BOOL", None if v is None else bool(v)))
+                exprs.append("@sandbox")
             elif c == "event_time":
                 params.append(P(c, "TIMESTAMP", parse_iso(v) if isinstance(v, str) else v))
                 exprs.append("@event_time")

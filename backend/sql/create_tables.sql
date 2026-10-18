@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS `recoverai_analytics.case_events` (
   event_id STRING NOT NULL, case_id STRING, event_type STRING OPTIONS(description = "case_confirmed | bank_decision"),
   country STRING, scam_type STRING, amount NUMERIC, currency STRING,
   beneficiary_hash STRING OPTIONS(description = "SHA-256 of the normalised beneficiary account; never the raw value"),
-  risk_level STRING, decision STRING, event_time TIMESTAMP
+  risk_level STRING, decision STRING, sandbox BOOL OPTIONS(description = "CR-01: test submission; excluded from Scam intelligence"),
+  event_time TIMESTAMP
 )
 PARTITION BY DATE(event_time);
+-- CR-01: existing tables get the column too.
+ALTER TABLE `recoverai_analytics.case_events` ADD COLUMN IF NOT EXISTS sandbox BOOL;

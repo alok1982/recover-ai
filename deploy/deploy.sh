@@ -27,6 +27,9 @@ GEMINI_LITE_MODEL="${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 CHAT_LIGHT_MODEL="${CHAT_LIGHT_MODEL-gemma-4-26b-a4b-it-maas}"
 CHAT_LIGHT_LOCATION="${CHAT_LIGHT_LOCATION:-global}"
 FORCE_LIGHT_FAIL="${FORCE_LIGHT_FAIL:-false}"
+# CR-01 / F8.1: safe bank handoff. Live submission stays off until a real bank integration exists.
+SANDBOX_DEFAULT="${SANDBOX_DEFAULT:-true}"
+ALLOW_LIVE_SUBMISSION="${ALLOW_LIVE_SUBMISSION:-false}"
 FIRESTORE_LOCATION="${FIRESTORE_LOCATION:-$REGION}"
 BQ_LOCATION="${BQ_LOCATION:-$REGION}"
 BQ_DATASET="${BQ_DATASET:-recoverai_analytics}"
@@ -189,12 +192,19 @@ prepare_knowledge_bundle() {
   mkdir -p "$ROOT/backend/knowledge_bundle/text"
   cp "$ROOT/knowledge/sources.json" "$ROOT/backend/knowledge_bundle/"
   cp "$ROOT"/knowledge/text/*.txt "$ROOT/backend/knowledge_bundle/text/"
+  # CR-01: SHA-256 of every bundled demo file → uploads that match are forced into (locked) sandbox
+  cp "$ROOT/fixtures/hashes.json" "$ROOT/backend/knowledge_bundle/fixture_hashes.json"
 }
 
 deploy_backend() {
   log "Cloud Run: ${SERVICE} (Cloud Build from backend/)"
   prepare_knowledge_bundle
   SERVING_CONFIG="$(cat "$STATE_DIR/serving_config" 2>/dev/null || true)"
+  # CR-01 / F8.2: HMAC key for confirmation tokens (generated once, git-ignored, never printed)
+  if [[ ! -s "$STATE_DIR/confirm_secret" ]]; then (umask 077; openssl rand -hex 32 > "$STATE_DIR/confirm_secret"); fi
+  # CR-01: case_events.sandbox (existing tables are not altered by CREATE TABLE IF NOT EXISTS)
+  bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --quiet \
+    "ALTER TABLE \`${PROJECT_ID}.${BQ_DATASET}.case_events\` ADD COLUMN IF NOT EXISTS sandbox BOOL" >/dev/null
   ENV_VARS="^##^GOOGLE_GENAI_USE_VERTEXAI=TRUE##GOOGLE_CLOUD_PROJECT=${PROJECT_ID}##GOOGLE_CLOUD_LOCATION=${REGION}"
   ENV_VARS+="##GEMINI_LOCATION=${GEMINI_LOCATION}##GEMINI_MODEL=${GEMINI_MODEL}##GEMINI_LITE_MODEL=${GEMINI_LITE_MODEL}"
   ENV_VARS+="##CHAT_LIGHT_MODEL=${CHAT_LIGHT_MODEL}##CHAT_LIGHT_LOCATION=${CHAT_LIGHT_LOCATION}##FORCE_LIGHT_FAIL=${FORCE_LIGHT_FAIL}"
@@ -204,6 +214,8 @@ deploy_backend() {
   ENV_VARS+="##PUSH_AUDIENCE=${PUSH_AUDIENCE}##PUSH_SA_EMAIL=${PUSH_SA}"
   ENV_VARS+="##ANALYTICS_BACKEND=bigquery##BQ_DATASET=${BQ_DATASET}##BQ_LOCATION=${BQ_LOCATION}##ENABLE_ML_SCORE=${ENABLE_ML_SCORE}"
   ENV_VARS+="##KNOWLEDGE_DIR=/srv/knowledge##VERTEX_SEARCH_SERVING_CONFIG=${SERVING_CONFIG}"
+  ENV_VARS+="##SANDBOX_DEFAULT=${SANDBOX_DEFAULT}##ALLOW_LIVE_SUBMISSION=${ALLOW_LIVE_SUBMISSION}"
+  ENV_VARS+="##CONFIRM_SECRET=$(cat "$STATE_DIR/confirm_secret")"
   gcloud run deploy "$SERVICE" --source "$ROOT/backend" --region "$REGION" \
     --service-account "$SA" --allow-unauthenticated \
     --min-instances "$MIN_INSTANCES" --max-instances 5 --concurrency 40 \

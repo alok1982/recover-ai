@@ -14,7 +14,9 @@ from ..agents import router as turn_router
 from ..auth import User, current_user
 from ..config import get_settings
 from ..i18n import t
-from ..models import (ChatReq, ClockReq, CreateCaseReq, ExtractionPatch, GuardReq, RegisterEvidenceReq, SendToBankReq,
+from .. import handoff
+from ..models import (ChatReq, ClockReq, CreateCaseReq, ExtractionPatch, GuardReq, RegisterEvidenceReq, SandboxReq, SendToBankReq,
+                      WithdrawReq,
                       StepPatch, UpdateCaseReq, UploadUrlReq)
 from ..services import append_message, get_owned_case, jsonable, system_event, update_case
 from ..sse import sse_response
@@ -50,7 +52,10 @@ async def create_case(req: CreateCaseReq, user: User = Depends(current_user)) ->
         "createdAt": now, "updatedAt": now, "incidentAt": None, "clockOffsetDays": 0, "extraction": None, "plan": None,
         "explanation": None, "drafts": {}, "evidencePackPath": None, "flags": {"recovery_scam_detected": False},
         "bankCaseId": None, "evidenceCount": 0, "turnTimes": [],
+        # CR-01 / F8.1: sandbox (forced when ALLOW_LIVE_SUBMISSION=false); locked once sent or on demo evidence
+        "sandbox": handoff.initial_sandbox(req.sandbox), "sandboxLocked": False, "submission": None, "consentWithdrawnAt": None,
     })
+    handoff.ensure_public_ref(get_store().get_case(case_id))
     greeting = append_message(case_id, role="assistant", text=t("greeting", req.language), lang=req.language)
     log.info("case_created", extra={"caseId": case_id, "step": "create", "country": req.country, "lang": req.language})
     return {"caseId": case_id, "greeting": jsonable(greeting)}
@@ -159,9 +164,9 @@ async def register_evidence(case_id: str, req: RegisterEvidenceReq, user: User =
     ev = store.add_evidence(case_id, rec)
     update_case(case_id, {"evidenceCount": (case.get("evidenceCount") or 0) + 1})
     system_event(case_id, f"User added {req.type} evidence ({ev['id']})", case.get("language", "en"))
-    warnings = []
+    warnings = handoff.on_evidence(actions.load(case_id), rec.get("sha256"))  # CR-01: demo evidence → sandbox
     if req.type == "text":  # F10: pasted/uploaded text is checked automatically
-        warnings = await actions.guard_text(case_id, rec["textContent"], case.get("language", "en"))
+        warnings += await actions.guard_text(case_id, rec["textContent"], case.get("language", "en"))
     return {"evidence": jsonable(_evidence_view(ev)), "messages": jsonable(warnings)}
 
 
@@ -248,10 +253,32 @@ async def run_guard(case_id: str, req: GuardReq, user: User = Depends(current_us
     return {"is_recovery_scam": bool(msgs), "messages": jsonable(msgs)}
 
 
+@router.patch("/{case_id}/sandbox")
+def set_sandbox(case_id: str, req: SandboxReq, user: User = Depends(current_user)) -> dict:
+    """CR-01 / F8.1: toggle before sending; 403 for live when ALLOW_LIVE_SUBMISSION=false; 409 once sent or locked."""
+    return {"case": _view(handoff.set_sandbox(get_owned_case(user, case_id), req.sandbox))}
+
+
+@router.post("/{case_id}/send-to-bank/preview")
+def send_preview(case_id: str, user: User = Depends(current_user)) -> dict:
+    """CR-01 / F8.2: summary for the confirmation sheet + a 5-minute confirmationToken. Publishes nothing."""
+    get_owned_case(user, case_id)
+    return jsonable(handoff.preview(case_id))
+
+
 @router.post("/{case_id}/send-to-bank")
 async def send_to_bank(case_id: str, req: SendToBankReq, user: User = Depends(current_user)) -> dict:
+    """consent=false → "Not now". Otherwise {confirmationToken, confirmed: true} is required (409 if details changed)."""
     get_owned_case(user, case_id)
-    case, msgs = await actions.send_to_bank(case_id, req.consent, req.consentVersion)
+    case, msgs = await actions.send_to_bank(case_id, req.consent, req.consentVersion, req.confirmationToken, req.confirmed)
+    return {"case": _view(case), "messages": jsonable(msgs)}
+
+
+@router.post("/{case_id}/withdraw-consent")
+async def withdraw_consent(case_id: str, req: WithdrawReq, user: User = Depends(current_user)) -> dict:
+    """CR-01 / F8.4: publish fraud_case.withdraw; the bank case becomes WITHDRAWN_BY_CUSTOMER."""
+    get_owned_case(user, case_id)
+    case, msgs = await handoff.withdraw(case_id, req.confirmed)
     return {"case": _view(case), "messages": jsonable(msgs)}
 
 

@@ -7,6 +7,8 @@ import { useCopilot } from "../copilot/context";
 import { openEvidencePack } from "../cards/DraftsCard";
 import { useT } from "../i18n";
 import { fmtTime } from "../cards/UploadCard";
+import { WithdrawAction, isShared } from "../cards/WithdrawCard";
+import { useHealth } from "../lib/health";
 
 /** F2/§13.3: evidence count with an expander listing every item's type, time and full SHA-256. */
 function EvidenceHashes({ caseId, count }: { caseId: string; count: number }) {
@@ -52,6 +54,8 @@ export function CasePanel() {
   const { caseDoc: c, caseId, apply } = useCopilot();
   const t = useT();
   const nav = useNavigate();
+  const health = useHealth();
+  const [sbErr, setSbErr] = useState<string | null>(null);
   const [, tick] = useState(0);
   useEffect(() => {
     const id = window.setInterval(() => tick((x) => x + 1), 30000);
@@ -65,6 +69,16 @@ export function CasePanel() {
   const next = pendingClocks[0];
   const overdueEsc = (c.clocks || []).find((k) => k.status === "overdue" && k.escalationTemplate);
   const travel = async (body: any) => apply(await api.post<any>(`/api/cases/${caseId}/clock`, body));
+  const setSandbox = async (sandbox: boolean) => {
+    setSbErr(null);
+    try {
+      apply(await api.patch<any>(`/api/cases/${caseId}/sandbox`, { sandbox }));
+    } catch (e: any) {
+      setSbErr(e.message);
+    }
+  };
+  // CR-01 / F8.1: the toggle exists only when live submission is allowed; otherwise every case is sandbox.
+  const canToggle = !!health?.allowLiveSubmission && !c.sandboxLocked && !isShared(c);
   const del = async () => {
     if (!confirm(t("confirmDelete"))) return;
     await api.del(`/api/cases/${caseId}`);
@@ -76,7 +90,18 @@ export function CasePanel() {
       <div className="panel-head">
         <span className={`pill status-${c.status}`}>{t(`status.${c.status}`)}</span>
         <span className={`pill bank-${c.bankStatus}`}>🏦 {t(`bank.${c.bankStatus}`)}</span>
+        {c.sandbox !== false && <span className="pill sandbox-pill" title={t("sandboxNote")}>{t("sandboxPill")}</span>}
       </div>
+      {c.publicRef && <div className="public-ref small">{t("publicRef")}: <code>{c.publicRef}</code></div>}
+      {c.sandbox !== false && <p className="sandbox-note small">{t("sandboxNote")}</p>}
+      {canToggle && (
+        <label className="sandbox-toggle small">
+          <input type="checkbox" checked={c.sandbox !== false} onChange={(e) => setSandbox(e.target.checked)} /> {t("sandboxNote")}
+        </label>
+      )}
+      {health?.allowLiveSubmission && c.sandboxLocked && !isShared(c) && <p className="muted small">🔒 {t("sandboxLocked")}</p>}
+      {sbErr && <p className="error small">{sbErr}</p>}
+      {(isShared(c) || c.bankStatus === "WITHDRAWN") && <div className="panel-withdraw"><WithdrawAction compact /></div>}
       {ex && (
         <section>
           <h4>{t("keyFacts")}</h4>

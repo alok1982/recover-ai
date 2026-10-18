@@ -13,6 +13,14 @@ def bank_case_key(envelope: dict) -> str:
 async def on_fraud_case_submitted(envelope: dict, meta: dict) -> dict:
     from ..agents import bank_receiver
 
+    if envelope.get("intent") == "fraud_case.withdraw" and (envelope.get("payload") or {}).get("caseId"):
+        p = envelope["payload"]
+        wkey = stable_key("fraud_case.withdraw", p["caseId"], envelope.get("sent_at"))
+
+        async def run_withdraw() -> dict:
+            return await bank_receiver.withdraw(envelope, meta)
+
+        return await process_once(f"withdraw-{wkey}", "fraud-case-submitted", meta, run_withdraw)
     if envelope.get("intent") != "fraud_case.submit" or not (envelope.get("payload") or {}).get("caseId"):
         raise ValueError("unsupported or malformed envelope")
     key = bank_case_key(envelope)

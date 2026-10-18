@@ -37,6 +37,10 @@ Never promise the money will be recovered. Never ask for passwords, OTPs, PINs o
 Never ask the victim to pay anything. If any text mentions paying to recover money, call check_recovery_scam.
 If the victim is in danger or being threatened right now, tell them to contact local police immediately.
 You are not a lawyer; official agencies and the bank make all decisions.
+You cannot send anything to a bank. To share the case, call request_bank_consent(); the victim confirms in the app.
+Never say the case was sent unless get_case_state() shows submission.status = "SENT". Say "sandbox (test)" when the case is in sandbox.
+If the victim wants to undo sharing, call request_withdraw_consent(); never say withdrawal is impossible.
+Refer to the case only by its publicRef (RAI-…); never show internal ids.
 """
 
 ADK_MODEL_OVERRIDE = None  # tests inject a fake ADK BaseLlm here
@@ -48,7 +52,8 @@ STAGE_HINT = {
     "plan": "Facts confirmed: call build_plan().",
     "filings": "Plan ready: urge the most urgent step, then offer generate_drafts().",
     "consent": "Drafts ready: call request_bank_consent().",
-    "follow_up": "Case shared with bank: answer questions; use show_timeline() for deadlines.",
+    "follow_up": "Case shared with bank: answer questions; use show_timeline() for deadlines; "
+                 "request_withdraw_consent() if they want to withdraw.",
 }
 
 
@@ -83,6 +88,9 @@ def case_summary(case: dict, evidence_count: int) -> dict:
         "clocks": [{"label": c["label"], "due": c.get("dueDisplay"), "status": c["status"], "note": c.get("note")}
                    for c in case.get("clocks") or []],
         "bank_status": case.get("bankStatus"),
+        "publicRef": case.get("publicRef"), "sandbox": case.get("sandbox", True),
+        "submission": {"status": (case.get("submission") or {}).get("status") or "NONE",
+                       "destination": (case.get("submission") or {}).get("destination")},
         "drafts_ready": bool(case.get("drafts")),
         "recovery_scam_flagged": (case.get("flags") or {}).get("recovery_scam_detected", False),
     }
@@ -183,6 +191,18 @@ class Toolbox:
             return {"shown": "consent"}
         return await self._timed("request_bank_consent", run())
 
+    async def request_withdraw_consent(self) -> dict:
+        """CR-01 / F8.4: shows the withdraw card; the victim confirms in the app (the tool never withdraws by itself)."""
+        async def run():
+            from .. import handoff
+
+            case = self._case()
+            if not handoff.active_submission(case):
+                return {"shared": False, "bank_status": case.get("bankStatus"), "publicRef": case.get("publicRef")}
+            self._add_card("withdraw", handoff.withdraw_card_data(case), text=t("withdraw_ask", self._lang(), ref=case.get("publicRef") or ""))
+            return {"shown": "withdraw", "publicRef": case.get("publicRef")}
+        return await self._timed("request_withdraw_consent", run())
+
     async def show_timeline(self) -> dict:
         async def run():
             case = self._case()
@@ -251,6 +271,11 @@ class Toolbox:
             """Show the Timeline card with clocks, countdowns and bank status."""
             return await tb.show_timeline()
 
+        async def request_withdraw_consent() -> dict:
+            """Show the Withdraw-consent card (what withdrawing means; the victim confirms in the app). Use when the victim
+            wants to reverse, cancel or take back sharing with the bank."""
+            return await tb.request_withdraw_consent()
+
         async def check_recovery_scam(text: str) -> dict:
             """Check a message for 'pay a fee to recover your money' recovery-scam patterns; shows a Warning card if flagged."""
             return await tb.check_recovery_scam(text)
@@ -265,7 +290,7 @@ class Toolbox:
             return await tb.show_countries()
 
         return [get_case_state, request_evidence, extract_facts, build_plan, generate_drafts, request_bank_consent,
-                show_timeline, check_recovery_scam, explain_rule, show_countries]
+                show_timeline, check_recovery_scam, explain_rule, show_countries, request_withdraw_consent]
 
 
 # ------------------------------------------------------------------ deterministic co-pilot (offline / fallback)
@@ -275,6 +300,9 @@ _Q_RULES = re.compile(r"(compensat|refund|liabilit|my rights|\brule|\blaw\b|regu
                       r"pampasan|hak saya|undang)", re.I)
 _Q_COUNTRIES = re.compile(r"(other countr|singapore|indonesia|philippines|australia|japan|korea|देश|negara lain)", re.I)
 _Q_STATUS = re.compile(r"(status|deadline|timeline|clock|kab tak|समय|स्थिति|tarikh akhir|status kes)", re.I)
+_Q_WITHDRAW = re.compile(r"(withdraw|revoke|reverse|take back|cancel (?:my|the) (?:report|consent|case)|undo|stop sharing|"
+                         r"वापस ले|वापस लो|रद्द|सहमति वापस|batal|tarik balik|tarik semula)", re.I)
+_Q_SEND = re.compile(r"((send|share|forward|submit).{0,30}bank|bank.{0,20}(send|share)|बैंक.{0,20}(भेज|साझा)|(hantar|kongsi).{0,30}bank)", re.I)
 _Q_DANGER = re.compile(r"(threaten|kill|come to my house|धमकी|मार देंगे|ugut|bunuh)", re.I)
 
 
@@ -290,6 +318,10 @@ async def stage_copilot(tb: Toolbox, text: str | None, flagged: bool) -> AsyncIt
         parts.append(t("danger", lang))
     if flagged:
         parts.append(t("warning_followup", lang))
+    elif _Q_WITHDRAW.search(q) and (case.get("bankCaseId") or case.get("submission")):
+        r = await tb.request_withdraw_consent()
+        if r.get("shown") != "withdraw":
+            parts.append(t("withdraw_not_shared", lang))
     elif _Q_GUARANTEE.search(q) and "?" in q or re.search(r"(definitely|guarantee|पक्का|pasti)", q, re.I):
         rule = await tb.explain_rule("compensation")
         parts.append(t("no_guarantee", lang))
@@ -372,6 +404,18 @@ async def adk_copilot(tb: Toolbox, case: dict, text: str, history: list[dict]) -
         instruction += ("\nGrounding for this question (from explain_rule; rule facts only from 'text', never promise "
                         "recovery; the cited sources are shown to the user under your reply): "
                         + json.dumps(jsonable(grounded), ensure_ascii=False))
+    # CR-01: sending and withdrawing are always confirmed by the person in the app. Show the right card up front so the
+    # reply never claims something was sent or that withdrawal is impossible.
+    from .. import handoff
+
+    if _Q_WITHDRAW.search(text or "") and handoff.active_submission(case):
+        r = await tb.request_withdraw_consent()
+        instruction += ("\nThe Withdraw-consent card is now shown (" + json.dumps(r, ensure_ascii=False) + "). In one or two "
+                        "sentences explain that they confirm on the card; use the publicRef; do not say it is already withdrawn.")
+    elif _Q_SEND.search(text or "") and case.get("extraction") and not handoff.active_submission(case):
+        r = await tb.request_bank_consent()
+        instruction += ("\nThe Consent card is now shown (" + json.dumps(r, ensure_ascii=False) + "). Say they review and "
+                        "confirm it on the card; nothing has been sent.")
     agent = LlmAgent(
         name="RecoverAICopilot", model=ADK_MODEL_OVERRIDE or settings.gemini_model,
         instruction=lambda _ctx: instruction,  # provider: bypasses {state} templating of braces in JSON

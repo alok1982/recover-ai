@@ -45,9 +45,13 @@ export function CaseDetail({ analyst }: { analyst: string }) {
     load();
   };
   const b = c.beneficiary || {};
+  const withdrawn = c.status === "WITHDRAWN_BY_CUSTOMER";
+  const open = c.status === "NEW" || c.status === "INFO_REQUESTED";
   return (
     <main className="bank-main detail">
-      <h2>{c.amountDisplay} · {c.scam_type} · {c.country} {riskBadge(c.riskLevel)} <span className="muted">score {c.riskScore}</span></h2>
+      {c.sandbox && <div className="sandbox-banner">SANDBOX — not a real report. Test submission only; no real bank received it.</div>}
+      {withdrawn && <div className="withdrawn-banner">Customer withdrew consent{c.withdrawnAt ? ` on ${new Date(c.withdrawnAt).toLocaleString()}` : ""}. Evidence and contacts are hidden; no further action on this case. If a hold was placed, the bank decides whether to release it.</div>}
+      <h2>{c.publicRef && <code className="ref-code">{c.publicRef}</code>} {c.amountDisplay} · {c.scam_type} · {c.country} {riskBadge(c.riskLevel)} <span className="muted">score {c.riskScore}</span></h2>
       <div className="grid2">
         <section className="card">
           <h3>Recommendation</h3>
@@ -59,9 +63,9 @@ export function CaseDetail({ analyst }: { analyst: string }) {
           <ul className="signals">{c.signals.map((s: any) => <li key={s.code}><code>{s.code}</code> {s.label} <span className="chip">+{s.weight}</span></li>)}</ul>
           <textarea placeholder="Note / question for the victim (for Request more info)" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
           <div className="row wrap">
-            <button className="btn primary big" disabled={c.status !== "NEW" && c.status !== "INFO_REQUESTED"} onClick={() => decide("APPROVE_HOLD")}>Approve temporary hold</button>
-            <button className="btn" onClick={() => decide("REQUEST_INFO")}>Request more info</button>
-            <button className="btn danger" onClick={() => decide("REJECT")}>Reject</button>
+            <button className="btn primary big" disabled={!open} onClick={() => decide("APPROVE_HOLD")}>Approve temporary hold</button>
+            <button className="btn" disabled={withdrawn} onClick={() => decide("REQUEST_INFO")}>Request more info</button>
+            <button className="btn danger" disabled={withdrawn} onClick={() => decide("REJECT")}>Reject</button>
           </div>
           <p>Status: <span className={`pill bstat-${c.status}`}>{c.status}</span> {c.decidedBy && <span className="muted">by {c.decidedBy}</span>}</p>
           <p className="muted small">Signed in as {analyst}. Every decision is written to the audit log.</p>
@@ -102,6 +106,7 @@ export function CaseDetail({ analyst }: { analyst: string }) {
             </p>
           )}
           <h3>Evidence</h3>
+          {c.dataHidden && <p className="muted small">Evidence hidden after the customer withdrew consent{c.hiddenEvidenceCount ? ` (${c.hiddenEvidenceCount} item(s))` : ""}.</p>}
           <ul className="evidence-list">
             {c.evidence.map((e: any) => (
               <li key={e.id}>

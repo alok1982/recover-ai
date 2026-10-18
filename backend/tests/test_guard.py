@@ -52,13 +52,14 @@ def test_guard_runs_on_every_chat_message_even_if_copilot_would_not(client, monk
 def test_pasted_text_evidence_is_checked(client):
     cid = client.post("/api/cases", json={"country": "IN", "language": "en"}, headers=H()).json()["caseId"]
     r = paste(client, cid, "recovery_scam.txt")
-    assert [m["card"]["kind"] for m in r["messages"]] == ["warning"]
+    # CR-01: a demo fixture also adds the one-time "demo evidence → sandbox" notice (no card)
+    assert [m["card"]["kind"] for m in r["messages"] if m.get("card")] == ["warning"]
 
 
 def test_prompt_injection_fixture_is_still_treated_as_scam_evidence(client):
     cid = client.post("/api/cases", json={"country": "IN", "language": "en"}, headers=H()).json()["caseId"]
     r = paste(client, cid, "injection_scam.txt")
-    assert r["messages"] == []
+    assert [m for m in r["messages"] if m.get("card")] == []  # no warning (CR-01 sandbox notice has no card)
     ev = sse(client, cid, {"trigger": "evidence_added"})
     facts = next(e for e in ev if e.get("type") == "card")["card"]["data"]
     assert facts["scamType"] == "digital_arrest"

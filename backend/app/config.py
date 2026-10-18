@@ -33,6 +33,12 @@ class Settings:
     force_light_fail: bool = field(default_factory=lambda: _bool("FORCE_LIGHT_FAIL", False))
     light_first_token_s: float = field(default_factory=lambda: float(os.getenv("LIGHT_FIRST_TOKEN_S", "8")))
     light_total_s: float = field(default_factory=lambda: float(os.getenv("LIGHT_TOTAL_S", "20")))
+    # CR-01 / F8.1 sandbox: ALLOW_LIVE_SUBMISSION=false forces every case into sandbox and rejects live sends (403).
+    sandbox_default: bool = field(default_factory=lambda: _bool("SANDBOX_DEFAULT", True))
+    allow_live_submission: bool = field(default_factory=lambda: _bool("ALLOW_LIVE_SUBMISSION", False))
+    # F8.2 confirmationToken HMAC key (deploy.sh generates one into deploy/.state); 5-minute validity
+    confirm_secret: str = field(default_factory=lambda: os.getenv("CONFIRM_SECRET", ""))
+    confirm_ttl_s: int = field(default_factory=lambda: int(os.getenv("CONFIRM_TTL_S", "300")))
     evidence_bucket: str = field(default_factory=lambda: os.getenv("EVIDENCE_BUCKET", ""))
     allowed_origins: tuple[str, ...] = field(
         default_factory=lambda: tuple(

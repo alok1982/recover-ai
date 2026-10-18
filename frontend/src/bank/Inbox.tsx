@@ -13,6 +13,9 @@ export function riskBadge(level: string) {
 export function Inbox() {
   const [rows, setRows] = useState<any[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  // CR-01 / F8.1: sandbox cases never appear in the live queue, only in the Sandbox tab.
+  const [tab, setTab] = useState<"live" | "sandbox">(() => (sessionStorage.getItem("recoverai.bankTab") === "sandbox" ? "sandbox" : "live"));
+  const pick = (x: "live" | "sandbox") => { setTab(x); sessionStorage.setItem("recoverai.bankTab", x); };
   useEffect(() => {
     if (MOCK) {
       const load = () => api.bankGet<{ cases: any[] }>("/api/bank/cases").then((r) => setRows(r.cases)).catch((e) => setErr(e.message));
@@ -24,17 +27,25 @@ export function Inbox() {
     return onSnapshot(query(collection(bankDb(), "bank_cases"), orderBy("receivedAt", "desc"), limit(100)),
       (qs) => setRows(qs.docs.map((d) => plain<any>(d.data()))), (e) => setErr(e.message));
   }, []);
+  const shown = rows.filter((r) => (tab === "sandbox" ? r.sandbox === true : r.sandbox !== true));
+  const nSandbox = rows.filter((r) => r.sandbox === true).length;
   const hours = (iso?: string) => (iso ? ((Date.now() - new Date(iso).getTime()) / 3600000).toFixed(1) + " h" : "—");
   return (
     <main className="bank-main">
       <h2>Incoming fraud cases</h2>
+      <div className="tabs" role="tablist">
+        <button role="tab" aria-selected={tab === "live"} className={`tab ${tab === "live" ? "on" : ""}`} onClick={() => pick("live")}>Live queue ({rows.length - nSandbox})</button>
+        <button role="tab" aria-selected={tab === "sandbox"} className={`tab sandbox-tab ${tab === "sandbox" ? "on" : ""}`} onClick={() => pick("sandbox")}>Sandbox ({nSandbox})</button>
+      </div>
+      {tab === "sandbox" && <div className="sandbox-banner">SANDBOX — not a real report. Test submissions only; nothing here reached a real bank.</div>}
       {err && <p className="error">{err}</p>}
-      <table className="inbox">
-        <thead><tr><th>Received</th><th>Country</th><th>Amount</th><th>Scam type</th><th>Since txn</th><th>Risk</th><th>Recommended action</th><th>Status</th></tr></thead>
+      <table className={`inbox ${tab === "sandbox" ? "inbox-sandbox" : ""}`}>
+        <thead><tr><th>Received</th><th>Reference</th><th>Country</th><th>Amount</th><th>Scam type</th><th>Since txn</th><th>Risk</th><th>Recommended action</th><th>Status</th></tr></thead>
         <tbody>
-          {rows.map((r) => (
+          {shown.map((r) => (
             <tr key={r.id}>
               <td><Link to={`/bank/case/${r.id}`}>{new Date(r.receivedAt).toLocaleString()}</Link></td>
+              <td><code>{r.publicRef || "—"}</code></td>
               <td>{r.country}</td>
               <td><b>{r.amountDisplay}</b></td>
               <td>{r.scam_type}</td>
@@ -44,7 +55,7 @@ export function Inbox() {
               <td><span className={`pill bstat-${r.status}`}>{r.status}</span></td>
             </tr>
           ))}
-          {rows.length === 0 && <tr><td colSpan={8} className="muted">No cases yet. Victim cases appear here within seconds of consent.</td></tr>}
+          {shown.length === 0 && <tr><td colSpan={9} className="muted">{tab === "sandbox" ? "No sandbox cases." : "No cases yet. Victim cases appear here within seconds of consent."}</td></tr>}
         </tbody>
       </table>
     </main>

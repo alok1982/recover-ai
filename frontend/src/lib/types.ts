@@ -2,7 +2,7 @@ export type Lang = "en" | "hi" | "ms";
 export type Country = "IN" | "MY";
 
 export interface Card {
-  kind: "upload" | "facts" | "plan" | "drafts" | "consent" | "timeline" | "escalation" | "warning" | "countries";
+  kind: "upload" | "facts" | "plan" | "drafts" | "consent" | "timeline" | "escalation" | "warning" | "countries" | "withdraw";
   data: any;
 }
 
@@ -76,4 +76,10 @@ export interface CaseDoc {
   escalation?: any;
   flags?: { recovery_scam_detected: boolean };
   demoMode?: boolean;
+  // CR-01 (F8): sandbox / confirmed submission / withdraw / readable reference
+  sandbox?: boolean;
+  sandboxLocked?: boolean;
+  publicRef?: string | null;
+  submission?: { status: "SENT" | "WITHDRAWN"; destination: "SANDBOX" | "LIVE"; confirmedAt?: string; publicRef?: string } | null;
+  consentWithdrawnAt?: string | null;
 }
