@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
-import { getAuth, signInAnonymously, onAuthStateChanged, type Auth, type User } from "firebase/auth";
+import { getAuth, type Auth, type User } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { FIREBASE_CONFIG, MOCK } from "./config";
 
@@ -11,7 +11,7 @@ export function victimApp(): FirebaseApp {
   return app;
 }
 
-/** The analyst signs in on a separate Firebase app instance so the victim's anonymous session is untouched. */
+/** The analyst signs in on a separate Firebase app instance so a victim session in the same browser is untouched. */
 export function analystApp(): FirebaseApp {
   if (!bankApp) bankApp = initializeApp(FIREBASE_CONFIG, "bank");
   return bankApp;
@@ -29,21 +29,10 @@ export function bankDb(): Firestore {
   return getFirestore(analystApp());
 }
 
-let ready: Promise<User> | null = null;
-
-export function ensureAnonymous(): Promise<User> {
+/** CR-03: the signed-in victim (phone + password account). Resolves once Firebase has restored the session. */
+export async function signedInVictim(): Promise<User | null> {
   if (MOCK) throw new Error("not in mock mode");
-  if (!ready) {
-    const auth = victimAuth();
-    ready = new Promise<User>((resolve, reject) => {
-      const unsub = onAuthStateChanged(auth, (u) => {
-        if (u) {
-          unsub();
-          resolve(u);
-        }
-      });
-      if (!auth.currentUser) signInAnonymously(auth).catch(reject);
-    });
-  }
-  return ready;
+  const auth = victimAuth();
+  await auth.authStateReady();
+  return auth.currentUser;
 }

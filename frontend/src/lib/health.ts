@@ -7,6 +7,7 @@ export interface Health {
   sandboxDefault?: boolean;
   chatLight?: string | null;
   voiceEnabled?: boolean;
+  demo?: boolean;
 }
 
 let cached: Promise<Health> | null = null;

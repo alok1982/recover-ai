@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from .config import TASK_DEFAULTS, get_settings
 from .logging_setup import setup_logging
-from .routers import bank, cases, events, local_blob
+from .routers import bank, cases, events, local_blob, me
 from .timeutil import utcnow
 
 setup_logging()
@@ -63,6 +63,7 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type"],
     )
     app.include_router(cases.router)
+    app.include_router(me.router)
     app.include_router(bank.router)
     app.include_router(bank.api_router)
     app.include_router(events.router)

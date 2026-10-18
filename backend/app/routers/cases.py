@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from .. import actions
 from ..agents import voice
 from ..agents import router as turn_router
-from ..auth import User, current_user
+from ..auth import User, victim_user
 from ..config import get_settings
 from ..i18n import t
 from .. import handoff
@@ -40,7 +40,7 @@ def _view(case: dict) -> dict:
 
 
 @router.post("")
-async def create_case(req: CreateCaseReq, user: User = Depends(current_user)) -> dict:
+async def create_case(req: CreateCaseReq, user: User = Depends(victim_user)) -> dict:
     store = get_store()
     s = get_settings()
     open_cases = [c for c in store.list_cases(owner_uid=user.uid) if c.get("status") != "closed"]
@@ -62,21 +62,35 @@ async def create_case(req: CreateCaseReq, user: User = Depends(current_user)) ->
     return {"caseId": case_id, "greeting": jsonable(greeting)}
 
 
+def _case_summary(c: dict) -> dict:
+    """CR-03 C /cases list row: publicRef, date, amount, status, next deadline, sandbox."""
+    from ..rules.formatting import format_amount
+    ex = c.get("extraction") or {}
+    pending = [k for k in (c.get("clocks") or []) if k.get("status") in ("pending", "due_soon", "overdue") and k.get("dueAt")
+               and not k.get("urgencyOnly")]
+    nxt = min(pending, key=lambda k: jsonable(k["dueAt"]), default=None)
+    return {"id": c["id"], "publicRef": c.get("publicRef"), "country": c["country"], "language": c.get("language"),
+            "status": c.get("status"), "bankStatus": c.get("bankStatus"), "createdAt": jsonable(c.get("createdAt")),
+            "amount": format_amount(ex.get("amount"), ex.get("currency")) if ex.get("amount") is not None else None,
+            "sandbox": c.get("sandbox", True),
+            "nextDeadline": {"label": nxt.get("labelLocal") or nxt.get("label"), "dueAt": jsonable(nxt["dueAt"]),
+                             "dueDisplay": nxt.get("dueDisplay"), "status": nxt.get("status")} if nxt else None}
+
+
 @router.get("")
-def list_my_cases(user: User = Depends(current_user)) -> dict:
-    return {"cases": [{"id": c["id"], "country": c["country"], "status": c.get("status"), "createdAt": jsonable(c.get("createdAt"))}
-                      for c in get_store().list_cases(owner_uid=user.uid)]}
+def list_my_cases(user: User = Depends(victim_user)) -> dict:
+    return {"cases": [_case_summary(c) for c in get_store().list_cases(owner_uid=user.uid)]}
 
 
 @router.get("/{case_id}")
-async def get_case(case_id: str, user: User = Depends(current_user)) -> dict:
+async def get_case(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     await actions.evaluate(case_id)  # lazy deadline evaluation on load
     return {"case": _view(actions.load(case_id))}
 
 
 @router.patch("/{case_id}")
-async def patch_case(case_id: str, req: UpdateCaseReq, user: User = Depends(current_user)) -> dict:
+async def patch_case(case_id: str, req: UpdateCaseReq, user: User = Depends(victim_user)) -> dict:
     case = get_owned_case(user, case_id)
     patch = {}
     if req.country and req.country != case["country"]:
@@ -99,7 +113,7 @@ async def patch_case(case_id: str, req: UpdateCaseReq, user: User = Depends(curr
 
 
 @router.delete("/{case_id}")
-def delete_case(case_id: str, user: User = Depends(current_user)) -> dict:
+def delete_case(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     try:
         get_blobs().delete_prefix(f"cases/{case_id}/")
@@ -111,14 +125,14 @@ def delete_case(case_id: str, user: User = Depends(current_user)) -> dict:
 
 
 @router.get("/{case_id}/messages")
-def messages(case_id: str, user: User = Depends(current_user)) -> dict:
+def messages(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     return {"messages": jsonable(get_store().list_messages(case_id))}
 
 
 # ------------------------------------------------------------------ evidence
 @router.post("/{case_id}/evidence/upload-url")
-def upload_url(case_id: str, req: UploadUrlReq, user: User = Depends(current_user)) -> dict:
+def upload_url(case_id: str, req: UploadUrlReq, user: User = Depends(victim_user)) -> dict:
     case = get_owned_case(user, case_id)
     s = get_settings()
     mime = req.mimeType.split(";")[0].strip().lower()
@@ -143,7 +157,7 @@ def upload_url(case_id: str, req: UploadUrlReq, user: User = Depends(current_use
 
 
 @router.post("/{case_id}/evidence")
-async def register_evidence(case_id: str, req: RegisterEvidenceReq, user: User = Depends(current_user)) -> dict:
+async def register_evidence(case_id: str, req: RegisterEvidenceReq, user: User = Depends(victim_user)) -> dict:
     case = get_owned_case(user, case_id)
     s = get_settings()
     if (case.get("evidenceCount") or 0) >= s.max_evidence_per_case:
@@ -186,7 +200,7 @@ def _evidence_view(e: dict) -> dict:
 
 
 @router.get("/{case_id}/evidence")
-def list_evidence(case_id: str, user: User = Depends(current_user)) -> dict:
+def list_evidence(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     return {"evidence": jsonable([_evidence_view(e) for e in get_store().list_evidence(case_id)])}
 
@@ -201,35 +215,35 @@ async def _collect(gen: AsyncIterator[dict]) -> list[dict]:
 
 
 @router.post("/{case_id}/extract")
-async def run_extract(case_id: str, user: User = Depends(current_user)) -> dict:
+async def run_extract(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     msgs = await _collect(actions.extract(case_id))
     return {"case": _view(actions.load(case_id)), "messages": msgs}
 
 
 @router.patch("/{case_id}/extraction")
-def patch_extraction(case_id: str, req: ExtractionPatch, user: User = Depends(current_user)) -> dict:
+def patch_extraction(case_id: str, req: ExtractionPatch, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     case = actions.patch_extraction(case_id, req.fields, req.confirm)
     return {"case": _view(case), "facts": jsonable(actions.facts_card_data(case))}
 
 
 @router.post("/{case_id}/plan")
-async def run_plan(case_id: str, user: User = Depends(current_user)) -> dict:
+async def run_plan(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     msgs = await _collect(actions.plan_stream(case_id))
     return {"case": _view(actions.load(case_id)), "messages": msgs}
 
 
 @router.post("/{case_id}/drafts")
-async def run_drafts(case_id: str, user: User = Depends(current_user)) -> dict:
+async def run_drafts(case_id: str, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     msgs = await _collect(actions.drafts_stream(case_id))
     return {"case": _view(actions.load(case_id)), "messages": msgs}
 
 
 @router.post("/{case_id}/evidence-pack")
-async def evidence_pack(case_id: str, rebuild: bool = False, user: User = Depends(current_user)) -> dict:
+async def evidence_pack(case_id: str, rebuild: bool = False, user: User = Depends(victim_user)) -> dict:
     case = get_owned_case(user, case_id)
     if rebuild or not case.get("evidencePackPath"):
         await actions.build_evidence_pack(case_id)
@@ -237,7 +251,7 @@ async def evidence_pack(case_id: str, rebuild: bool = False, user: User = Depend
 
 
 @router.patch("/{case_id}/steps/{step_id}")
-async def patch_step(case_id: str, step_id: str, req: StepPatch, user: User = Depends(current_user)) -> dict:
+async def patch_step(case_id: str, step_id: str, req: StepPatch, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     actions.set_step(case_id, step_id, req.status, req.reference)
     msgs = await actions.evaluate(case_id)
@@ -245,34 +259,34 @@ async def patch_step(case_id: str, step_id: str, req: StepPatch, user: User = De
 
 
 @router.post("/{case_id}/clock")
-async def time_travel(case_id: str, req: ClockReq, user: User = Depends(current_user)) -> dict:
+async def time_travel(case_id: str, req: ClockReq, user: User = Depends(victim_user)) -> dict:
     get_owned_case(user, case_id)
     case, msgs = await actions.time_travel(case_id, req.addDays, req.jumpToDay, req.reset)
     return {"case": _view(case), "messages": jsonable(msgs)}
 
 
 @router.post("/{case_id}/guard")
-async def run_guard(case_id: str, req: GuardReq, user: User = Depends(current_user)) -> dict:
+async def run_guard(case_id: str, req: GuardReq, user: User = Depends(victim_user)) -> dict:
     case = get_owned_case(user, case_id)
     msgs = await actions.guard_text(case_id, req.text, case.get("language", "en"))
     return {"is_recovery_scam": bool(msgs), "messages": jsonable(msgs)}
 
 
 @router.patch("/{case_id}/sandbox")
-def set_sandbox(case_id: str, req: SandboxReq, user: User = Depends(current_user)) -> dict:
+def set_sandbox(case_id: str, req: SandboxReq, user: User = Depends(victim_user)) -> dict:
     """CR-01 / F8.1: toggle before sending; 403 for live when ALLOW_LIVE_SUBMISSION=false; 409 once sent or locked."""
     return {"case": _view(handoff.set_sandbox(get_owned_case(user, case_id), req.sandbox))}
 
 
 @router.post("/{case_id}/send-to-bank/preview")
-def send_preview(case_id: str, user: User = Depends(current_user)) -> dict:
+def send_preview(case_id: str, user: User = Depends(victim_user)) -> dict:
     """CR-01 / F8.2: summary for the confirmation sheet + a 5-minute confirmationToken. Publishes nothing."""
     get_owned_case(user, case_id)
     return jsonable(handoff.preview(case_id))
 
 
 @router.post("/{case_id}/send-to-bank")
-async def send_to_bank(case_id: str, req: SendToBankReq, user: User = Depends(current_user)) -> dict:
+async def send_to_bank(case_id: str, req: SendToBankReq, user: User = Depends(victim_user)) -> dict:
     """consent=false → "Not now". Otherwise {confirmationToken, confirmed: true} is required (409 if details changed)."""
     get_owned_case(user, case_id)
     case, msgs = await actions.send_to_bank(case_id, req.consent, req.consentVersion, req.confirmationToken, req.confirmed)
@@ -280,7 +294,7 @@ async def send_to_bank(case_id: str, req: SendToBankReq, user: User = Depends(cu
 
 
 @router.post("/{case_id}/withdraw-consent")
-async def withdraw_consent(case_id: str, req: WithdrawReq, user: User = Depends(current_user)) -> dict:
+async def withdraw_consent(case_id: str, req: WithdrawReq, user: User = Depends(victim_user)) -> dict:
     """CR-01 / F8.4: publish fraud_case.withdraw; the bank case becomes WITHDRAWN_BY_CUSTOMER."""
     get_owned_case(user, case_id)
     case, msgs = await handoff.withdraw(case_id, req.confirmed)
@@ -359,7 +373,7 @@ async def chat_events(case_id: str, req: ChatReq) -> AsyncIterator[dict]:
 
 @router.post("/{case_id}/voice")
 async def voice_note(case_id: str, file: UploadFile = File(...), mimeType: str | None = Form(default=None),
-                     user: User = Depends(current_user)):
+                     user: User = Depends(victim_user)):
     """CR-03 D: multipart voice note → stored + transcribed. The app then sends the transcript as a normal chat turn
     (guard → router → co-pilot) with this audioPath. 422 VOICE_UNCLEAR when nothing could be transcribed."""
     case = get_owned_case(user, case_id)
@@ -387,7 +401,7 @@ async def voice_note(case_id: str, file: UploadFile = File(...), mimeType: str |
 
 
 @router.post("/{case_id}/chat")
-async def chat(case_id: str, req: ChatReq, user: User = Depends(current_user)):
+async def chat(case_id: str, req: ChatReq, user: User = Depends(victim_user)):
     case = get_owned_case(user, case_id)
     if not (req.text or req.audioPath or req.trigger):
         raise HTTPException(400, "empty turn")

@@ -1,17 +1,33 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Landing } from "./pages/Landing";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Home } from "./pages/Home";
+import { Login, Signup } from "./pages/AuthPages";
+import { CasesPage } from "./pages/CasesPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { Privacy } from "./pages/Privacy";
 import { CasePage } from "./pages/CasePage";
 import { BankApp } from "./bank/BankApp";
+import { RequireAuth } from "./ui/RequireAuth";
 import "./styles.css";
+
+function OldCaseLink() {
+  const { caseId } = useParams();
+  return <Navigate to={`/cases/${caseId}`} replace />;
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/case/:caseId" element={<CasePage />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/cases" element={<RequireAuth><CasesPage /></RequireAuth>} />
+        <Route path="/cases/:caseId" element={<RequireAuth><CasePage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+        <Route path="/case/:caseId" element={<OldCaseLink />} />
         <Route path="/bank/*" element={<BankApp />} />
       </Routes>
     </BrowserRouter>

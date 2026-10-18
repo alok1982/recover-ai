@@ -1,31 +1,120 @@
-import { signInWithEmailAndPassword, getAuth, signOut } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+} from "firebase/auth";
+import { useEffect, useState } from "react";
 import { MOCK } from "./config";
-import { analystApp, ensureAnonymous } from "./firebase";
+import { analystApp, signedInVictim, victimAuth } from "./firebase";
+import { phoneEmail } from "./phone";
 
-const MOCK_UID_KEY = "recoverai.mockUid";
 const BANK_KEY = "recoverai.bankUser";
+const MOCK_ACCOUNTS = "recoverai.mockAccounts";
+const MOCK_SESSION = "recoverai.mockSession";
 
-function mockUid(): string {
-  let uid = localStorage.getItem(MOCK_UID_KEY);
-  if (!uid) {
-    uid = "anon-" + Math.random().toString(36).slice(2, 12);
-    localStorage.setItem(MOCK_UID_KEY, uid);
+export class AuthError extends Error {
+  constructor(public code: "bad_credentials" | "exists" | "weak" | "network" | "other", message: string = code) {
+    super(message);
   }
-  return uid;
 }
 
-/** Victim: Firebase Anonymous Auth ID token (or a mock token offline). */
+// ------------------------------------------------------------------ victim (CR-03: phone + password)
+const listeners = new Set<(p: string | null) => void>();
+
+async function sha(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+function mockAccounts(): Record<string, string> {
+  return JSON.parse(localStorage.getItem(MOCK_ACCOUNTS) || "{}");
+}
+
+function mapFirebase(e: any): AuthError {
+  const c = String(e?.code || "");
+  if (/invalid-credential|wrong-password|user-not-found|invalid-email|too-many-requests|user-disabled/.test(c)) return new AuthError("bad_credentials");
+  if (/email-already-in-use/.test(c)) return new AuthError("exists");
+  if (/weak-password/.test(c)) return new AuthError("weak");
+  if (/network/.test(c)) return new AuthError("network");
+  return new AuthError("other", e?.message);
+}
+
+export async function victimSignUp(e164: string, password: string): Promise<void> {
+  if (MOCK) {
+    const acc = mockAccounts();
+    if (acc[e164]) throw new AuthError("exists");
+    acc[e164] = await sha(password);
+    localStorage.setItem(MOCK_ACCOUNTS, JSON.stringify(acc));
+    localStorage.setItem(MOCK_SESSION, e164);
+    listeners.forEach((f) => f(e164));
+    return;
+  }
+  try {
+    await createUserWithEmailAndPassword(victimAuth(), phoneEmail(e164), password);
+  } catch (e) {
+    throw mapFirebase(e);
+  }
+}
+
+export async function victimSignIn(e164: string, password: string): Promise<void> {
+  if (MOCK) {
+    const acc = mockAccounts();
+    // seed users (scripts/seed_users.py) exist server-side only; in mock mode they log in with the demo password
+    const seeded = /^\+91900000000[1-3]$|^\+601000000(01|02)$/.test(e164) && password === "Demo@2026";
+    if (!seeded && acc[e164] !== (await sha(password))) throw new AuthError("bad_credentials");
+    localStorage.setItem(MOCK_SESSION, e164);
+    listeners.forEach((f) => f(e164));
+    return;
+  }
+  try {
+    await signInWithEmailAndPassword(victimAuth(), phoneEmail(e164), password);
+  } catch (e) {
+    throw mapFirebase(e);
+  }
+}
+
+export async function victimSignOut(): Promise<void> {
+  localStorage.removeItem("recoverai.lastCase");
+  if (MOCK) {
+    localStorage.removeItem(MOCK_SESSION);
+    listeners.forEach((f) => f(null));
+    return;
+  }
+  await signOut(victimAuth());
+}
+
+/** Signed-in victim id (mock: E.164; Firebase: uid), or null. */
+export async function victimId(): Promise<string | null> {
+  if (MOCK) return localStorage.getItem(MOCK_SESSION);
+  const u = await signedInVictim();
+  return u && !u.isAnonymous ? u.uid : null;
+}
+
+/** ID token for /api/* victim routes. Throws when signed out (the route guards send the user to /login). */
 export async function victimToken(): Promise<string> {
-  if (MOCK) return `mock:${mockUid()}`;
-  const user = await ensureAnonymous();
-  return user.getIdToken();
+  if (MOCK) {
+    const p = localStorage.getItem(MOCK_SESSION);
+    if (!p) throw new AuthError("other", "Please sign in.");
+    return `mock:phone:${p}`;
+  }
+  const u = await signedInVictim();
+  if (!u || u.isAnonymous) throw new AuthError("other", "Please sign in.");
+  return u.getIdToken();
 }
 
-export async function victimUid(): Promise<string> {
-  if (MOCK) return mockUid();
-  return (await ensureAnonymous()).uid;
+/** React hook: undefined while loading, null when signed out, else the victim id. */
+export function useVictim(): string | null | undefined {
+  const [v, setV] = useState<string | null | undefined>(MOCK ? localStorage.getItem(MOCK_SESSION) : undefined);
+  useEffect(() => {
+    if (MOCK) {
+      const f = (p: string | null) => setV(p);
+      listeners.add(f);
+      return () => { listeners.delete(f); };
+    }
+    return onAuthStateChanged(victimAuth(), (u) => setV(u && !u.isAnonymous ? u.uid : null));
+  }, []);
+  return v;
 }
 
+// ------------------------------------------------------------------ bank analyst (unchanged)
 export interface BankUser {
   name: string;
   email?: string;

@@ -50,6 +50,11 @@ class Store(Protocol):
     def delete_bank_case(self, bank_case_id: str) -> None: ...
     def create_bank_case_if_absent(self, bank_case_id: str, data: dict) -> bool: ...
     def claim_public_ref(self, ref: str, case_id: str) -> bool: ...  # CR-01 F8.5: atomic, unique RAI-… reference
+    # CR-03: users/{uid} (victim account + profile); client read-only via rules, written only here
+    def get_user(self, uid: str) -> dict | None: ...
+    def set_user(self, uid: str, data: dict) -> None: ...
+    def update_user(self, uid: str, patch: dict) -> None: ...
+    def delete_user(self, uid: str) -> None: ...
     # Pub/Sub dedupe (F15)
     def get_processed_event(self, event_key: str) -> dict | None: ...
     def put_processed_event(self, event_key: str, data: dict) -> None: ...
@@ -89,7 +94,7 @@ class MemoryStore:
         self._lock = threading.RLock()
         self._path = Path(persist_path) if persist_path else None
         self.db: dict[str, dict[str, dict]] = {
-            "cases": {}, "messages": {}, "evidence": {}, "bank_cases": {}, "audit_log": {}, "processed_events": {},
+            "cases": {}, "messages": {}, "evidence": {}, "bank_cases": {}, "audit_log": {}, "processed_events": {}, "users": {},
         }
         if self._path and self._path.exists():
             try:
@@ -138,6 +143,30 @@ class MemoryStore:
         with self._lock:
             out = [copy.deepcopy(c) for c in self.db["cases"].values() if owner_uid is None or c.get("ownerUid") == owner_uid]
             return sorted(out, key=lambda c: c.get("createdAt") or utcnow(), reverse=True)
+
+    # users (CR-03)
+    def get_user(self, uid: str) -> dict | None:
+        with self._lock:
+            u = self.db.setdefault("users", {}).get(uid)
+            return copy.deepcopy(u) if u else None
+
+    def set_user(self, uid: str, data: dict) -> None:
+        with self._lock:
+            self.db.setdefault("users", {})[uid] = copy.deepcopy({**data, "uid": uid})
+            self._save()
+
+    def update_user(self, uid: str, patch: dict) -> None:
+        with self._lock:
+            users = self.db.setdefault("users", {})
+            if uid not in users:
+                raise KeyError(uid)
+            users[uid].update(copy.deepcopy(patch))
+            self._save()
+
+    def delete_user(self, uid: str) -> None:
+        with self._lock:
+            self.db.setdefault("users", {}).pop(uid, None)
+            self._save()
 
     # messages
     def add_message(self, case_id: str, msg: dict) -> dict:
@@ -308,6 +337,20 @@ class FirestoreStore:
             q = q.where(filter=self._fs.FieldFilter("ownerUid", "==", owner_uid))
         out = [{**d.to_dict(), "id": d.id} for d in q.stream()]
         return sorted(out, key=lambda c: c.get("createdAt") or utcnow(), reverse=True)
+
+    # users (CR-03)
+    def get_user(self, uid: str) -> dict | None:
+        snap = self.client.collection("users").document(uid).get()
+        return {**snap.to_dict(), "uid": snap.id} if snap.exists else None
+
+    def set_user(self, uid: str, data: dict) -> None:
+        self.client.collection("users").document(uid).set({**data, "uid": uid})
+
+    def update_user(self, uid: str, patch: dict) -> None:
+        self.client.collection("users").document(uid).update(patch)
+
+    def delete_user(self, uid: str) -> None:
+        self.client.collection("users").document(uid).delete()
 
     def add_message(self, case_id: str, msg: dict) -> dict:
         """A caller-supplied id makes the write idempotent (Pub/Sub redelivery): an existing message is returned as is."""

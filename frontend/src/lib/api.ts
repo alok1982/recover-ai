@@ -2,7 +2,7 @@ import { API_BASE, CHAT_BASE } from "./config";
 import { bankToken, victimToken } from "./auth";
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public detail?: any) {
     super(message);
   }
 }
@@ -15,13 +15,14 @@ async function request<T>(method: string, path: string, body?: unknown, bank = f
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    let msg = res.statusText;
+    let msg: any = res.statusText;
     try {
       msg = (await res.json()).detail || msg;
     } catch {
       /* ignore */
     }
-    throw new ApiError(res.status, typeof msg === "string" ? msg : JSON.stringify(msg));
+    if (res.status === 412 && msg?.code === "PROFILE_INCOMPLETE") window.dispatchEvent(new CustomEvent("recoverai:profile-incomplete", { detail: msg }));
+    throw new ApiError(res.status, typeof msg === "string" ? msg : msg?.message || msg?.code || JSON.stringify(msg), msg);
   }
   return res.json() as Promise<T>;
 }
@@ -30,6 +31,7 @@ export const api = {
   get: <T>(p: string) => request<T>("GET", p),
   post: <T>(p: string, b: unknown = {}) => request<T>("POST", p, b),
   patch: <T>(p: string, b: unknown) => request<T>("PATCH", p, b),
+  put: <T>(p: string, b: unknown) => request<T>("PUT", p, b),
   del: <T>(p: string) => request<T>("DELETE", p),
   bankGet: <T>(p: string) => request<T>("GET", p, undefined, true),
   bankPost: <T>(p: string, b: unknown) => request<T>("POST", p, b, true),

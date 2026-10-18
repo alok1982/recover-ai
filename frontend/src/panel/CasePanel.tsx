@@ -83,7 +83,7 @@ export function CasePanel() {
     if (!confirm(t("confirmDelete"))) return;
     await api.del(`/api/cases/${caseId}`);
     localStorage.removeItem("recoverai.lastCase");
-    nav("/");
+    nav("/cases");
   };
   return (
     <aside className="panel">

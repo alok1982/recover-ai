@@ -8,6 +8,7 @@ import { CasePanel } from "../panel/CasePanel";
 import { CountriesList } from "../cards/CountriesCard";
 import { COUNTRY_LANGS, DEFAULT_LANG, LANG_LABEL, LangContext, translate } from "../i18n";
 import { Disclaimer } from "./Disclaimer";
+import { AppHeader } from "../ui/AppHeader";
 
 export function CasePage() {
   const { caseId } = useParams();
@@ -29,8 +30,7 @@ export function CasePage() {
   return (
     <LangContext.Provider value={lang}>
       <div className={`app tab-${tab}`}>
-        <header className="top">
-          <a className="brand small" href="/">✔ RecoverAI</a>
+        <AppHeader>
           {c && (
             <div className="row">
               <select aria-label={t("country")} value={c.country} onChange={(e) => {
@@ -46,7 +46,7 @@ export function CasePage() {
               <button className="link" onClick={() => setShowSoon(!showSoon)}>🌏 {t("comingSoon")}</button>
             </div>
           )}
-        </header>
+        </AppHeader>
         {showSoon && <div className="soon-pop"><CountriesList /></div>}
         {live.error && <div className="banner error">{live.error}</div>}
         <nav className="mobile-tabs">

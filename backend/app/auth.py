@@ -1,4 +1,8 @@
-"""Firebase ID-token verification (anonymous victims; email/password analyst with role=bank claim)."""
+"""Firebase ID-token verification.
+
+Victims (CR-03): phone + password accounts on the Email/Password provider (synthetic `<digits>@phone.recoverai.app`).
+Anonymous tokens are rejected on victim routes (old anonymous data is left in place). Analysts: email/password
+with a `role: bank` custom claim (unchanged)."""
 from __future__ import annotations
 
 import logging
@@ -18,6 +22,7 @@ class User:
     role: str | None = None
     name: str | None = None
     email: str | None = None
+    anonymous: bool = False
 
     @property
     def is_bank(self) -> bool:
@@ -44,7 +49,12 @@ def verify_token(token: str) -> User:
         parts = token.split(":", 2)
         if len(parts) == 3 and parts[1] == "bank":
             return User(uid=f"bank-{parts[2]}", role="bank", name=parts[2])
-        return User(uid=parts[1] or "anon")
+        if len(parts) == 3 and parts[1] == "phone":  # mock phone account: "mock:phone:+919000000001"
+            from .profile import phone_email
+            digits = parts[2].lstrip("+")
+            return User(uid=f"ph-{digits}", email=phone_email("+" + digits))
+        uid = parts[1] or "anon"
+        return User(uid=uid, anonymous=uid.startswith("anon"))
     _init_firebase()
     from firebase_admin import auth as fb_auth
 
@@ -53,7 +63,9 @@ def verify_token(token: str) -> User:
     except Exception as e:  # noqa: BLE001
         log.info("token rejected", extra={"err": str(e)[:200]})
         raise HTTPException(401, "invalid or expired token") from e
-    return User(uid=claims["uid"], role=claims.get("role"), name=claims.get("name"), email=claims.get("email"))
+    provider = (claims.get("firebase") or {}).get("sign_in_provider")
+    return User(uid=claims["uid"], role=claims.get("role"), name=claims.get("name"), email=claims.get("email"),
+                anonymous=provider == "anonymous")
 
 
 def current_user(authorization: str | None = Header(default=None)) -> User:
@@ -66,4 +78,12 @@ def bank_user(authorization: str | None = Header(default=None)) -> User:
     user = current_user(authorization)
     if not user.is_bank:
         raise HTTPException(403, "bank analyst role required")
+    return user
+
+
+def victim_user(authorization: str | None = Header(default=None)) -> User:
+    """Victim routes: a signed-in phone account (anonymous sessions are no longer accepted, CR-03 B)."""
+    user = current_user(authorization)
+    if user.anonymous:
+        raise HTTPException(401, {"code": "SIGN_IN_REQUIRED", "message": "Please sign in with your phone number."})
     return user

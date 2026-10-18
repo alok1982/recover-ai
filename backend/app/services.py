@@ -59,3 +59,14 @@ def system_event(case_id: str, text: str, lang: str = "en", store: Store | None 
 
 def card(kind: str, data: dict) -> dict:
     return {"kind": kind, "data": jsonable(data)}
+
+
+def mark_profile_changed(uid: str) -> int:
+    """CR-03 C: drafts already generated carry the old name/address/bank → flag them "Profile changed — regenerate"."""
+    store = get_store()
+    n = 0
+    for c in store.list_cases(owner_uid=uid):
+        if c.get("drafts"):
+            store.update_case(c["id"], {"draftsStale": "profile_changed", "updatedAt": utcnow()})
+            n += 1
+    return n

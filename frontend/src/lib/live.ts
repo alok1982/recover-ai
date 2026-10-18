@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { collection, doc, onSnapshot, orderBy, query, Timestamp } from "firebase/firestore";
 import { api } from "./api";
 import { MOCK } from "./config";
-import { victimDb, ensureAnonymous } from "./firebase";
+import { victimDb, signedInVictim } from "./firebase";
 import type { CaseDoc, Message } from "./types";
 
 /** Firestore Timestamps -> ISO strings (same shape as the REST API). */
@@ -59,7 +59,7 @@ export function useCaseLive(caseId: string | undefined) {
       stop = () => window.clearInterval(id);
     } else {
       let unsubs: (() => void)[] = [];
-      ensureAnonymous().then(() => {
+      signedInVictim().then(() => {
         const db = victimDb();
         unsubs.push(
           onSnapshot(doc(db, "cases", caseId), (s) => s.exists() && setCase((prev) => ({ ...(prev || {}), ...plain<CaseDoc>(s.data()) }))),
