@@ -81,6 +81,17 @@ export async function victimSignOut(): Promise<void> {
   await signOut(victimAuth());
 }
 
+/** After DELETE /api/me: the server removed the Firebase user; drop the local session (mock: the local account too). */
+export async function victimForget(): Promise<void> {
+  if (MOCK) {
+    const p = localStorage.getItem(MOCK_SESSION);
+    const acc = mockAccounts();
+    if (p) delete acc[p];
+    localStorage.setItem(MOCK_ACCOUNTS, JSON.stringify(acc));
+  }
+  await victimSignOut();
+}
+
 /** Signed-in victim id (mock: E.164; Firebase: uid), or null. */
 export async function victimId(): Promise<string | null> {
   if (MOCK) return localStorage.getItem(MOCK_SESSION);

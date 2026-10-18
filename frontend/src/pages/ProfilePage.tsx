@@ -4,7 +4,7 @@ import { deleteMe, getMe, REQUIRED, type Me } from "../lib/me";
 import type { Lang } from "../lib/types";
 import { LangContext, translate } from "../i18n";
 import { saveLang, savedLang } from "../lib/prefs";
-import { victimSignOut } from "../lib/auth";
+import { victimForget } from "../lib/auth";
 import { AppHeader } from "../ui/AppHeader";
 import { ProfileForm } from "../profile/ProfileForm";
 
@@ -19,7 +19,7 @@ export function ProfilePage() {
   const del = async () => {
     if (!confirm(t("deleteAccountConfirm"))) return;
     await deleteMe();
-    await victimSignOut();
+    await victimForget();
     nav("/");
   };
   return (
