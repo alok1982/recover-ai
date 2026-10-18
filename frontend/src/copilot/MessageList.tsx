@@ -3,10 +3,12 @@ import type { Message } from "../lib/types";
 import { CardView } from "../cards";
 import { useT } from "../i18n";
 import { DEMO_UI } from "../lib/config";
+import { useHealth } from "../lib/health";
 
 /** F17 demo chip: which model wrote this reply. */
 export function ModelChip({ m }: { m: Message }) {
-  if (!DEMO_UI || m.role !== "assistant" || !m.text || !m.model) return null;
+  const health = useHealth();  // the Gemma/Gemini label is shown only while Gemma (F17) is enabled
+  if (!DEMO_UI || !health?.chatLight || m.role !== "assistant" || !m.text || !m.model) return null;
   const gemma = m.model.startsWith("gemma");
   const title = gemma
     ? `${m.model}${m.route?.firstTokenMs != null ? ` · first token ${m.route.firstTokenMs} ms` : ""}`

@@ -23,8 +23,9 @@ REGION="${REGION:-asia-south1}"
 GEMINI_LOCATION="${GEMINI_LOCATION:-global}"
 GEMINI_MODEL="${GEMINI_MODEL:-gemini-3.8-flash}"
 GEMINI_LITE_MODEL="${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
-# F17: Gemma 4 for light chat turns (Vertex AI MaaS, global endpoint only). CHAT_LIGHT_MODEL= (empty) → Gemini only.
-CHAT_LIGHT_MODEL="${CHAT_LIGHT_MODEL-gemma-4-26b-a4b-it-maas}"
+# F17: Gemma 4 for light chat turns (Vertex AI MaaS, global endpoint only). Disabled (empty) → every turn on Gemini;
+# Gemma MaaS returned frequent 429 "queue full". Re-enable with CHAT_LIGHT_MODEL=gemma-4-26b-a4b-it-maas.
+CHAT_LIGHT_MODEL="${CHAT_LIGHT_MODEL-}"
 CHAT_LIGHT_LOCATION="${CHAT_LIGHT_LOCATION:-global}"
 FORCE_LIGHT_FAIL="${FORCE_LIGHT_FAIL:-false}"
 # CR-01 / F8.1: safe bank handoff. Live submission stays off until a real bank integration exists.

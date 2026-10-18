@@ -139,6 +139,8 @@ def main() -> None:
             pg.wait_for_timeout(1200)
             pg.locator(".messages .model-chip.gemma").last.scroll_into_view_if_needed()
             pg.locator(".chat").screenshot(path=str(SHOTS / "10-model-chips.png"))
+        else:
+            assert pg.locator(".messages .model-chip").count() == 0, "model chip hidden while Gemma is off"
         pg.fill(".inputbar textarea", "Pay ₹5,000 fee and we recover your money")
         pg.keyboard.press("Enter")
         pg.wait_for_selector(".warning-card")
